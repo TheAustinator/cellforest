@@ -1,0 +1,76 @@
+{
+  "file_map": {
+    "combine": {
+      "barcodes_raw": "barcodes.tsv.gz",
+      "cell_metadata": "cell_metadata.tsv",
+      "features_raw": "features.tsv.gz",
+      "matrix_raw": "matrix.mtx.gz"
+    },
+    "normalize": {
+      "cell_ids": "cell_ids.tsv",
+      "genes": "genes.tsv",
+      "matrix": "matrix.pickle",
+      "matrix_r": "matrix.rds",
+      "corrected_umi": "corrected_umi.mtx",
+      "pearson_residual": "pearson_residuals.tsv"
+    },
+    "dim_reduce": {
+      "pca_embeddings": "pca_embeddings.tsv",
+      "pca_loadings": "pca_loadings.tsv",
+      "umap_embeddings": "umap_embeddings.tsv",
+      "dimred_r": "matrix.rds"
+    },
+    "cluster": {
+      "clusters": "clusters.tsv",
+      "cluster_r": "matrix.rds"
+    },
+    "diffexp_bulk": {
+      "diffexp_bulk_result": "diffexp.tsv"
+    },
+    "diffexp": {
+      "diffexp_result": "diffexp.tsv"
+    },
+    "markers": {
+      "markers": "markers.tsv"
+    }
+  },
+
+  "param_names": {
+    "combine": ["root"],
+    "normalize": ["max_genes", "min_genes", "perc_mito_cutoff", "method", "min_cells", "nfeatures"],
+    "dim_reduce": ["pca_npcs", "umap_n_neighbors", "umap_min_dist", "umap_n_components", "umap_metric"],
+    "cluster": ["res", "eps", "num_pcs"],
+    "diffexp_bulk": ["logfc_thresh", "test"],
+    "diffexp": ["logfc_thresh", "test"],
+    "markers": ["logfc_thresh", "test"],
+    "gsea": ["gene_set"],
+    "gsea_bulk": ["gene_set"]
+  },
+
+  "process_hierarchy": {
+    "combine": {
+      "normalize": {
+        "gsea_bulk": null,
+        "diffexp_bulk": null,
+        "dim_reduce": {
+          "cluster": ["diffexp", "gsea", "markers"]
+        }
+      }
+    }
+  },
+
+  "r_filepaths": {
+    "LOAD_DATA_SCRIPT": "load_data.R",
+    "DIFF_EXP_BULK_SCRIPT": "diff_exp_bulk.R",
+    "DIFF_EXP_CLUSTER_SCRIPT": "diff_exp_cluster_wise.R",
+    "SCTRANSFORM_SCRIPT": "run_sctransform.R",
+    "PCA_SCRIPT": "run_pca.R",
+    "FIND_CLUSTERS_SCRIPT": "find_clusters.R",
+    "FIND_CLUSTER_MARKERS_SCRIPT": "find_cluster_markers.R",
+    "SEURAT_SCRIPT": "run_seurat.R",
+    "FUNCTIONS_FILE_PATH": "functions.R",
+    "SUBSET_RDS_SCRIPT": "subset_rds.R",
+    "FILTER_NORMALIZE_SCRIPT": "filter_normalize.R",
+    "SEURAT_DEFAULT_NORMALIZE_SCRIPT": "seurat_default_normalize.R",
+  }
+}
