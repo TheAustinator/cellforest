@@ -1,10 +1,9 @@
 import pickle
-from pathlib import Path
 
+from dataforest.utils.decorators import default_kwargs
 import pandas as pd
+from pathlib import Path
 from scipy import io
-
-from dataforest.decorators import default_kwargs
 
 
 class ReaderMethodsSC:

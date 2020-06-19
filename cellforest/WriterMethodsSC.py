@@ -1,6 +1,6 @@
+from dataforest.utils.decorators import default_kwargs
 import pandas as pd
 
-from dataforest.decorators import default_kwargs
 
 
 class WriterMethodsSC:

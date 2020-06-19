@@ -1,8 +1,9 @@
 import json
-from pathlib import Path
 from operator import ge, le
 
-from dataforest.ProcessSchema import ProcessSchema
+from dataforest.templates.ProcessSchema import ProcessSchema
+from pathlib import Path
+
 from cellforest.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.WriterMethodsSC import WriterMethodsSC
 
@@ -12,7 +13,7 @@ class ProcessSchemaSC(ProcessSchema):
     # TODO: check that process names in PROCESS_HIERARCHY, PARAM_NAMES, and FILE_MAP are consistent
     # fmt: off
 
-    PROCESS_HIERARCHY = CONFIG["process_hierarchyd"]
+    PROCESS_HIERARCHY = CONFIG["process_hierarchy"]
     # fmt: on
 
     PARAM_NAMES = CONFIG["param_names"]

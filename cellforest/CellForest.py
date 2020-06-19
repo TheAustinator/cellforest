@@ -1,11 +1,11 @@
 from copy import deepcopy
 from typing import Optional, Union
 
+from dataforest.core.DataForest import DataForest
+from dataforest.utils.utils import label_df_partitions, update_recursive
 import pandas as pd
 
-from dataforest.DataForest import DataForest
-from dataforest.utils import label_df_partitions, update_recursive
-from cellforest.Counts import Counts
+from cellforest.data_structures.Counts import Counts
 from cellforest.PlotMethodsSC import PlotMethodsSC
 from cellforest.ProcessSchemaSC import ProcessSchemaSC
 from cellforest.ReaderMethodsSC import ReaderMethodsSC
@@ -15,7 +15,7 @@ from cellforest.WriterMethodsSC import WriterMethodsSC
 
 class CellForest(DataForest):
     """
-    ORM for scRNAseq processed data. The `process_hierarchy` currently starts
+    DataForest for scRNAseq processed data. The `process_hierarchy` currently starts
     at `combine`, where non-normalized counts data is combined.
 
     A path through specific `process_runs` of processes in the
@@ -63,13 +63,13 @@ class CellForest(DataForest):
         else:
             self._unversioned = bool(unversioned)
         if self.unversioned:
-            self.logger.warning(f"Unversioned ORM")
+            self.logger.warning(f"Unversioned DataForest")
 
     @property
     def samples(self) -> pd.DataFrame:
         """
         Hierarchical categorization of all samples in dataset with cell counts.
-        The canonical use case would be to use it on a broad ORM to choose
+        The canonical use case would be to use it on a broad DataForest to choose
         a dataset.
         Returns:
 
@@ -124,17 +124,17 @@ class CellForest(DataForest):
     def groupby(self, by: Union[str, list, set, tuple], **kwargs):
         """
         Operates like a pandas groupby, but does not return a GroupBy object,
-        and yields (name, ORM), where each ORM is subset according to `by`,
+        and yields (name, DataForest), where each DataForest is subset according to `by`,
         which corresponds to columns of `self.meta`.
         This is useful for batching analysis across various conditions, where
-        each run requires an ORM.
+        each run requires an DataForest.
         Args:
             by: variables over which to group (like pandas)
             **kwargs: for pandas groupby on `self.meta`
 
         Yields:
-            name: values for ORM `subset` according to keys specified in `by`
-            orm: new ORM which inherits `self.spec` with additional `subset`s
+            name: values for DataForest `subset` according to keys specified in `by`
+            forest: new DataForest which inherits `self.spec` with additional `subset`s
                 from `by`
         """
         if isinstance(by, (tuple, set)):
@@ -147,9 +147,9 @@ class CellForest(DataForest):
                     subset_dict = {by[0]: name}
             else:
                 subset_dict = {by: name}
-            orm = self.get_subset(subset_dict)
-            # orm._meta = df
-            yield name, orm
+            forest = self.get_subset(subset_dict)
+            # forest._meta = df
+            yield name, forest
 
     def copy(self, reset: bool = False, **kwargs):
         if kwargs.get("meta", None) is not None:
@@ -168,20 +168,20 @@ class CellForest(DataForest):
             spec = update_recursive(self.spec, update, inplace=False)
         else:
             spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
-        orm = self.copy(spec_dict=spec)
-        bool_selector = pd.concat([orm.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
+        forest = self.copy(spec_dict=spec)
+        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
         if sum(bool_selector) == 0:
             import ipdb
 
             ipdb.set_trace()
         if compartment_name == "subset":
-            orm._meta = orm.meta[bool_selector]
+            forest._meta = forest.meta[bool_selector]
         elif compartment_name == "filter":
-            orm._meta = orm.meta[~bool_selector]
+            forest._meta = forest.meta[~bool_selector]
         else:
             raise ValueError()
-        orm._counts = orm.counts[orm.meta.index]
-        return orm
+        forest._counts = forest.counts[forest.meta.index]
+        return forest
 
     def get_cell_meta(self, df=None):
         # TODO: MEMORY DUPLICATION - we want to keep file access pure?

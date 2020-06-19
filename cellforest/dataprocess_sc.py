@@ -2,7 +2,8 @@ import logging
 import os
 import shutil
 
-from dataforest.dataprocess import dataprocess
+from dataforest.core.dataprocess import dataprocess
+
 from cellforest.WriterMethodsSC import WriterMethodsSC
 
 
@@ -18,13 +19,13 @@ class dataprocess_sc(dataprocess):
             self.clean_hooks.append(self._hook_clean_unversioned)
 
     def _hook_store_temp_metadata(self):
-        self._metadata_filepath = self.orm[self.process_name].path / self.orm.schema.TEMP_METADATA_FILENAME
-        WriterMethodsSC.tsv(self._metadata_filepath, self.orm[self.process_name].orm.meta, header=True)
+        self._metadata_filepath = self.forest[self.process_name].path / self.forest.schema.TEMP_METADATA_FILENAME
+        WriterMethodsSC.tsv(self._metadata_filepath, self.forest[self.process_name].orm.meta, header=True)
 
     def _hook_clean_temp_metadata(self):
         os.remove(self._metadata_filepath)
 
     def _hook_clean_unversioned(self):
-        if self.orm.unversioned:
+        if self.forest.unversioned:
             self.logger.info(f"Removing output files for {self.process_name} name due to unversioned ORM")
-            shutil.rmtree(str(self.orm[self.process_name].path))
+            shutil.rmtree(str(self.forest[self.process_name].path))

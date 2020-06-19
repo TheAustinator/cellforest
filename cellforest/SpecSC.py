@@ -1,4 +1,4 @@
-from dataforest.Spec import Spec
+from dataforest.core.Spec import Spec
 
 
 class SpecSC(Spec):

@@ -1,7 +1,7 @@
 import os
-from pathlib import Path
 import pickle
 
+from pathlib import Path
 from scipy.io import mmread
 
 from cellforest.r_utils.shell_command import shell_command

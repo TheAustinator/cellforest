@@ -3,13 +3,10 @@ import gzip
 import logging
 import os
 import sys
-from pathlib import Path
 from subprocess import check_call, check_output
 
 import pandas as pd
-
-# from scipy.io import mmread
-# from scipy.sparse import vstack
+from pathlib import Path
 
 RESULTS_ROOT_DIRECTORY_PATH = "<RESULTS_ROOT_DIRECTORY_PATH>"
 TENX_RELATIVE_DIRECTORY_PATH = "<TENX_RELATIVE_DIRECTORY_PATH>"
