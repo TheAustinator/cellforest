@@ -36,7 +36,7 @@ seurat_object[["cluster_id", , ]] <- metadata[colnames(seurat_object), "cluster_
 Idents(seurat_object) <- metadata$cluster_id
 print(groupby)
 cluster_ids <- unique(Idents(seurat_object))
-print(paste0(length(cluster_ids),  " clusters exist: ", cluster_ids)); print(date())
+print(paste0(length(cluster_ids), " clusters exist: ", cluster_ids)); print(date())
 
 print(paste0("Identifying markers with logfc_thresh: ", logfc_thresh)); print(date())
 
@@ -65,4 +65,4 @@ for (value in cluster_ids) {
 }
 
 all_markers <- do.call(rbind, datalist)
-write.table(all_markers, sep="\t", file=output_diffexp_path, quote=FALSE, row.names=FALSE)
+write.table(all_markers, sep = "\t", file = output_diffexp_path, quote = FALSE, row.names = FALSE)

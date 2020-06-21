@@ -6,16 +6,18 @@ from scipy.io import mmread
 
 from cellforest.r_utils.shell_command import shell_command
 
-
-RDS_CONVERTER_SCRIPT = Path(__file__).parent.absolute().parent / "r_scripts" / "rds_converter.R"
+RDS_CONVERTER_SCRIPT = (
+    Path(__file__).parent.absolute().parent / "r_scripts" / "rds_converter.R"
+)
 
 
 def gzip_replace(filepath):
     import gzip
     import shutil
+
     filepath = str(filepath)
-    with open(filepath, 'rb') as f_in:
-        with gzip.open(filepath + '.gz', 'wb') as f_out:
+    with open(filepath, "rb") as f_in:
+        with gzip.open(filepath + ".gz", "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     os.remove(filepath)
 

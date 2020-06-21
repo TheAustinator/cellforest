@@ -4,13 +4,16 @@ from dataforest.templates.BatchMethods import BatchMethods
 from scgsea.GSEAGroup import GSEAGroup
 import pandas as pd
 
-from cellforest.CellForest import CellForest
+from cellforest.templates.CellForest import CellForest
 
 
 class BatchMethodsSC(BatchMethods):
     @staticmethod
     def gsea_bulk(
-        forest: CellForest, batch_vars: Union[str, list, set, tuple], overwrite: bool = False, **kwargs
+        forest: CellForest,
+        batch_vars: Union[str, list, set, tuple],
+        overwrite: bool = False,
+        **kwargs,
     ) -> pd.DataFrame:
         """
         Run multiple GSEAs over a set of varying conditions as specified by
@@ -39,11 +42,17 @@ class BatchMethodsSC(BatchMethods):
 
     @staticmethod
     def gsea_bulk_repeat(
-        forest: CellForest, batch_vars: Union[str, list, set, tuple], overwrite: bool = True, n_repeat: int = 20, **kwargs
+        forest: CellForest,
+        batch_vars: Union[str, list, set, tuple],
+        overwrite: bool = True,
+        n_repeat: int = 20,
+        **kwargs,
     ) -> List[pd.DataFrame]:
         group_results_df_list = []
         for i in range(n_repeat):
             if kwargs.get("shuffling", False) or i > 0:
                 kwargs["no_plot"] = True
-            group_results_df_list.append(BatchMethodsSC.gsea_bulk(forest, batch_vars, overwrite, **kwargs))
+            group_results_df_list.append(
+                BatchMethodsSC.gsea_bulk(forest, batch_vars, overwrite, **kwargs)
+            )
         return group_results_df_list

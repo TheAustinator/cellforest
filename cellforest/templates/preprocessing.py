@@ -33,15 +33,23 @@ def load_10x_lane(analysis_output_directory_path):
     tenx_dir = analysis_output_directory_path / TENX_RELATIVE_DIRECTORY_PATH
 
     features_df = pd.read_csv(
-        tenx_dir / FEATURES_FILE_NAME, compression="gzip", header=None, sep="\t", usecols=[0, 1]
+        tenx_dir / FEATURES_FILE_NAME,
+        compression="gzip",
+        header=None,
+        sep="\t",
+        usecols=[0, 1],
     ).rename(columns={0: "ensembl_id", 1: "gene_name"})
 
-    barcodes_df = pd.read_csv(tenx_dir / BARCODES_FILE_NAME, compression="gzip", header=None, sep="\t").rename(
-        columns={0: "barcode"}
-    )
+    barcodes_df = pd.read_csv(
+        tenx_dir / BARCODES_FILE_NAME, compression="gzip", header=None, sep="\t"
+    ).rename(columns={0: "barcode"})
 
     mat = pd.read_csv(
-        tenx_dir / MATRIX_FILE_NAME, skiprows=3, header=None, sep=" ", names=["feature_idx", "barcode_idx", "count"]
+        tenx_dir / MATRIX_FILE_NAME,
+        skiprows=3,
+        header=None,
+        sep=" ",
+        names=["feature_idx", "barcode_idx", "count"],
     )
 
     return features_df, barcodes_df, mat
@@ -65,9 +73,20 @@ def load_bd_demux(analysis_output_directory_path):
     :return: Dataframe containing the results of demultiplexing
     """
     analysis_output_directory_path = Path(analysis_output_directory_path)
-    demux_bd = pd.read_csv(analysis_output_directory_path / BD_DEMUX_DIRECTORY_NAME / BD_DEMUX_FILE_NAME)
-    singlets = demux_bd.loc[demux_bd["noiseReduction"].str.startswith("SampleTag")].copy()
-    singlets.loc[:, "bd_id"] = singlets["noiseReduction"].str.split("_").str[-1].str.split("|").str[0].astype(int)
+    demux_bd = pd.read_csv(
+        analysis_output_directory_path / BD_DEMUX_DIRECTORY_NAME / BD_DEMUX_FILE_NAME
+    )
+    singlets = demux_bd.loc[
+        demux_bd["noiseReduction"].str.startswith("SampleTag")
+    ].copy()
+    singlets.loc[:, "bd_id"] = (
+        singlets["noiseReduction"]
+            .str.split("_")
+            .str[-1]
+            .str.split("|")
+            .str[0]
+            .astype(int)
+    )
     singlets = singlets.rename(columns={"cell": "barcode"})[["barcode", "bd_id"]]
     return singlets
 
@@ -83,10 +102,14 @@ def load_demuxlet_demux(analysis_output_directory_path):
     """
     analysis_output_directory_path = Path(analysis_output_directory_path)
     demuxlet = pd.read_csv(
-        analysis_output_directory_path / DEMUXLET_DIRECTORY_NAME / DEMUXLET_FILE_NAME, sep="\t", usecols=[0, 5]
+        analysis_output_directory_path / DEMUXLET_DIRECTORY_NAME / DEMUXLET_FILE_NAME,
+        sep="\t",
+        usecols=[0, 5],
     )
     demuxlet.columns = [col.lower() for col in demuxlet.columns]
-    demuxed_cells = demuxlet.loc[demuxlet.loc[:, "best"].str.startswith("SNG"), :].copy()
+    demuxed_cells = demuxlet.loc[
+                    demuxlet.loc[:, "best"].str.startswith("SNG"), :
+                    ].copy()
     source_ids = demuxed_cells.loc[:, "best"].str.split("-").str[1].tolist()
     #
 
@@ -96,7 +119,10 @@ def load_demuxlet_demux(analysis_output_directory_path):
 def load_scrnaseq_demux(analysis_output_directory_path, prob_thresh):
     analysis_output_directory_path = Path(analysis_output_directory_path)
     demux = pd.read_csv(
-        analysis_output_directory_path / SCRNASEQ_DEMUX_DIRECTORY_NAME / SCRNASEQ_DEMUX_FILE_NAME, sep="\t",
+        analysis_output_directory_path
+        / SCRNASEQ_DEMUX_DIRECTORY_NAME
+        / SCRNASEQ_DEMUX_FILE_NAME,
+        sep="\t",
     )
     demux.rename(columns={"BARCODE": "barcode"}, inplace=True)
     demux["barcode_idx"] = demux.index
@@ -135,8 +161,6 @@ def combine_10x_outputs(
     """
     logger = logging.getLogger("combine_10x_outputs")
 
-
-
     output_dir = Path(output_dir)
     os.makedirs(output_dir, exist_ok=True)
     curr_good_cell_count = 0
@@ -147,10 +171,14 @@ def combine_10x_outputs(
     # Make the user confirm they really want to do this so we don't blow up existing data.
     tmp_matrix_file_path = output_dir / "tmp_matrix.mtx.gz"
     if os.path.exists(tmp_matrix_file_path):
-        sys.exit(f"{tmp_matrix_file_path} already exists. If you really want to regenerate this file, delete it first.")
+        sys.exit(
+            f"{tmp_matrix_file_path} already exists. If you really want to regenerate this file, delete it first."
+        )
     barcodes_file_path = output_dir / BARCODES_FILE_NAME
     if os.path.exists(barcodes_file_path):
-        sys.exit(f"{barcodes_file_path} already exists. If you really want to regenerate this file, delete it first.")
+        sys.exit(
+            f"{barcodes_file_path} already exists. If you really want to regenerate this file, delete it first."
+        )
     # keep only newest run for each sample
     #
     if len(sample_metadata_df) == 0:
@@ -170,7 +198,9 @@ def combine_10x_outputs(
         barcodes_df["barcode_idx"] = barcodes_df.index + 1
         features_df["feature_idx"] = features_df.index + 1
         if reference_feature_map is None:
-            reference_feature_map = features_df.rename(columns={"feature_idx": "reference_feature_idx"})
+            reference_feature_map = features_df.rename(
+                columns={"feature_idx": "reference_feature_idx"}
+            )
         print(analysis_output_path)
         if is_bd:
             good_cells_df = load_bd_demux(analysis_output_path)
@@ -180,9 +210,9 @@ def combine_10x_outputs(
             good_cells_df = load_demuxlet_demux(analysis_output_path)
         good_cells_df = barcodes_df.merge(good_cells_df, on="barcode")
         if is_bd:
-            good_cells_df = good_cells_df.rename(columns={"bd_id": "bd_antibody_id"}).merge(
-                lane_label_df, on="bd_antibody_id"
-            )
+            good_cells_df = good_cells_df.rename(
+                columns={"bd_id": "bd_antibody_id"}
+            ).merge(lane_label_df, on="bd_antibody_id")
             print("USING BD LANE")
         else:
             #
@@ -195,11 +225,18 @@ def combine_10x_outputs(
                 + good_cells_df.loc[:, "lane_label"]
         )
 
-        good_cells_df["new_barcode_idx"] = good_cells_df.index + 1 + curr_good_cell_count
-        filtered_mat = mat.merge(good_cells_df, on="barcode_idx").merge(features_df, on="feature_idx")
-        curr_good_cell_count += len(good_cells_df)  # set global index for combined matrix
+        good_cells_df["new_barcode_idx"] = (
+                good_cells_df.index + 1 + curr_good_cell_count
+        )
+        filtered_mat = mat.merge(good_cells_df, on="barcode_idx").merge(
+            features_df, on="feature_idx"
+        )
+        curr_good_cell_count += len(
+            good_cells_df
+        )  # set global index for combined matrix
         filtered_mat = filtered_mat.merge(
-            reference_feature_map[["reference_feature_idx", "ensembl_id"]], on="ensembl_id"
+            reference_feature_map[["reference_feature_idx", "ensembl_id"]],
+            on="ensembl_id",
         )
         with gzip.open(str(tmp_matrix_file_path), mode="at") as f:
             filtered_mat[["reference_feature_idx", "new_barcode_idx", "count"]].to_csv(
@@ -211,7 +248,9 @@ def combine_10x_outputs(
         all_metadata.append(good_cells_df)
         logger.info(f"keeping {len(good_cells_df)} / {n_cells_init} cells")
     # Remove "best" column that is unique to demuxlet cell dataframes
-    to_merge = [df.drop("best", axis=1) if "best" in df.columns else df for df in all_metadata]
+    to_merge = [
+        df.drop("best", axis=1) if "best" in df.columns else df for df in all_metadata
+    ]
     # Reorder all dataframes to have columns in the same order (as the first lane_label_df)
     to_merge = [df[to_merge[0].columns] for df in to_merge]
     merged_metadata = pd.concat(to_merge)
@@ -223,20 +262,34 @@ def combine_10x_outputs(
     feature_map_out = reference_feature_map[["ensembl_id", "gene_name"]].applymap(
         lambda x: x.replace("GRCh38_______", "")
     )
-    feature_map_out.to_csv(output_dir / FEATURES_FILE_NAME, compression="gzip", index=False, header=None, sep="\t")
+    feature_map_out.to_csv(
+        output_dir / FEATURES_FILE_NAME,
+        compression="gzip",
+        index=False,
+        header=None,
+        sep="\t",
+    )
 
     final_matrix_path = output_dir / MATRIX_FILE_NAME
 
-    num_entries = int(check_output(f"gunzip -c {tmp_matrix_file_path} | wc -l", shell=True).decode("utf-8").strip())
+    num_entries = int(
+        check_output(f"gunzip -c {tmp_matrix_file_path} | wc -l", shell=True)
+            .decode("utf-8")
+            .strip()
+    )
 
     header = "%%MatrixMarket matrix coordinate integer general\n"
     header += """%metadata_json: {"format_version": 2, "software_version": "3.0.2"}\n"""
-    header += "\t".join(map(str, [len(reference_feature_map), len(merged_metadata), num_entries]))
+    header += "\t".join(
+        map(str, [len(reference_feature_map), len(merged_metadata), num_entries])
+    )
     header += "\n"
 
     with gzip.open(final_matrix_path, "wb") as f:
         f.write(header.encode())
 
-    failed = check_call(f"cat {tmp_matrix_file_path} >> {final_matrix_path}", shell=True)
+    failed = check_call(
+        f"cat {tmp_matrix_file_path} >> {final_matrix_path}", shell=True
+    )
     if not failed:
         os.remove(tmp_matrix_file_path)

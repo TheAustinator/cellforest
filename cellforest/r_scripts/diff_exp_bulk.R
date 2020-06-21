@@ -31,10 +31,10 @@ seurat_object[[groupby, , ]] <- metadata[colnames(seurat_object), groupby, drop 
 Idents(seurat_object) <- groupby
 print(groupby)
 unique_idents <- unique(Idents(seurat_object))
-print(paste0(length(unique_idents),  " groups exist: ", unique_idents)); print(date())
+print(paste0(length(unique_idents), " groups exist: ", unique_idents)); print(date())
 
 print(paste0("Identifying markers with logfc_thresh: ", logfc_thresh)); print(date())
-markers <- FindMarkers(seurat_object, ident.1=ident1, ident.2=ident2, test.use=test, logfc.threshold=logfc_thresh) # group.by=groupby, subset.ident=value,
+markers <- FindMarkers(seurat_object, ident.1 = ident1, ident.2 = ident2, test.use = test, logfc.threshold = logfc_thresh) # group.by=groupby, subset.ident=value,
 print("writing markers"); print(date())
-write.table(markers, sep="\t", file=output_diffexp_path, quote=FALSE, row.names=FALSE)
+write.table(markers, sep = "\t", file = output_diffexp_path, quote = FALSE, row.names = FALSE)
 print("diffexp_bulk DONE"); print(date())

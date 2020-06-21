@@ -2,7 +2,6 @@ from dataforest.utils.decorators import default_kwargs
 import pandas as pd
 
 
-
 class WriterMethodsSC:
     TSV_DEFAULTS = {"sep": "\t", "header": None}
     TSV_GZ_DEFAULTS = {**TSV_DEFAULTS, "compression": "gzip"}

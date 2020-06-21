@@ -4,12 +4,12 @@ from operator import ge, le
 from dataforest.templates.ProcessSchema import ProcessSchema
 from pathlib import Path
 
-from cellforest.ReaderMethodsSC import ReaderMethodsSC
-from cellforest.WriterMethodsSC import WriterMethodsSC
+from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
+from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 
 
 class ProcessSchemaSC(ProcessSchema):
-    CONFIG = json.load(Path(__file__) / "config/process_schema.json")
+    CONFIG = json.load(Path(__file__).parent / "config/process_schema.json")
     # TODO: check that process names in PROCESS_HIERARCHY, PARAM_NAMES, and FILE_MAP are consistent
     # fmt: off
 
