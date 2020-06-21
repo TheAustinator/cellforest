@@ -15,8 +15,6 @@ def shell_command(command_string, working_dir, process_name):
     logger.info(f"STDERR -> {err_path}")
 
     check_call(
-        shlex.split(command_string),
-        stdout=open(out_path, "w"),
-        stderr=open(err_path, "w"),
+        shlex.split(command_string), stdout=open(out_path, "w"), stderr=open(err_path, "w"),
     )
     logger.info(f"Finished")

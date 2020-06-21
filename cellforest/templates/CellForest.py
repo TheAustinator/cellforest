@@ -49,9 +49,7 @@ class CellForest(DataForest):
     METADATA_NAME = "meta"
     COPY_KWARGS = {**DataForest.COPY_KWARGS, "unversioned": "unversioned"}
 
-    def __init__(
-            self, root_dir, spec_dict=None, verbose=False, meta=None, unversioned=None
-    ):
+    def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, unversioned=None):
         super().__init__(root_dir, spec_dict, verbose)
         self._counts = None
         self._meta_unfiltered = None
@@ -86,9 +84,7 @@ class CellForest(DataForest):
         `cell_id`s and `gene_name`s.
         """
         if self._counts is None:
-            self._counts = Counts(self.f_matrix, self.f_cell_ids, self.f_genes)[
-                self.f_cell_ids[0]
-            ]
+            self._counts = Counts(self.f_matrix, self.f_cell_ids, self.f_genes)[self.f_cell_ids[0]]
             self._counts = self._counts[self.meta.index]
         return self._counts
 
@@ -167,22 +163,16 @@ class CellForest(DataForest):
             kwargs = base_kwargs
         return self.__class__(**kwargs)
 
-    def _get_compartment_updated(
-            self, compartment_name: str, update: dict
-    ) -> "CellForest":
+    def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
         """
 
         """
         if compartment_name in self.ROOT_LEVEL_COMPARTMENTS:
             spec = update_recursive(self.spec, update, inplace=False)
         else:
-            spec = update_recursive(
-                self.spec, {compartment_name: update}, inplace=False
-            )
+            spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
         forest = self.copy(spec_dict=spec)
-        bool_selector = pd.concat(
-            [forest.meta[key] == value for key, value in update.items()], axis=1
-        ).all(axis=1)
+        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
         if sum(bool_selector) == 0:
             import ipdb
 
@@ -204,15 +194,9 @@ class CellForest(DataForest):
             df.index = df["cell_id"]
             df.drop(columns=["cell_id"], inplace=True)
             if "to_bucket_var" in df and "bucketed_var" not in df:
-                df["bucketed_var"] = pd.cut(
-                    df["to_bucket_var"],
-                    bins=(0, 20, 40, 60, 80),
-                    labels=(10, 30, 50, 70),
-                )
+                df["bucketed_var"] = pd.cut(df["to_bucket_var"], bins=(0, 20, 40, 60, 80), labels=(10, 30, 50, 70),)
             if "str_var_preprocessed" in df and "str_var_processed" not in df:
-                df["str_var_processed"] = df["str_var_preprocessed"].str.extract(
-                    r"([A-Z]\d)"
-                )
+                df["str_var_processed"] = df["str_var_preprocessed"].str.extract(r"([A-Z]\d)")
             # TODO: fill in once `process_run.done` feature is ready
             df = self._meta_add_downstream_data(df)
         df = self._subset_filter(df, self.spec, self.schema)
@@ -237,16 +221,12 @@ class CellForest(DataForest):
             df = df.merge(clusters, how="left", left_index=True, right_index=True)
             df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
         if "dim_reduce" in done:
-            df = df.merge(
-                self.f_umap_embeddings, how="left", left_index=True, right_index=True
-            )
+            df = df.merge(self.f_umap_embeddings, how="left", left_index=True, right_index=True)
         if "normalize" in done:
             df = df[df.index.isin(self.f_cell_ids[0])]
         # TODO: temp during param mismatch
         try:
             df = df[df.index.isin(self.f_cell_ids[0])]
         except Exception:
-            self.logger.info(
-                "Could not find filtered cell ids. Using all cells in metadata"
-            )
+            self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df

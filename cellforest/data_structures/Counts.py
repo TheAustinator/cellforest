@@ -129,14 +129,10 @@ class Counts(csr_matrix):
             import ipdb
 
             ipdb.set_trace()
-            raise KeyError(
-                f"some of provided keys missing from counts matrix. Intersection: {intersection}"
-            )
+            raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
 
     def __repr__(self):
-        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(
-            self
-        )
+        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
 
     @staticmethod
     def _index_col_swap(df):

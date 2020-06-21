@@ -6,9 +6,7 @@ from scipy.io import mmread
 
 from cellforest.r_utils.shell_command import shell_command
 
-RDS_CONVERTER_SCRIPT = (
-    Path(__file__).parent.absolute().parent / "r_scripts" / "rds_converter.R"
-)
+RDS_CONVERTER_SCRIPT = Path(__file__).parent.absolute().parent / "r_scripts" / "rds_converter.R"
 
 
 def gzip_replace(filepath):

@@ -17,9 +17,7 @@ class ProcessMethodsSC(ProcessMethods):
         self.normalize = self.normalize()
 
     @staticmethod
-    def combine(
-            root_path: Union[str, Path], sample_metadata_df: pd.DataFrame, **kwargs
-    ):
+    def combine(root_path: Union[str, Path], sample_metadata_df: pd.DataFrame, **kwargs):
         from cellforest.templates.preprocessing import combine_10x_outputs
 
         path = Path(root_path)
@@ -31,9 +29,7 @@ class ProcessMethodsSC(ProcessMethods):
     @dataprocess_sc(requires="combine")
     def normalize(forest: "CellForest"):
         process_name = "normalize"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         input_tenx_directory_path = forest["combine"].path
         output_rds_path = forest[process_name].path_map["matrix_r"]
         min_genes = forest.spec[process_name]["min_genes"]
@@ -54,9 +50,7 @@ class ProcessMethodsSC(ProcessMethods):
         ]
         if method == "sctransform":
             output_corrected_umi_path = forest[process_name].path_map["corrected_umi"]
-            output_pearson_residual_path = forest[process_name].path_map[
-                "pearson_residual"
-            ]
+            output_pearson_residual_path = forest[process_name].path_map["pearson_residual"]
             arg_list += [output_corrected_umi_path, output_pearson_residual_path]
             r_normalize_script = str(forest.schema.R_FILEPATHS["SCTRANSFORM_SCRIPT"])
         elif method == "seurat_default":
@@ -64,19 +58,11 @@ class ProcessMethodsSC(ProcessMethods):
             verbose = str(verbose).upper()
             nfeatures = forest.spec[process_name]["nfeatures"]
             arg_list += [verbose, nfeatures]
-            r_normalize_script = str(
-                forest.schema.R_FILEPATHS["SEURAT_DEFAULT_NORMALIZE_SCRIPT"]
-            )
+            r_normalize_script = str(forest.schema.R_FILEPATHS["SEURAT_DEFAULT_NORMALIZE_SCRIPT"])
         else:
-            raise ValueError(
-                f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'"
-            )
-        ProcessMethodsSC._run_r_script(
-            forest, r_normalize_script, arg_list, process_name
-        )
-        seurat_rds_to_sparse_pickle(
-            forest.paths["combine"], output_rds_path, forest.paths[process_name]
-        )
+            raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
+        ProcessMethodsSC._run_r_script(forest, r_normalize_script, arg_list, process_name)
+        seurat_rds_to_sparse_pickle(forest.paths["combine"], output_rds_path, forest.paths[process_name])
 
     @staticmethod
     @dataprocess_sc(requires="normalize", comparative=True, temp_meta=False)
@@ -91,9 +77,7 @@ class ProcessMethodsSC(ProcessMethods):
     @dataprocess_sc(requires="normalize")
     def dim_reduce(forest: "CellForest"):
         process_name = "dim_reduce"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         input_rds_path = forest["normalize"].path_map["matrix_r"]
         print(input_rds_path)
         output_rds_path = forest[process_name].path_map["dimred_r"]
@@ -114,9 +98,7 @@ class ProcessMethodsSC(ProcessMethods):
         working_dir = str(forest.paths[process_name])
         arg_list = list(map(str, arg_list))
         command_string = f"Rscript {r_pca_filepath} {' '.join(arg_list)}"
-        shell_command(
-            command_string=command_string, working_dir=working_dir, process_name="pca"
-        )
+        shell_command(command_string=command_string, working_dir=working_dir, process_name="pca")
         umap_df = ProcessMethodsSC._run_umap(
             output_embeddings_path,
             n_neighbors=forest.spec[process_name]["umap_n_neighbors"],
@@ -126,17 +108,13 @@ class ProcessMethodsSC(ProcessMethods):
         )
         umap_df.index = forest.f_cell_ids[0]
         output_umap_embeddings_path = forest[process_name].path_map["umap_embeddings"]
-        forest.write_umap_embeddings(
-            output_umap_embeddings_path, umap_df, index=True, header=True
-        )
+        forest.write_umap_embeddings(output_umap_embeddings_path, umap_df, index=True, header=True)
 
     @staticmethod
     @dataprocess_sc(requires="dim_reduce")
     def cluster(forest: "CellForest"):
         process_name = "cluster"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         input_rds_path = forest["dim_reduce"].path_map["dimred_r"]
         output_rds_path = forest[process_name].path_map["cluster_r"]
         output_clusters_path = forest[process_name].path_map["clusters"]
@@ -155,24 +133,18 @@ class ProcessMethodsSC(ProcessMethods):
             r_functions_filepath,
         ]
         r_clusters_filepath = forest.schema.R_FILEPATHS["FIND_CLUSTERS_SCRIPT"]
-        ProcessMethodsSC._run_r_script(
-            forest, r_clusters_filepath, arg_list, process_name
-        )
+        ProcessMethodsSC._run_r_script(forest, r_clusters_filepath, arg_list, process_name)
 
     @staticmethod
     @dataprocess_sc(requires="normalize", comparative=True)
     def diffexp_bulk(forest: "CellForest"):
         process_name = "diffexp_bulk"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         input_rds_path = forest["normalize"].path_map["matrix_r"]
         output_diffexp_path = forest[process_name].path_map["diffexp_bulk_result"]
         groups = forest[process_name].forest.meta["partition_code"].unique().astype("O")
         if len(groups) != 2:
-            raise ValueError(
-                f"Exactly two groups required for diffexp_bulk. Got: {groups}"
-            )
+            raise ValueError(f"Exactly two groups required for diffexp_bulk. Got: {groups}")
         test = forest.spec[process_name]["test"]
         ident1 = groups.min()
         ident2 = groups.max()
@@ -191,18 +163,14 @@ class ProcessMethodsSC(ProcessMethods):
             r_functions_filepath,
         ]
         r_diff_exp_bulk_filepath = forest.schema.R_FILEPATHS["DIFF_EXP_BULK_SCRIPT"]
-        ProcessMethodsSC._run_r_script(
-            forest, r_diff_exp_bulk_filepath, arg_list, process_name
-        )
+        ProcessMethodsSC._run_r_script(forest, r_diff_exp_bulk_filepath, arg_list, process_name)
 
     @staticmethod
     @dataprocess_sc(requires="cluster", comparative=True)
     def diffexp(forest: "CellForest"):
         # TODO: refactor both diffexp versions into `_get_diffexp_args`
         process_name = "diffexp"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         input_rds_path = forest["cluster"].path_map["cluster_r"]
         output_diffexp_path = forest[process_name].path_map["diffexp_result"]
         groups = forest[process_name].forest.meta["partition_code"].unique().astype("O")
@@ -226,9 +194,7 @@ class ProcessMethodsSC(ProcessMethods):
             r_functions_filepath,
         ]
         r_diff_exp_filepath = forest.schema.R_FILEPATHS["DIFF_EXP_CLUSTER_SCRIPT"]
-        ProcessMethodsSC._run_r_script(
-            forest, r_diff_exp_filepath, arg_list, process_name
-        )
+        ProcessMethodsSC._run_r_script(forest, r_diff_exp_filepath, arg_list, process_name)
 
     @staticmethod
     @dataprocess_sc(requires="cluster", comparative=True, temp_meta=False)
@@ -242,9 +208,7 @@ class ProcessMethodsSC(ProcessMethods):
     @dataprocess_sc(requires="cluster")
     def markers(forest: "CellForest"):
         process_name = "markers"
-        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(
-            forest, process_name
-        )
+        input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
         meta = forest.READER_METHODS.tsv(input_metadata_path, header=0)
         cluster_counts = meta["cluster_id"].value_counts()
         deficient_clusters = cluster_counts[cluster_counts < 2].index.tolist()
@@ -269,15 +233,11 @@ class ProcessMethodsSC(ProcessMethods):
         ProcessMethodsSC._run_r_script(forest, r_find_markers, arg_list, "markers")
 
     @staticmethod
-    def _run_r_script(
-            forest: "CellForest", r_script_filepath: str, arg_list: list, process_name: str
-    ):
+    def _run_r_script(forest: "CellForest", r_script_filepath: str, arg_list: list, process_name: str):
         command_string = f"Rscript {r_script_filepath} {' '.join(map(str, arg_list))}"
         working_dir = str(forest[process_name].path)
         shell_command(
-            command_string=command_string,
-            working_dir=working_dir,
-            process_name=process_name,
+            command_string=command_string, working_dir=working_dir, process_name=process_name,
         )
 
     @staticmethod
@@ -301,15 +261,8 @@ class ProcessMethodsSC(ProcessMethods):
 
         pca_df = pd.read_csv(input_file_path, sep="\t")
         umap_handle = umap.UMAP(
-            n_neighbors=n_neighbors,
-            min_dist=min_dist,
-            random_state=seed,
-            n_components=n_components,
-            metric=metric,
+            n_neighbors=n_neighbors, min_dist=min_dist, random_state=seed, n_components=n_components, metric=metric,
         )
         umap_matrix = umap_handle.fit(pca_df).embedding_
-        umap_df = pd.DataFrame(
-            umap_matrix,
-            columns=[f"UMAP_{idx + 1}" for idx in range(umap_matrix.shape[1])],
-        )
+        umap_df = pd.DataFrame(umap_matrix, columns=[f"UMAP_{idx + 1}" for idx in range(umap_matrix.shape[1])],)
         return umap_df
