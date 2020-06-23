@@ -67,7 +67,7 @@ class ProcessMethodsSC(ProcessMethods):
     @staticmethod
     @dataprocess_sc(requires="normalize", comparative=True, temp_meta=False)
     def gsea_bulk(forest: "CellForest", **kwargs):
-        from scgsea.GSEA import GSEA
+        # from scgsea.GSEA import GSEA
 
         gsea = GSEA(forest.at("gsea_bulk"), "gsea_bulk")
         gsea.run(**kwargs)
@@ -106,7 +106,7 @@ class ProcessMethodsSC(ProcessMethods):
             n_components=forest.spec[process_name]["umap_n_components"],
             metric=forest.spec[process_name]["umap_metric"],
         )
-        umap_df.index = forest.f_cell_ids[0]
+        umap_df.index = forest.f["cell_ids"][0]
         output_umap_embeddings_path = forest[process_name].path_map["umap_embeddings"]
         forest.write_umap_embeddings(output_umap_embeddings_path, umap_df, index=True, header=True)
 

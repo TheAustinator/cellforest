@@ -59,7 +59,7 @@
     }
   },
 
-  "r_filepaths": {
+  "r_filenames": {
     "LOAD_DATA_SCRIPT": "load_data.R",
     "DIFF_EXP_BULK_SCRIPT": "diff_exp_bulk.R",
     "DIFF_EXP_CLUSTER_SCRIPT": "diff_exp_cluster_wise.R",
@@ -71,6 +71,6 @@
     "FUNCTIONS_FILE_PATH": "functions.R",
     "SUBSET_RDS_SCRIPT": "subset_rds.R",
     "FILTER_NORMALIZE_SCRIPT": "filter_normalize.R",
-    "SEURAT_DEFAULT_NORMALIZE_SCRIPT": "seurat_default_normalize.R",
+    "SEURAT_DEFAULT_NORMALIZE_SCRIPT": "seurat_default_normalize.R"
   }
 }

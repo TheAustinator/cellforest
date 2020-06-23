@@ -5,7 +5,7 @@ from dataforest.core.DataForest import DataForest
 from dataforest.utils.utils import label_df_partitions, update_recursive
 import pandas as pd
 
-from cellforest.data_structures.Counts import Counts
+from cellforest.structures.Counts import Counts
 from cellforest.templates.PlotMethodsSC import PlotMethodsSC
 from cellforest.templates.ProcessSchemaSC import ProcessSchemaSC
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
@@ -77,14 +77,29 @@ class CellForest(DataForest):
         raise NotImplementedError()
 
     @property
-    def counts(self) -> Counts:
+    def rna(self) -> Counts:
         """
         Interface for normalized counts data. It uses the `Counts` wrapper
         around `scipy.sparse.csr_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
         if self._counts is None:
-            self._counts = Counts(self.f_matrix, self.f_cell_ids, self.f_genes)[self.f_cell_ids[0]]
+            # TODO: make `use_raw` an input choice
+            # TODO: change names (
+            if self.f.exists("matrix") and self.f.exists("cell_ids") and self.f.exists("genes"):
+                matrix = self.f["matrix"]
+                cell_ids = self.f["cell_ids"]
+                genes = self.f["genes"]
+            elif self.f.exists("matrix_raw") and self.f.exists("barcodes_raw"):
+                matrix = self.f["matrix_raw"]
+                cell_ids = self.f["barcodes_raw"]
+                genes = self.f["features_raw"]
+            else:
+                expected = [
+                    self.root_dir / self.schema.file_map[x] for x in ["matrix_raw", "barcodes_raw", "features_raw"]
+                ]
+                raise FileNotFoundError(f"Expected files based on self.schema.file_map: {expected}")
+            self._counts = Counts(matrix, cell_ids, genes)[cell_ids[0]]
             self._counts = self._counts[self.meta.index]
         return self._counts
 
@@ -189,7 +204,13 @@ class CellForest(DataForest):
     def get_cell_meta(self, df=None):
         # TODO: MEMORY DUPLICATION - we want to keep file access pure?
         if df is None:
-            df = self.f_cell_metadata.copy()
+            # TODO: fix this
+            try:
+                df = self.f["cell_metadata"].copy()
+            except FileNotFoundError:
+                df = self.f["barcodes_raw"].copy()
+                df.columns = ["cell_id"]
+                print(df.head())
             df.replace(" ", "_", regex=True, inplace=True)
             df.index = df["cell_id"]
             df.drop(columns=["cell_id"], inplace=True)
@@ -216,17 +237,17 @@ class CellForest(DataForest):
             if self["normalize"].done:
                 done.update({"normalize"})
         if "cluster" in done:
-            clusters = self.f_clusters.copy()
+            clusters = self.f["clusters"].copy()
             clusters.rename(columns={1: "cluster_id"}, inplace=True)
             df = df.merge(clusters, how="left", left_index=True, right_index=True)
             df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
         if "dim_reduce" in done:
-            df = df.merge(self.f_umap_embeddings, how="left", left_index=True, right_index=True)
+            df = df.merge(self.f["umap_embeddings"], how="left", left_index=True, right_index=True)
         if "normalize" in done:
-            df = df[df.index.isin(self.f_cell_ids[0])]
+            df = df[df.index.isin(self.f["cell_ids"][0])]
         # TODO: temp during param mismatch
         try:
-            df = df[df.index.isin(self.f_cell_ids[0])]
+            df = df[df.index.isin(self.f["cell_ids"][0])]
         except Exception:
             self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df

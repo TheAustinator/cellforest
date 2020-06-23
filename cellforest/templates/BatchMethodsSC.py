@@ -1,7 +1,8 @@
 from typing import List, Union
 
 from dataforest.templates.BatchMethods import BatchMethods
-from scgsea.GSEAGroup import GSEAGroup
+
+# from scgsea.GSEAGroup import GSEAGroup
 import pandas as pd
 
 from cellforest.templates.CellForest import CellForest

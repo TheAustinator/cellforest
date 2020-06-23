@@ -1,2 +1,3 @@
-from cellforest.data_structures.Counts import Counts
-from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC as ReaderMethods
+from .structures.Counts import Counts
+from .templates.CellForest import CellForest
+from .templates.SpecSC import SpecSC as Spec

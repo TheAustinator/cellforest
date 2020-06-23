@@ -9,7 +9,8 @@ from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 
 
 class ProcessSchemaSC(ProcessSchema):
-    CONFIG = json.load(Path(__file__).parent / "config/process_schema.json")
+    with open(Path(__file__).parent.parent / "config/process_schema.json") as f:
+        CONFIG = json.load(f)
     # TODO: check that process names in PROCESS_HIERARCHY, PARAM_NAMES, and FILE_MAP are consistent
     # fmt: off
 
@@ -28,7 +29,13 @@ class ProcessSchemaSC(ProcessSchema):
     WRITER_METHODS = WriterMethodsSC
     R_SCRIPTS_DIR = Path(__file__).parent.absolute() / "r_scripts"
     R_FILENAMES = CONFIG["r_filenames"]
-    R_FILEPATHS = {k: R_SCRIPTS_DIR / v for k, v in R_FILENAMES.items()}
+
+    # noinspection
+    def _get_r_filepaths(scripts_dir, r_filenames):
+        # has to be a function due to scoping issue with class var dict comprehension
+        return {k: scripts_dir / v for k, v in r_filenames.items()}
+
+    R_FILEPATHS = _get_r_filepaths(R_SCRIPTS_DIR, R_FILENAMES)
     TEMP_METADATA_FILENAME = "temp_cell_metadata.tsv"
 
 

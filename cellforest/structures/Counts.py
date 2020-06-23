@@ -38,18 +38,21 @@ class Counts(csr_matrix):
         "trunc",
     ]
 
-    def __init__(self, matrix, cell_ids, genes, **kwargs):
+    def __init__(self, matrix, cell_ids, features, **kwargs):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
         self.matrix = matrix
+        self.features = features
         cell_ids = self._to_series(cell_ids)
-        genes = self._to_series(genes)
+        genes = self._to_series(features, 1)
+        ensgs = self._to_series(features, 0)
         self._idx = cell_ids.copy()
         self._ids = cell_ids.copy()
         self._ids = self._index_col_swap(self._ids)
         self._genes_idx = genes.copy()
-        self._genes_names = genes.copy()
-        self._genes_names = self._index_col_swap(self._genes_names)
+        self._ensgs_idx = ensgs.copy()
+        self._genes_names = self._index_col_swap(genes.copy(), 1)
+        self._ensgs_names = self._index_col_swap(ensgs.copy(), 0)
 
     @property
     def index(self):
@@ -66,6 +69,10 @@ class Counts(csr_matrix):
     @property
     def genes(self):
         return self.columns
+
+    @property
+    def ensgs(self):
+        return self._ensgs_idx
 
     def vstack(self, other):
         raise NotImplementedError()
@@ -88,8 +95,10 @@ class Counts(csr_matrix):
 
     def __getitem__(self, key):
         genes = self._genes_idx
+        ensgs = self._ensgs_idx
         if isinstance(key, tuple):
             gene_sliced = self._gene_slice(key[1])
+
             cell_sliced = gene_sliced[key[0]]
             return cell_sliced
         key = self._convert_key(key, self._ids)
@@ -101,10 +110,13 @@ class Counts(csr_matrix):
         return self.__class__(mat, cell_ids, genes)
 
     def _gene_slice(self, key):
+        """Slice columns with either gene names or ensemble gene names"""
         key = self._convert_key(key, self._genes_names)
         genes = pd.DataFrame(self._genes_idx.reindex(key)).reset_index(drop=True)
+        ensgs = pd.DataFrame(self._ensgs_idx.reindex(key)).reset_index(drop=True)
         mat = csr_matrix(self.matrix)[:, key]
-        return self.__class__(mat, self._idx, genes)
+        col_slice = genes if len(genes) > len(ensgs) else ensgs
+        return self.__class__(mat, self._idx, col_slice)
 
     @staticmethod
     def _convert_key(key, df):
@@ -135,18 +147,27 @@ class Counts(csr_matrix):
         return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
 
     @staticmethod
-    def _index_col_swap(df):
+    def _index_col_swap(df, col=0, new_index_colname="i"):
+        """Swaps column with index of DataFrame"""
+        df = df.copy()
         if isinstance(df, pd.Series):
             df = pd.DataFrame(df)
-        df["i"] = df.index
-        df.index = df[0]
-        df.drop(columns=0, inplace=True)
+        df[new_index_colname] = df.index
+        try:
+            df.index = df[col]
+        except:
+            pass
+        try:
+            df.drop(columns=col, inplace=True)
+        except:
+            pass
         return df
 
     @staticmethod
-    def _to_series(df):
+    def _to_series(df, col_ind=0):
+        df = df.copy()
         if isinstance(df, pd.DataFrame):
-            df = df.iloc[:, 0]
+            df = df.iloc[:, col_ind]
         return df
 
     @staticmethod
