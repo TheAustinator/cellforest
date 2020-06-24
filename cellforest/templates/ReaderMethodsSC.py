@@ -39,4 +39,4 @@ class ReaderMethodsSC:
 
     @staticmethod
     def mtx_gz(filepath):
-        return io.mmread(str(filepath))
+        return io.mmread(str(filepath)).T

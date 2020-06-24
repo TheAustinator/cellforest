@@ -1,11 +1,15 @@
 from functools import wraps
+from typing import Union
 
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
+from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
+
 
 class Counts(csr_matrix):
+    FEATURES_COLUMNS = ["ensgs", "genes"]
     SUPER_METHODS = [
         "arcsin",
         "arcsinh",
@@ -42,17 +46,18 @@ class Counts(csr_matrix):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
         self.matrix = matrix
-        self.features = features
-        cell_ids = self._to_series(cell_ids)
-        genes = self._to_series(features, 1)
-        ensgs = self._to_series(features, 0)
-        self._idx = cell_ids.copy()
-        self._ids = cell_ids.copy()
-        self._ids = self._index_col_swap(self._ids)
-        self._genes_idx = genes.copy()
-        self._ensgs_idx = ensgs.copy()
-        self._genes_names = self._index_col_swap(genes.copy(), 1)
-        self._ensgs_names = self._index_col_swap(ensgs.copy(), 0)
+        self.features = features.iloc[:, :2].copy()
+        self.features.columns = self.FEATURES_COLUMNS
+        self._idx = self._convert_to_series(cell_ids)
+        self._ids = self._index_col_swap(cell_ids.copy())
+
+    @property
+    def genes(self):
+        return self.features["genes"]
+
+    @property
+    def ensgs(self):
+        return self.features["ensgs"]
 
     @property
     def index(self):
@@ -60,19 +65,19 @@ class Counts(csr_matrix):
 
     @property
     def columns(self):
-        return self._genes_idx
+        return self.genes
 
     @property
     def cell_ids(self):
         return self.index
 
     @property
-    def genes(self):
-        return self.columns
+    def _genes_names(self):
+        return self._index_col_swap(self.genes.copy(), "genes")
 
     @property
-    def ensgs(self):
-        return self._ensgs_idx
+    def _ensgs_names(self):
+        return self._index_col_swap(self.ensgs.copy(), "ensgs")
 
     def vstack(self, other):
         raise NotImplementedError()
@@ -93,42 +98,88 @@ class Counts(csr_matrix):
         else:
             return self[:, selector]
 
-    def __getitem__(self, key):
-        genes = self._genes_idx
-        ensgs = self._ensgs_idx
-        if isinstance(key, tuple):
-            gene_sliced = self._gene_slice(key[1])
+    @classmethod
+    def from_cellranger(cls, cellranger_dir):
+        raise NotImplementedError()
 
-            cell_sliced = gene_sliced[key[0]]
-            return cell_sliced
-        key = self._convert_key(key, self._ids)
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            return self._2d_slice(key)
+        else:
+            return self._cell_slice(key)
+
+    def _2d_slice(self, key):
+        """Slice rows and columns (cells and genes)"""
+        gene_sliced = self._gene_slice(key[1])
+        cell_sliced = gene_sliced[key[0]]
+        return cell_sliced
+
+    def _cell_slice(self, key):
+        """Slice rows (cells)"""
+        try:
+            key = self._convert_key(key, self._ids)
+        except KeyError:
+            raise CellsNotFound(self._ids, key)
         if isinstance(key, slice):
             cell_ids = pd.DataFrame(self._idx[key]).reset_index(drop=True)
         else:
             cell_ids = pd.DataFrame(self._idx.reindex(key)).reset_index(drop=True)
         mat = csr_matrix(self.matrix)[key]
-        return self.__class__(mat, cell_ids, genes)
+        return self.__class__(mat, cell_ids, self.features)
 
     def _gene_slice(self, key):
-        """Slice columns with either gene names or ensemble gene names"""
-        key = self._convert_key(key, self._genes_names)
-        genes = pd.DataFrame(self._genes_idx.reindex(key)).reset_index(drop=True)
-        ensgs = pd.DataFrame(self._ensgs_idx.reindex(key)).reset_index(drop=True)
+        """Slice columns (genes) with either gene names or ensemble names"""
+        key = self._genes_convert_key(key)
         mat = csr_matrix(self.matrix)[:, key]
-        col_slice = genes if len(genes) > len(ensgs) else ensgs
-        return self.__class__(mat, self._idx, col_slice)
+        if isinstance(key, slice):
+            features = self.features[key]
+        else:
+            genes = pd.DataFrame(self.genes.reindex(key)).reset_index(drop=True)
+            ensgs = pd.DataFrame(self.ensgs.reindex(key)).reset_index(drop=True)
+            if len(ensgs) > len(genes):
+                features = self.features[self.features.ensgs.isin(key)]
+            else:
+                features = self.features[self.features.genes.isin(key)]
+        return self.__class__(mat, self._idx, features)
+
+    def _genes_convert_key(self, key):
+        """"""
+        try:
+            key = self._convert_key(key, self._genes_names)
+        except KeyError:
+            try:
+                key = self._convert_key(key, self._ensgs_names)
+            except KeyError:
+                genes_err = GenesNotFound(self._genes_names, key)
+                ensgs_err = GenesNotFound(self._ensgs_names, key)
+                if len(ensgs_err.missing) < len(genes_err.missing):
+                    raise ensgs_err
+                else:
+                    raise genes_err
+        return key
 
     @staticmethod
     def _convert_key(key, df):
+        """Slice index dataframe with key and convert to integer indices"""
         if isinstance(key, (pd.Series, pd.Index, np.ndarray)):
             key = key.tolist()
         if isinstance(key, list):
             if isinstance(key[0], str):
-                key = df.reindex(key).dropna()["i"].astype(int).tolist()
+                # gene names are duplicated, ensgs aren't
+                if df.index.duplicated().any():
+                    df_temp = df.reset_index()
+                    key_rows = df_temp[df_temp[df_temp.columns[0]].isin(key)]
+                else:
+                    key_rows = df.reindex(key)
+                key = key_rows.dropna()["i"].astype(int).tolist()
         elif isinstance(key, str):
             key = [df.loc[key]["i"].tolist()]
         elif isinstance(key, int):
             key = [key]
+        else:
+            return key
+        if len(key) == 0:
+            raise KeyError("No matching indices")
         return key
 
     @staticmethod
@@ -143,35 +194,33 @@ class Counts(csr_matrix):
             ipdb.set_trace()
             raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
 
-    def __repr__(self):
-        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
-
     @staticmethod
-    def _index_col_swap(df, col=0, new_index_colname="i"):
+    def _index_col_swap(df, col: Union[str, int] = 0, new_index_colname="i"):
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
             df = pd.DataFrame(df)
         df[new_index_colname] = df.index
-        try:
-            df.index = df[col]
-        except:
-            pass
-        try:
-            df.drop(columns=col, inplace=True)
-        except:
-            pass
+        df.index = df[col]
+        df.drop(columns=col, inplace=True)
         return df
 
     @staticmethod
-    def _to_series(df, col_ind=0):
-        df = df.copy()
+    def _convert_to_series(df):
+        """If a dataframe, convert to series"""
         if isinstance(df, pd.DataFrame):
-            df = df.iloc[:, col_ind]
+            df = df.iloc[:, 0].copy()
+        elif not isinstance(df, pd.Series):
+            raise TypeError(f"Must be dataframe not series {type(df)}")
         return df
+
+    def __repr__(self):
+        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
 
     @staticmethod
     def wrap_super(func):
+        """Wrapper to pass scipy matrix methods through to .matrix attribute"""
+
         @wraps(func)
         def wrapper(counts, *args, **kwargs):
             matrix = func(counts.matrix, *args, **kwargs)
@@ -181,6 +230,10 @@ class Counts(csr_matrix):
 
     @staticmethod
     def decorate(method_names):
+        """
+        Wrap a list of scipy matrix `method_names` with `wrap_super` and
+        re-tether them to class
+        """
         for name in method_names:
             super_method = getattr(csr_matrix, name)
             wrapped_method = Counts.wrap_super(super_method)
