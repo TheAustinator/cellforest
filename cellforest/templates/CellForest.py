@@ -1,5 +1,6 @@
 from copy import deepcopy
-from typing import Optional, Union
+from pathlib import Path
+from typing import Optional, Union, List
 
 from dataforest.core.DataForest import DataForest
 from dataforest.utils.utils import label_df_partitions, update_recursive
@@ -7,6 +8,7 @@ import pandas as pd
 
 from cellforest.structures.Counts import Counts
 from cellforest.templates.PlotMethodsSC import PlotMethodsSC
+from cellforest.templates.ProcessMethodsSC import ProcessMethodsSC
 from cellforest.templates.ProcessSchemaSC import ProcessSchemaSC
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.SpecSC import SpecSC
@@ -29,11 +31,12 @@ class CellForest(DataForest):
     ROOT_LEVEL_COMPARTMENTS = {
         "subset",
     }
-    SCHEMA_CLASS = ProcessSchemaSC
+    PLOT_METHODS = PlotMethodsSC
+    PROCESS_METHODS = ProcessMethodsSC
     SPEC_CLASS = SpecSC
+    SCHEMA_CLASS = ProcessSchemaSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
-    PLOT_METHODS = PlotMethodsSC
     READER_KWARGS_MAP = {
         "dim_reduce": {
             "pca_embeddings": {"header": "infer"},
@@ -130,9 +133,11 @@ class CellForest(DataForest):
 
     @property
     def meta_unfiltered(self) -> pd.DataFrame:
+        # TODO: not used anywhere, figure out use and add docstring or delete
         return self._meta_unfiltered
 
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
+        """Add columns to metadata to indicate partition from spec"""
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
@@ -251,3 +256,15 @@ class CellForest(DataForest):
         except Exception:
             self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
+
+    @staticmethod
+    def _combine_datasets(
+        root_dir: Union[str, Path],
+        metadata: Optional[str, Path] = None,
+        input_dirs: Optional[List[Union[str, Path]]] = None,
+    ):
+        if (input_dirs and metadata) or (input_dirs is None and metadata is None):
+            raise ValueError("Must specify exactly one of `input_dirs` or `metadata`")
+        elif metadata is not None:
+            # TODO: use combine 10x inputs here
+            raise NotImplementedError()

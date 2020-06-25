@@ -5,7 +5,16 @@ from cellforest import CellForest
 
 
 def test_init(root_dir):
-    spec = {}
+    spec = {
+        "combine": {},
+        "normalize": {
+            "min_genes": 5,
+            "max_genes": 5000,
+            "min_cells": 5,
+            "prec_mito_cutoff": 20,
+            "method": "seurat_default",
+        },
+    }
     cf = CellForest(root_dir=root_dir, spec_dict=spec)
     assert cf.rna["TTTGTCAGTTTAGCTG-1"].shape[0] == 1
     assert cf.rna["TTTGTCAGTTTAGCTG-1", :].shape[0] == 1

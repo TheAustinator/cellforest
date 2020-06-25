@@ -13,9 +13,6 @@ if TYPE_CHECKING:
 
 
 class ProcessMethodsSC(ProcessMethods):
-    def __init__(self):
-        self.normalize = self.normalize()
-
     @staticmethod
     def combine(root_path: Union[str, Path], sample_metadata_df: pd.DataFrame, **kwargs):
         from cellforest.templates.preprocessing import combine_10x_outputs

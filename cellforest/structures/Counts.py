@@ -99,7 +99,23 @@ class Counts(csr_matrix):
             return self[:, selector]
 
     @classmethod
+    def to_cellranger(cls, output_dir):
+        """Save in 10X Cellranger output format"""
+        raise NotImplementedError()
+
+    @classmethod
     def from_cellranger(cls, cellranger_dir):
+        """Load from 10X Cellranger output format"""
+        raise NotImplementedError()
+
+    @classmethod
+    def load(cls, filepath):
+        """Load from pickle"""
+        raise NotImplementedError()
+
+    @classmethod
+    def save(cls, filepath):
+        """Save as pickle"""
         raise NotImplementedError()
 
     def __getitem__(self, key):

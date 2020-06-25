@@ -23,7 +23,7 @@ class dataprocess_sc(dataprocess):
     def _hook_store_temp_metadata(self):
         self._metadata_filepath = self.forest[self.process_name].path / self.forest.schema.TEMP_METADATA_FILENAME
         WriterMethodsSC.tsv(
-            self._metadata_filepath, self.forest[self.process_name].orm.meta, header=True,
+            self._metadata_filepath, self.forest[self.process_name].forest.meta, header=True,
         )
 
     def _hook_clean_temp_metadata(self):
@@ -31,5 +31,5 @@ class dataprocess_sc(dataprocess):
 
     def _hook_clean_unversioned(self):
         if self.forest.unversioned:
-            self.logger.info(f"Removing output files for {self.process_name} name due to unversioned ORM")
+            self.logger.info(f"Removing output files for {self.process_name} name due to unversioned CellForest")
             shutil.rmtree(str(self.forest[self.process_name].path))
