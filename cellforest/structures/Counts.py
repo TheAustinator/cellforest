@@ -101,21 +101,25 @@ class Counts(csr_matrix):
     @classmethod
     def to_cellranger(cls, output_dir):
         """Save in 10X Cellranger output format"""
+        # TODO: QUEUE
         raise NotImplementedError()
 
     @classmethod
     def from_cellranger(cls, cellranger_dir):
         """Load from 10X Cellranger output format"""
+        # TODO: QUEUE
         raise NotImplementedError()
 
     @classmethod
     def load(cls, filepath):
         """Load from pickle"""
+        # TODO: QUEUE
         raise NotImplementedError()
 
     @classmethod
     def save(cls, filepath):
         """Save as pickle"""
+        # TODO: QUEUE
         raise NotImplementedError()
 
     def __getitem__(self, key):
