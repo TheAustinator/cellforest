@@ -1,0 +1,13 @@
+library(reticulate)
+use_python("/Users/austinmckay/code/cellforest/venv/bin/python")
+library(Seurat)
+library(Matrix)
+
+store <- py_load_object("/Users/austinmckay/data/root_1/counts.pickle")
+counts <- t(store$matrix)
+colnames(counts) <- as.vector(store$cell_ids)
+rownames(counts) <- as.vector(store$features["genes"])
+srat <- CreateSeuratObject(counts)
+mito.genes = grep(pattern = "^MT-", x = rownames(x = seurat_object$RNA@data), value = TRUE)
+percent.mito = Matrix::colSums(seurat_object$RNA@counts[mito.genes,]) / Matrix::colSums(seurat_object$RNA@counts)
+seurat_object = AddMetaData(object = seurat_object, metadata = percent.mito, col.name = "percent.mito")

@@ -12,8 +12,8 @@ def parse_requirements(requirements_path):
 
 
 requirements = parse_requirements("requirements.txt")
-test_requirements = parse_requirements("requirements-test.txt")
-dev_requirements = parse_requirements("requirements-dev.txt")
+test_requirements = parse_requirements("requirements/requirements-test.txt")
+dev_requirements = parse_requirements("requirements/requirements-dev.txt")
 print("REQUIREMENTS: ", requirements)
 
 setup(

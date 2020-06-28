@@ -20,6 +20,7 @@ class ReaderMethodsSC:
     @staticmethod
     @default_kwargs(TSV_GZ_DEFAULTS)
     def tsv_gz(filepath, **kwargs):
+        # TODO: should be able to pass kwargs directly now, given decorator
         defaults = {"sep": "\t", "compression": "gzip", "header": None}
         defaults.update(kwargs)
         kwargs = defaults

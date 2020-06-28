@@ -21,6 +21,9 @@ class dataprocess_sc(dataprocess):
             self.clean_hooks.append(self._hook_clean_unversioned)
 
     def _hook_store_temp_metadata(self):
+        """
+        Stores a temporary metadata file in the current process
+        """
         self._metadata_filepath = self.forest[self.process_name].path / self.forest.schema.TEMP_METADATA_FILENAME
         WriterMethodsSC.tsv(
             self._metadata_filepath, self.forest[self.process_name].forest.meta, header=True,

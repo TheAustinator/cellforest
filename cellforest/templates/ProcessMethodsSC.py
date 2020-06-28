@@ -4,8 +4,8 @@ from dataforest.templates.ProcessMethods import ProcessMethods
 from pathlib import Path
 import pandas as pd
 
-from cellforest.r_utils.seurat_rds_to_pickle import seurat_rds_to_sparse_pickle
-from cellforest.r_utils.shell_command import shell_command
+from cellforest.utils.r.seurat_rds_to_pickle import seurat_rds_to_sparse_pickle
+from cellforest.utils.r.shell_command import shell_command
 from cellforest.templates.dataprocess_sc import dataprocess_sc
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ class ProcessMethodsSC(ProcessMethods):
         return combine_10x_outputs(root_path, sample_metadata_df, **kwargs)
 
     @staticmethod
-    @dataprocess_sc(requires="combine")
+    @dataprocess_sc
     def normalize(forest: "CellForest"):
         process_name = "normalize"
         input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
@@ -103,7 +103,7 @@ class ProcessMethodsSC(ProcessMethods):
             n_components=forest.spec[process_name]["umap_n_components"],
             metric=forest.spec[process_name]["umap_metric"],
         )
-        umap_df.index = forest.f["cell_ids"][0]
+        umap_df.index = forest.f["normalize"]["cell_ids"][0]
         output_umap_embeddings_path = forest[process_name].path_map["umap_embeddings"]
         forest.write_umap_embeddings(output_umap_embeddings_path, umap_df, index=True, header=True)
 

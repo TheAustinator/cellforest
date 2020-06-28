@@ -54,7 +54,7 @@ class CellForest(DataForest):
 
     def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, unversioned=None):
         super().__init__(root_dir, spec_dict, verbose)
-        self._counts = None
+        self._rna = None
         self._meta_unfiltered = None
         if meta is not None:
             meta = meta.copy()
@@ -86,25 +86,18 @@ class CellForest(DataForest):
         around `scipy.sparse.csr_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
-        if self._counts is None:
-            # TODO: make `use_raw` an input choice
-            # TODO: change names (
-            if self.f.exists("matrix") and self.f.exists("cell_ids") and self.f.exists("genes"):
-                matrix = self.f["matrix"]
-                cell_ids = self.f["cell_ids"]
-                genes = self.f["genes"]
-            elif self.f.exists("matrix_raw") and self.f.exists("barcodes_raw"):
-                matrix = self.f["matrix_raw"]
-                cell_ids = self.f["barcodes_raw"]
-                genes = self.f["features_raw"]
-            else:
-                expected = [
-                    self.root_dir / self.schema.file_map[x] for x in ["matrix_raw", "barcodes_raw", "features_raw"]
-                ]
-                raise FileNotFoundError(f"Expected files based on self.schema.file_map: {expected}")
-            self._counts = Counts(matrix, cell_ids, genes)[cell_ids[0]]
-            self._counts = self._counts[self.meta.index]
-        return self._counts
+        if self._rna is None:
+            # TODO: set to use normalized if exists by default -- see old version
+            # TODO: soft code filenames
+            counts_path = self.root_dir / "counts.pickle"
+            if not counts_path.exists:
+                raise FileNotFoundError(
+                    f"Ensure that you initialized the root directory with CellForest.from_metadata or "
+                    f"CellForest.from_input_dirs. Not found: {counts_path}"
+                )
+            self._rna = Counts.load(counts_path)
+            self._rna = self._rna[self.meta.index]
+        return self._rna
 
     @property
     def meta(self) -> pd.DataFrame:
@@ -203,7 +196,7 @@ class CellForest(DataForest):
             forest._meta = forest.meta[~bool_selector]
         else:
             raise ValueError()
-        forest._counts = forest.counts[forest.meta.index]
+        forest._rna = forest.counts[forest.meta.index]
         return forest
 
     def get_cell_meta(self, df=None):
@@ -211,14 +204,14 @@ class CellForest(DataForest):
         if df is None:
             # TODO: fix this
             try:
-                df = self.f["cell_metadata"].copy()
+                # df = self.f["cell_metadata"].copy()
+                df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
             except FileNotFoundError:
-                df = self.f["barcodes_raw"].copy()
+                df = pd.DataFrame(self.rna.cell_ids.copy())
                 df.columns = ["cell_id"]
-                print(df.head())
+                df.index = df["cell_id"]
+                df.drop(columns=["cell_id"], inplace=True)
             df.replace(" ", "_", regex=True, inplace=True)
-            df.index = df["cell_id"]
-            df.drop(columns=["cell_id"], inplace=True)
             if "to_bucket_var" in df and "bucketed_var" not in df:
                 df["bucketed_var"] = pd.cut(df["to_bucket_var"], bins=(0, 20, 40, 60, 80), labels=(10, 30, 50, 70),)
             if "str_var_preprocessed" in df and "str_var_processed" not in df:
@@ -242,17 +235,17 @@ class CellForest(DataForest):
             if self["normalize"].done:
                 done.update({"normalize"})
         if "cluster" in done:
-            clusters = self.f["clusters"].copy()
+            clusters = self.f["cluster"]["clusters"].copy()
             clusters.rename(columns={1: "cluster_id"}, inplace=True)
             df = df.merge(clusters, how="left", left_index=True, right_index=True)
             df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
         if "dim_reduce" in done:
-            df = df.merge(self.f["umap_embeddings"], how="left", left_index=True, right_index=True)
+            df = df.merge(self.f["dim_reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
         if "normalize" in done:
-            df = df[df.index.isin(self.f["cell_ids"][0])]
+            df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
         # TODO: temp during param mismatch
         try:
-            df = df[df.index.isin(self.f["cell_ids"][0])]
+            df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
         except Exception:
             self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
@@ -260,11 +253,35 @@ class CellForest(DataForest):
     @staticmethod
     def _combine_datasets(
         root_dir: Union[str, Path],
-        metadata: Optional[str, Path] = None,
-        input_dirs: Optional[List[Union[str, Path]]] = None,
+        metadata: Optional[Union[str, Path, pd.DataFrame]] = None,
+        input_paths: Optional[List[Union[str, Path]]] = None,
+        metadata_read_kwargs: Optional[dict] = None,
     ):
-        if (input_dirs and metadata) or (input_dirs is None and metadata is None):
+        """
+        Combine files from multiple cellranger output directories into a single
+        `Counts` and save it to `root_dir`. If sample metadata is provided,
+        replicate each row corresponding to the number of cells in the sample
+        such that the number of rows changes from n_samples to n_cells.
+        """
+        root_dir = Path(root_dir)
+        if (input_paths and metadata) or (input_paths is None and metadata is None):
             raise ValueError("Must specify exactly one of `input_dirs` or `metadata`")
         elif metadata is not None:
-            # TODO: use combine 10x inputs here
-            raise NotImplementedError()
+            if isinstance(metadata, (str, Path)):
+                metadata_read_kwargs = {"sep": "\t"} if not metadata_read_kwargs else metadata_read_kwargs
+                metadata = pd.read_csv(metadata, **metadata_read_kwargs)
+            if "path" not in metadata.columns:
+                raise ValueError("metadata must contain column: `path` with reference to cellranger outputs")
+            paths = metadata["path"]
+            counts_list = [Counts.from_cellranger(dir_) for dir_ in paths]
+            cells_per_matrix = [counts.shape[0] for counts in counts_list]
+            meta = metadata.loc[metadata.index.repeat(cells_per_matrix)].reset_index(drop=True)
+        else:
+            counts_list = [Counts.from_cellranger(dir_) for dir_ in input_paths]
+            meta = None
+        counts = Counts.concatenate(counts_list)
+        counts.save(root_dir / "counts.pickle")
+        if meta is not None:
+            meta.index = counts.cell_ids
+            meta.to_csv(root_dir / "meta.tsv", sep="\t")
+        return dict()

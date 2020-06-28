@@ -1,46 +1,21 @@
+import pickle
 from functools import wraps
-from typing import Union
+from pathlib import Path
+from typing import Union, Iterable
 
 import numpy as np
 import pandas as pd
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, hstack, vstack
 
+from cellforest.structures import const
+from cellforest.structures.CountsStore import CountsStore
 from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
+from cellforest.utils.cellranger import CellRangerIO
 
 
 class Counts(csr_matrix):
     FEATURES_COLUMNS = ["ensgs", "genes"]
-    SUPER_METHODS = [
-        "arcsin",
-        "arcsinh",
-        "arctan",
-        "arctanh",
-        "asformat",
-        "asfptype",
-        "astype",
-        "ceil",
-        "conj",
-        "conjugate",
-        "copy",
-        "deg2rad",
-        "eliminate_zeros",
-        "expm1",
-        "floor",
-        "log1p",
-        "maximum",
-        "minimum",
-        "multiply",
-        "power",
-        "rad2deg",
-        "rint",
-        "sign",
-        "sin",
-        "sinh",
-        "sqrt",
-        "tan",
-        "tanh",
-        "trunc",
-    ]
+    SUPER_METHODS = const.SUPER_METHODS
 
     def __init__(self, matrix, cell_ids, features, **kwargs):
         # TODO: make a get_counts function that just takes the directory
@@ -79,11 +54,31 @@ class Counts(csr_matrix):
     def _ensgs_names(self):
         return self._index_col_swap(self.ensgs.copy(), "ensgs")
 
-    def vstack(self, other):
-        raise NotImplementedError()
+    @classmethod
+    def concatenate(cls, counts_list: Union["Counts", Iterable["Counts"]], axis: int = 0) -> "Counts":
+        counts_list = counts_list.copy()
+        orig = counts_list.pop(0)
+        return orig.append(counts_list, axis=axis)
 
-    def hstack(self, other):
-        raise NotImplementedError()
+    def append(self, others: Union["Counts", Iterable["Counts"]], axis: int = 0) -> "Counts":
+        if axis == 0:
+            return self.vstack(others)
+        elif axis == 1:
+            return self.hstack(others)
+
+    def vstack(self, others: Union["Counts", Iterable["Counts"]]):
+        others = others if isinstance(others, (list, tuple)) else [others]
+        matrix = vstack([self.matrix, *[x.matrix for x in others]])
+        cell_ids = pd.concat([self.cell_ids, *[x.cell_ids for x in others]]).reset_index(drop=True)
+        features = self.features
+        return self.__class__(matrix, cell_ids, features)
+
+    def hstack(self, others: Union["Counts", Iterable["Counts"]]):
+        others = others if isinstance(others, (list, tuple)) else [others]
+        matrix = hstack([self.matrix, *[x.matrix for x in others]])
+        cell_ids = self.cell_ids
+        features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
+        return self.__class__(matrix, cell_ids, features)
 
     def to_df(self):
         return pd.DataFrame(self.todense(), columns=self.columns, index=self.index)
@@ -107,20 +102,30 @@ class Counts(csr_matrix):
     @classmethod
     def from_cellranger(cls, cellranger_dir):
         """Load from 10X Cellranger output format"""
-        # TODO: QUEUE
-        raise NotImplementedError()
+        crio = CellRangerIO(cellranger_dir)
+        matrix = crio.read_matrix()
+        cell_ids = crio.read_barcodes()
+        features = crio.read_features()
+        return cls(matrix, cell_ids, features)
 
     @classmethod
     def load(cls, filepath):
         """Load from pickle"""
-        # TODO: QUEUE
-        raise NotImplementedError()
+        with open(filepath, "rb") as f:
+            store = pickle.load(f)
+        return cls(store.matrix, store.cell_ids, store.features)
 
-    @classmethod
-    def save(cls, filepath):
-        """Save as pickle"""
-        # TODO: QUEUE
-        raise NotImplementedError()
+    def save(self, filepath):
+        """
+        Save as pickle.
+        Intermediate data store used to maintain future compatibility
+        """
+        store = CountsStore()
+        store.matrix = self.matrix
+        store.cell_ids = self.cell_ids
+        store.features = self.features
+        with open(filepath, "wb") as f:
+            pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     def __getitem__(self, key):
         if isinstance(key, tuple):

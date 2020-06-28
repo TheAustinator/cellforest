@@ -27,7 +27,7 @@ class ProcessSchemaSC(ProcessSchema):
     FILE_MAP = CONFIG["file_map"]
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
-    R_SCRIPTS_DIR = Path(__file__).parent.absolute() / "r_scripts"
+    R_SCRIPTS_DIR = Path(__file__).parent.absolute() / "modules"
     R_FILENAMES = CONFIG["r_filenames"]
 
     # noinspection
