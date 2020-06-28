@@ -1,3 +1,4 @@
+import os
 import pickle
 from functools import wraps
 from pathlib import Path
@@ -120,10 +121,12 @@ class Counts(csr_matrix):
         Save as pickle.
         Intermediate data store used to maintain future compatibility
         """
+        filepath = Path(filepath)
         store = CountsStore()
         store.matrix = self.matrix
         store.cell_ids = self.cell_ids
         store.features = self.features
+        os.makedirs(filepath.parent, exist_ok=True)
         with open(filepath, "wb") as f:
             pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
 

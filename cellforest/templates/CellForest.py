@@ -90,7 +90,7 @@ class CellForest(DataForest):
             # TODO: set to use normalized if exists by default -- see old version
             # TODO: soft code filenames
             counts_path = self.root_dir / "counts.pickle"
-            if not counts_path.exists:
+            if not counts_path.exists():
                 raise FileNotFoundError(
                     f"Ensure that you initialized the root directory with CellForest.from_metadata or "
                     f"CellForest.from_input_dirs. Not found: {counts_path}"
@@ -272,7 +272,7 @@ class CellForest(DataForest):
                 metadata = pd.read_csv(metadata, **metadata_read_kwargs)
             if "path" not in metadata.columns:
                 raise ValueError("metadata must contain column: `path` with reference to cellranger outputs")
-            paths = metadata["path"]
+            paths = metadata["path"].tolist()
             counts_list = [Counts.from_cellranger(dir_) for dir_ in paths]
             cells_per_matrix = [counts.shape[0] for counts in counts_list]
             meta = metadata.loc[metadata.index.repeat(cells_per_matrix)].reset_index(drop=True)

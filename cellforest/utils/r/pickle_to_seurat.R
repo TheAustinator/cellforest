@@ -3,7 +3,7 @@ use_python("/Users/austinmckay/code/cellforest/venv/bin/python")
 library(Seurat)
 library(Matrix)
 
-store <- py_load_object("/Users/austinmckay/data/root_1/counts.pickle")
+store <- py_load_object(/Users/austinmckay/code/cellforest/tests/data/counts.pickle)
 counts <- t(store$matrix)
 colnames(counts) <- as.vector(store$cell_ids)
 rownames(counts) <- as.vector(store$features["genes"])

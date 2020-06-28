@@ -1,5 +1,6 @@
 import os
 import logging
+from pathlib import Path
 
 import pandas as pd
 from scipy import io
@@ -15,7 +16,7 @@ class CellRangerIO:
 
     def __init__(self, cellranger_dir):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.cellranger_dir = cellranger_dir
+        self.cellranger_dir = Path(cellranger_dir)
         self.files = os.listdir(cellranger_dir)
         self.matrix_filename = self._get_filename(self.files, self._MATRIX_BASENAME)
         self.barcodes_filename = self._get_filename(self.files, self._BARCODES_BASENAME)

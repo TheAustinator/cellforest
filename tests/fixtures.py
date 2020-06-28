@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 import pytest
 
+from cellforest import Counts
 from tests.utils.get_test_data import get_test_data
 
 
@@ -41,14 +42,30 @@ def root_path(data_dir):
 
 
 @pytest.fixture
-def metadata_path(data_dir):
+def metadata(data_dir):
     path = data_dir / "sample_metadata.tsv"
-    if not path.exists:
-        df = pd.DataFrame({"name": ["sample_1", "sample_2"], "path": sample_paths})
+    base_path = Path(__file__).parent / "data/v3"
+    cellranger_paths = [base_path / "sample_1", base_path / "sample_2"]
+    if not path.exists():
+        df = pd.DataFrame({"name": ["sample_1", "sample_2"], "path": cellranger_paths})
         df.to_csv(path, sep="\t")
-    return metadata_path
+    else:
+        df = pd.read_csv(path, sep="\t")
+    return df
 
 
 @pytest.fixture
-def counts_path(data_dir):
-    return data_dir / "counts.pickle"
+def counts_path(root_path):
+    return root_path / "counts.pickle"
+
+
+@pytest.fixture
+def test_from_cellranger(sample_1):
+    rna = Counts.from_cellranger(sample_1)
+    return rna
+
+
+@pytest.fixture
+def test_save(test_from_cellranger, counts_path):
+    test_from_cellranger.save(counts_path)
+    return counts_path

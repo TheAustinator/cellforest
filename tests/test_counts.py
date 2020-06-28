@@ -5,12 +5,6 @@ from cellforest import Counts
 from tests.fixtures import *
 
 
-@pytest.fixture
-def test_from_cellranger(sample_1):
-    rna = Counts.from_cellranger(sample_1)
-    return rna
-
-
 def test_from_cellranger_v2(sample_1_v2):
     rna = Counts.from_cellranger(sample_1_v2)
     return rna
@@ -19,12 +13,6 @@ def test_from_cellranger_v2(sample_1_v2):
 def test_from_cellranger_gz(sample_1_gz):
     rna = Counts.from_cellranger(sample_1_gz)
     return rna
-
-
-@pytest.fixture
-def test_save(test_from_cellranger, counts_path):
-    test_from_cellranger.save(counts_path)
-    return counts_path
 
 
 def test_load(test_save):
