@@ -8,7 +8,7 @@ from scipy import io
 
 class ReaderMethodsSC:
     TSV_DEFAULTS = {"sep": "\t", "header": None}
-    TSV_GZ_DEFAULTS = {**TSV_DEFAULTS, "compression": "gzip"}
+    TSV_GZ_DEFAULTS = {**TSV_DEFAULTS, "filesystem": "gzip"}
     PICKLE_DEFAULTS = {}
 
     @staticmethod
@@ -21,7 +21,7 @@ class ReaderMethodsSC:
     @default_kwargs(TSV_GZ_DEFAULTS)
     def tsv_gz(filepath, **kwargs):
         # TODO: should be able to pass kwargs directly now, given decorator
-        defaults = {"sep": "\t", "compression": "gzip", "header": None}
+        defaults = {"sep": "\t", "filesystem": "gzip", "header": None}
         defaults.update(kwargs)
         kwargs = defaults
         df = pd.read_csv(filepath, **kwargs)

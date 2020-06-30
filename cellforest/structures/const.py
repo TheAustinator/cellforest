@@ -9,7 +9,6 @@ SUPER_METHODS = [
     "ceil",
     "conj",
     "conjugate",
-    "copy",
     "deg2rad",
     "eliminate_zeros",
     "expm1",

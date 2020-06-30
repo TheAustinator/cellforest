@@ -4,7 +4,7 @@ import pandas as pd
 
 class WriterMethodsSC:
     TSV_DEFAULTS = {"sep": "\t", "header": None}
-    TSV_GZ_DEFAULTS = {**TSV_DEFAULTS, "compression": "gzip"}
+    TSV_GZ_DEFAULTS = {**TSV_DEFAULTS, "filesystem": "gzip"}
 
     @staticmethod
     @default_kwargs(TSV_DEFAULTS)

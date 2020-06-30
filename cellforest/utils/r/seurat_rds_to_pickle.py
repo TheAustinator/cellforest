@@ -4,7 +4,7 @@ import pickle
 from pathlib import Path
 from scipy.io import mmread
 
-from cellforest.utils.r.shell_command import shell_command
+from cellforest.utils.r.shell_command import process_shell_command
 
 RDS_CONVERTER_SCRIPT = Path(__file__).parent.absolute().parent / "modules" / "rds_converter.R"
 
@@ -30,7 +30,7 @@ def seurat_rds_to_sparse_pickle(rds_path, output_dir):
     output_genes_path = output_dir / "genes.tsv"
     output_metadata_path = output_dir / "cell_metadata.tsv"
     cmd_str = f"Rscript {RDS_CONVERTER_SCRIPT} {rds_path} {output_mtx_path} {output_cell_ids_path} {output_genes_path} {output_metadata_path}"
-    shell_command(cmd_str, output_dir, "matrix_rds_to_sparse_pickle")
+    process_shell_command(cmd_str, output_dir, "matrix_rds_to_sparse_pickle")
     sparse_matrix = mmread(str(output_mtx_path)).T.tocsr()
     with open(str(output_pickle_path), "wb") as f:
         pickle.dump(sparse_matrix, f, protocol=pickle.HIGHEST_PROTOCOL)

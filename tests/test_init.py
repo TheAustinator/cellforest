@@ -3,7 +3,7 @@ from tests.fixtures import *
 
 
 def test_from_input_dirs(root_path, sample_paths):
-    cf = CellForest.from_input_dirs(root_path, sample_paths)
+    cf = CellForest.from_input_dirs(root_path, sample_paths, mode="rna")
     _ = cf.meta
     _ = cf.rna
     return cf

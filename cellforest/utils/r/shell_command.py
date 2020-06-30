@@ -4,7 +4,7 @@ import shlex
 from subprocess import check_call
 
 
-def shell_command(command_string, working_dir, process_name):
+def process_shell_command(command_string, working_dir, process_name):
     out_path = os.path.join(working_dir, f"{process_name}.out")
     err_path = os.path.join(working_dir, f"{process_name}.err")
 
@@ -18,3 +18,7 @@ def shell_command(command_string, working_dir, process_name):
         shlex.split(command_string), stdout=open(out_path, "w"), stderr=open(err_path, "w"),
     )
     logger.info(f"Finished")
+
+
+def shell_command(command_string):
+    check_call(shlex.split(command_string))

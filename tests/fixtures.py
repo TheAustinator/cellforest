@@ -8,7 +8,11 @@ from tests.utils.get_test_data import get_test_data
 
 @pytest.fixture
 def data_dir():
-    return Path(__file__).parent / "data"
+    path = Path(__file__).parent / "data"
+    check_paths = [path / subdir for subdir in ["v2", "v3", "v3_gz"]]
+    if not all(list(map(lambda p: p.exists(), check_paths))):
+        get_test_data()
+    return path
 
 
 @pytest.fixture
@@ -47,8 +51,8 @@ def metadata(data_dir):
     base_path = Path(__file__).parent / "data/v3"
     cellranger_paths = [base_path / "sample_1", base_path / "sample_2"]
     if not path.exists():
-        df = pd.DataFrame({"name": ["sample_1", "sample_2"], "path": cellranger_paths})
-        df.to_csv(path, sep="\t")
+        df = pd.DataFrame({"name": ["sample_1", "sample_2"], "path_rna": cellranger_paths})
+        df.to_csv(path, sep="\t", index=False)
     else:
         df = pd.read_csv(path, sep="\t")
     return df
@@ -56,7 +60,7 @@ def metadata(data_dir):
 
 @pytest.fixture
 def counts_path(root_path):
-    return root_path / "counts.pickle"
+    return root_path / "rna.pickle"
 
 
 @pytest.fixture

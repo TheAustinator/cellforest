@@ -4,6 +4,9 @@ from pathlib import Path
 
 import pandas as pd
 from scipy import io
+from scipy.io import mmwrite
+
+from cellforest.utils import compress
 
 
 class CellRangerIO:
@@ -11,10 +14,11 @@ class CellRangerIO:
     _FEATURES_BASENAME = "features.tsv"
     _BARCODES_BASENAME = "barcodes.tsv"
     _ALT_FEATURES_BASENAME = "genes.tsv"
-    _READ_FEATURES_KWARGS = {"sep": "\t", "header": None}
-    _READ_BARCODES_KWARGS = {"sep": "\t", "header": None}
+    _READ_TSV_KWARGS = {"sep": "\t", "header": None}
+    _WRITE_TSV_KWARGS = {"sep": "\t", "header": None, "index": False}
 
     def __init__(self, cellranger_dir):
+        """Initialize for reading only, not for writing"""
         self.logger = logging.getLogger(self.__class__.__name__)
         self.cellranger_dir = Path(cellranger_dir)
         self.files = os.listdir(cellranger_dir)
@@ -35,7 +39,7 @@ class CellRangerIO:
     @staticmethod
     def read_barcodes(filepath, **kwargs):
         # TODO: convert these to use default_args decorator
-        kwargs = {**CellRangerIO._READ_BARCODES_KWARGS.copy(), **kwargs}
+        kwargs = {**CellRangerIO._READ_TSV_KWARGS.copy(), **kwargs}
         if str(filepath).endswith(".gz"):
             kwargs.update({"compression": "gzip"})
         df = pd.read_csv(filepath, **kwargs)
@@ -43,7 +47,7 @@ class CellRangerIO:
 
     @staticmethod
     def read_features(filepath, **kwargs):
-        kwargs = {**CellRangerIO._READ_FEATURES_KWARGS.copy(), **kwargs}
+        kwargs = {**CellRangerIO._READ_TSV_KWARGS.copy(), **kwargs}
         if str(filepath).endswith(".gz"):
             kwargs.update({"compression": "gzip"})
         df = pd.read_csv(filepath, **kwargs)
@@ -54,16 +58,19 @@ class CellRangerIO:
         return io.mmread(str(filepath)).T
 
     @staticmethod
-    def write_barcodes(filepath):
-        raise NotImplementedError()
+    def write_barcodes(filepath, df, gz=True):
+        df.to_csv(filepath, **CellRangerIO._WRITE_TSV_KWARGS)
+        CellRangerIO._gzip_if_needed(filepath, gz)
 
     @staticmethod
-    def write_features(filepath):
-        raise NotImplementedError()
+    def write_features(filepath, df, gz=True):
+        df.to_csv(filepath, **CellRangerIO._WRITE_TSV_KWARGS)
+        CellRangerIO._gzip_if_needed(filepath, gz)
 
     @staticmethod
-    def write_matrix(filepath):
-        raise NotImplementedError()
+    def write_matrix(filepath, matrix, gz=True):
+        mmwrite(str(filepath), matrix.T)
+        CellRangerIO._gzip_if_needed(filepath, gz)
 
     @staticmethod
     def _get_filename(files, basename):
@@ -72,6 +79,11 @@ class CellRangerIO:
     @staticmethod
     def _is_gz(filepath):
         return filepath.endswith(".gz")
+
+    @staticmethod
+    def _gzip_if_needed(path, gzip):
+        if gzip:
+            compress(path, keep_orig=False)
 
     @staticmethod
     def _tether(method, tether_arg):

@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from cellforest.utils.r.seurat_rds_to_pickle import seurat_rds_to_sparse_pickle
-from cellforest.utils.r.shell_command import shell_command
+from cellforest.utils.r.shell_command import process_shell_command
 from cellforest.templates.dataprocess_sc import dataprocess_sc
 
 if TYPE_CHECKING:
@@ -14,20 +14,12 @@ if TYPE_CHECKING:
 
 class ProcessMethodsSC(ProcessMethods):
     @staticmethod
-    def combine(root_path: Union[str, Path], sample_metadata_df: pd.DataFrame, **kwargs):
-        from cellforest.templates.preprocessing import combine_10x_outputs
-
-        path = Path(root_path)
-        if not path.exists():
-            path.mkdir(parents=True, exist_ok=True)
-        return combine_10x_outputs(root_path, sample_metadata_df, **kwargs)
-
-    @staticmethod
-    @dataprocess_sc
+    @dataprocess_sc(requires="root")
     def normalize(forest: "CellForest"):
         process_name = "normalize"
         input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
-        input_tenx_directory_path = forest["combine"].path
+        input_dir = forest.root_dir
+        # TODO: current position
         output_rds_path = forest[process_name].path_map["matrix_r"]
         min_genes = forest.spec[process_name]["min_genes"]
         max_genes = forest.spec[process_name]["max_genes"]
@@ -37,7 +29,7 @@ class ProcessMethodsSC(ProcessMethods):
         method = forest.spec[process_name]["method"]
         arg_list = [
             input_metadata_path,
-            input_tenx_directory_path,
+            input_dir,
             output_rds_path,
             min_genes,
             max_genes,
@@ -95,7 +87,7 @@ class ProcessMethodsSC(ProcessMethods):
         working_dir = str(forest.paths[process_name])
         arg_list = list(map(str, arg_list))
         command_string = f"Rscript {r_pca_filepath} {' '.join(arg_list)}"
-        shell_command(command_string=command_string, working_dir=working_dir, process_name="pca")
+        process_shell_command(command_string=command_string, working_dir=working_dir, process_name="pca")
         umap_df = ProcessMethodsSC._run_umap(
             output_embeddings_path,
             n_neighbors=forest.spec[process_name]["umap_n_neighbors"],
@@ -233,7 +225,7 @@ class ProcessMethodsSC(ProcessMethods):
     def _run_r_script(forest: "CellForest", r_script_filepath: str, arg_list: list, process_name: str):
         command_string = f"Rscript {r_script_filepath} {' '.join(map(str, arg_list))}"
         working_dir = str(forest[process_name].path)
-        shell_command(
+        process_shell_command(
             command_string=command_string, working_dir=working_dir, process_name=process_name,
         )
 

@@ -24,6 +24,7 @@ class ProcessSchemaSC(ProcessSchema):
         "max_lane_id": (le, "lane_id"),
         "min_lane_id": (ge, "lane_id"),
     }
+    STANDARD_FILES = CONFIG["standard_files"]
     FILE_MAP = CONFIG["file_map"]
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC

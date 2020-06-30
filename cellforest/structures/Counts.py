@@ -12,9 +12,11 @@ from cellforest.structures import const
 from cellforest.structures.CountsStore import CountsStore
 from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
 from cellforest.utils.cellranger import CellRangerIO
+from cellforest.utils.r.Convert import Convert
 
 
 class Counts(csr_matrix):
+    _SUPPORTED_CHEMISTRIES = ["v1", "v2", "v3"]
     FEATURES_COLUMNS = ["ensgs", "genes"]
     SUPER_METHODS = const.SUPER_METHODS
 
@@ -22,6 +24,7 @@ class Counts(csr_matrix):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
         self.matrix = matrix
+        self.chemistry = "v3" if "mode" in features.columns else "v2"
         self.features = features.iloc[:, :2].copy()
         self.features.columns = self.FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
@@ -46,14 +49,6 @@ class Counts(csr_matrix):
     @property
     def cell_ids(self):
         return self.index
-
-    @property
-    def _genes_names(self):
-        return self._index_col_swap(self.genes.copy(), "genes")
-
-    @property
-    def _ensgs_names(self):
-        return self._index_col_swap(self.ensgs.copy(), "ensgs")
 
     @classmethod
     def concatenate(cls, counts_list: Union["Counts", Iterable["Counts"]], axis: int = 0) -> "Counts":
@@ -95,12 +90,6 @@ class Counts(csr_matrix):
             return self[:, selector]
 
     @classmethod
-    def to_cellranger(cls, output_dir):
-        """Save in 10X Cellranger output format"""
-        # TODO: QUEUE
-        raise NotImplementedError()
-
-    @classmethod
     def from_cellranger(cls, cellranger_dir):
         """Load from 10X Cellranger output format"""
         crio = CellRangerIO(cellranger_dir)
@@ -109,6 +98,24 @@ class Counts(csr_matrix):
         features = crio.read_features()
         return cls(matrix, cell_ids, features)
 
+    def to_cellranger(self, output_dir, gz=True, chemistry="v3"):
+        """Save in 10X Cellranger output format"""
+        output_dir = Path(output_dir)
+        crio = CellRangerIO
+        # TODO: memory duplication
+        counts = self.as_chemistry_version(chemistry)
+        features_filename = "features.tsv" if chemistry == "v3" else "genes.tsv"
+        crio.write_matrix(output_dir / "matrix.mtx", counts.matrix, gz)
+        crio.write_features(output_dir / features_filename, counts.features, gz)
+        crio.write_barcodes(output_dir / "barcodes.tsv", counts.cell_ids, gz)
+
+    @classmethod
+    def from_rds(cls, path):
+        raise NotImplementedError()
+
+    def to_rds(self, path):
+        raise NotImplementedError()
+
     @classmethod
     def load(cls, filepath):
         """Load from pickle"""
@@ -116,19 +123,28 @@ class Counts(csr_matrix):
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath):
+    def save(self, filepath, rds=False):
         """
         Save as pickle.
         Intermediate data store used to maintain future compatibility
         """
-        filepath = Path(filepath)
-        store = CountsStore()
-        store.matrix = self.matrix
-        store.cell_ids = self.cell_ids
-        store.features = self.features
-        os.makedirs(filepath.parent, exist_ok=True)
-        with open(filepath, "wb") as f:
-            pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
+        self._save(filepath, self.matrix, self.cell_ids, self.features, rds)
+
+    def copy(self):
+        return self.__class__(self.matrix.copy(), self.cell_ids.copy(), self.features.copy())
+
+    def as_chemistry_version(self, chemistry):
+        """Duplicate with a different chemistry version"""
+        if chemistry not in self._SUPPORTED_CHEMISTRIES:
+            raise ValueError(f"supported chemistries: {self._SUPPORTED_CHEMISTRIES}")
+        counts = self.copy()
+        counts.chemistry = chemistry
+        if chemistry == "v3":
+            counts.features["mode"] = "Gene Expression"
+        else:
+            if "mode" in counts.features.columns:
+                counts.features.drop("mode", inplace=True)
+        return counts
 
     def __getitem__(self, key):
         if isinstance(key, tuple):
@@ -169,6 +185,14 @@ class Counts(csr_matrix):
             else:
                 features = self.features[self.features.genes.isin(key)]
         return self.__class__(mat, self._idx, features)
+
+    @property
+    def _genes_names(self):
+        return self._index_col_swap(self.genes.copy(), "genes")
+
+    @property
+    def _ensgs_names(self):
+        return self._index_col_swap(self.ensgs.copy(), "ensgs")
 
     def _genes_convert_key(self, key):
         """"""
@@ -232,6 +256,19 @@ class Counts(csr_matrix):
         df.index = df[col]
         df.drop(columns=col, inplace=True)
         return df
+
+    @staticmethod
+    def _save(filepath, matrix, cell_ids, features, rds=False):
+        filepath = Path(filepath)
+        store = CountsStore()
+        store.matrix = matrix
+        store.cell_ids = cell_ids
+        store.features = features
+        os.makedirs(filepath.parent, exist_ok=True)
+        with open(filepath, "wb") as f:
+            pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
+        if rds:
+            Convert.pickle_to_rds_dir(filepath.parent)
 
     @staticmethod
     def _convert_to_series(df):

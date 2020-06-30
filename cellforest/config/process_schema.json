@@ -1,28 +1,21 @@
 {
+  "standard_files": {
+    "rna": "rna.pickle",
+    "rna_r": "rna.rds",
+    "rna_ann": "rna.anndata"
+  },
   "file_map": {
-    "combine": {
-      "barcodes_raw": "barcodes.tsv.gz",
-      "cell_metadata": "cell_metadata.tsv",
-      "features_raw": "features.tsv.gz",
-      "matrix_raw": "matrix.mtx.gz"
-    },
     "normalize": {
-      "cell_ids": "cell_ids.tsv",
-      "genes": "genes.tsv",
-      "matrix": "matrix.pickle",
-      "matrix_r": "matrix.rds",
       "corrected_umi": "corrected_umi.mtx",
       "pearson_residual": "pearson_residuals.tsv"
     },
     "dim_reduce": {
       "pca_embeddings": "pca_embeddings.tsv",
       "pca_loadings": "pca_loadings.tsv",
-      "umap_embeddings": "umap_embeddings.tsv",
-      "dimred_r": "matrix.rds"
+      "umap_embeddings": "umap_embeddings.tsv"
     },
     "cluster": {
-      "clusters": "clusters.tsv",
-      "cluster_r": "matrix.rds"
+      "clusters": "clusters.tsv"
     },
     "diffexp_bulk": {
       "diffexp_bulk_result": "diffexp.tsv"
@@ -36,7 +29,6 @@
   },
 
   "param_names": {
-    "combine": ["root"],
     "normalize": ["max_genes", "min_genes", "perc_mito_cutoff", "method", "min_cells", "nfeatures"],
     "dim_reduce": ["pca_npcs", "umap_n_neighbors", "umap_min_dist", "umap_n_components", "umap_metric"],
     "cluster": ["res", "eps", "num_pcs"],
@@ -48,13 +40,11 @@
   },
 
   "process_hierarchy": {
-    "combine": {
-      "normalize": {
-        "gsea_bulk": null,
-        "diffexp_bulk": null,
-        "dim_reduce": {
-          "cluster": ["diffexp", "gsea", "markers"]
-        }
+    "normalize": {
+      "gsea_bulk": null,
+      "diffexp_bulk": null,
+      "dim_reduce": {
+        "cluster": ["diffexp", "gsea", "markers"]
       }
     }
   },

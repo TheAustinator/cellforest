@@ -1,7 +1,3 @@
-import pandas as pd
-import pytest
-
-from cellforest import Counts
 from tests.fixtures import *
 
 
@@ -34,9 +30,9 @@ def test_slice(test_from_cellranger):
     assert rna["AAACATACAACCAC-1", :].shape[0] == 1
     assert rna[["AAACATACAACCAC-1", "AAACATTGATCAGC-1"], :].shape[0] == 2
     assert rna[pd.Series(["AAACATACAACCAC-1", "AAACATTGATCAGC-1"]), :].shape[0] == 2
-    assert rna[:, "ENSG00000268674"].shape[1] == 1
-    assert rna[:, ["ENSG00000268674", "ENSG00000238009"]].shape[1] == 2
-    assert rna[:, pd.Series(["ENSG00000268674", "ENSG00000238009"])].shape[1] == 2
+    assert rna[:, "ENSG00000243485"].shape[1] == 1
+    assert rna[:, ["ENSG00000243485", "ENSG00000186092"]].shape[1] == 2
+    assert rna[:, pd.Series(["ENSG00000243485", "ENSG00000186092"])].shape[1] == 2
     assert rna[:, "FAM138A"].shape[1] == 1
     assert rna[:, ["OR4F5", "FAM138A"]].shape[1] == 2
     assert rna[:, pd.Series(["OR4F5", "FAM138A"])].shape[1] == 2
