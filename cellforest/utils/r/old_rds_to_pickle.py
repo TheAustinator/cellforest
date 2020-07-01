@@ -6,7 +6,7 @@ from scipy.io import mmread
 
 from cellforest.utils.r.shell_command import process_shell_command
 
-RDS_CONVERTER_SCRIPT = Path(__file__).parent.absolute().parent / "modules" / "rds_converter.R"
+RDS_CONVERTER_SCRIPT = Path(__file__).parent.absolute().parent / "modules" / "rds_to_cellranger.R"
 
 
 def gzip_replace(filepath):
@@ -20,7 +20,7 @@ def gzip_replace(filepath):
     os.remove(filepath)
 
 
-def seurat_rds_to_sparse_pickle(rds_path, output_dir):
+def old_rds_to_pickle(rds_path, output_dir):
     output_dir = Path(output_dir)
     if not os.path.isfile(rds_path):
         raise ValueError(f"rds file does not exists: {rds_path}")

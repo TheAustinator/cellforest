@@ -274,7 +274,8 @@ class CellForest(DataForest):
         if "dim_reduce" in done:
             df = df.merge(self.f["dim_reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
         if "normalize" in done:
-            df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
+            pass
+            # df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
         # TODO: temp during param mismatch
         try:
             df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]

@@ -1,3 +1,5 @@
+import os
+
 from cellforest import Counts
 
 
@@ -20,11 +22,13 @@ class DataMerge:
         rna = Counts.concatenate(rna_list)
         if meta is not None:
             meta.index = rna.cell_ids
-            if save_dir:
-                meta.to_csv(save_dir / "meta.tsv", sep="\t")
+        else:
+            meta = rna.cell_ids
         if save_dir:
-            # TODO: move rds val to config
-            rna.save(save_dir / "rna.pickle", rds=True)
+            os.makedirs(save_dir, exist_ok=True)
+            meta.to_csv(save_dir / "meta.tsv", sep="\t")
+            # TODO: move create_rds val to config
+            rna.save(save_dir / "rna.pickle", create_rds=True)
         return rna, meta
 
     @staticmethod

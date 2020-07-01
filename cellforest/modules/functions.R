@@ -11,24 +11,22 @@ library(Matrix)
 library(readr)
 
 
-metadata_filter <- function(input_metadata_path, input_rds_path) {
+metadata_filter_paths <- function(input_metadata_path, input_rds_path) {
   print("reading metadata"); print(date())
-  metadata <- read_tsv(input_metadata_path)
+  meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1)
   print("reading rds"); print(date())
   seurat_object <- readRDS(input_rds_path)
   return(metadata_filter_objs(metadata, seurat_object))
 }
 
-metadata_filter_objs <- function(metadata, seurat_object) {
-  frame <- data.frame(rownames(seurat_object@meta.data))
-  frame$cell_id <- frame$rownames.seurat_object.meta.data
-  print(paste0("filtering cells based on metadata with ", nrow(metadata), " cells")); print(date())
-  to_keep <- frame %>% filter(cell_id %in% metadata$cell_id)
-  print(paste0("filtered - keeping ", nrow(to_keep), "/", nrow(frame), " cells")); print(date())
-  seurat_object <- subset(seurat_object, cells = to_keep$cell_id)
-  rownames(metadata) <- metadata$cell_id
-  filter_outputs <- list(metadata = metadata, seurat_object = seurat_object)
-  return(filter_outputs)
+metadata_filter_objs <- function(meta, srat) {
+  print(paste0("filtering cells by metadata and keeping ", nrow(meta), " / ", nrow(srat@meta.data))); print(date())
+  srat <- subset(srat, cells = rownames(meta))
+  AddMetaData(srat, meta)
+  if (nrow(srat@meta.data) != nrow(meta)) {
+    stop("Seurat object must contain all cell_ids present in metadata for filtering")
+  }
+  return(srat)
 }
 
 

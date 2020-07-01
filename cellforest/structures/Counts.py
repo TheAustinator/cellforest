@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix, hstack, vstack
 
 from cellforest.structures import const
-from cellforest.structures.CountsStore import CountsStore
+from cellforest.structures.build_counts_store import build_counts_store
 from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
 from cellforest.utils.cellranger import CellRangerIO
 from cellforest.utils.r.Convert import Convert
@@ -17,6 +17,7 @@ from cellforest.utils.r.Convert import Convert
 
 class Counts(csr_matrix):
     _SUPPORTED_CHEMISTRIES = ["v1", "v2", "v3"]
+    # TODO: change to singular
     FEATURES_COLUMNS = ["ensgs", "genes"]
     SUPER_METHODS = const.SUPER_METHODS
 
@@ -28,7 +29,7 @@ class Counts(csr_matrix):
         self.features = features.iloc[:, :2].copy()
         self.features.columns = self.FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
-        self._ids = self._index_col_swap(cell_ids.copy())
+        self._ids = self._index_col_swap(cell_ids)
 
     @property
     def genes(self):
@@ -123,12 +124,12 @@ class Counts(csr_matrix):
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath, rds=False):
+    def save(self, filepath, create_rds=False):
         """
         Save as pickle.
         Intermediate data store used to maintain future compatibility
         """
-        self._save(filepath, self.matrix, self.cell_ids, self.features, rds)
+        self._save(filepath, self.matrix, self.cell_ids, self.features, create_rds)
 
     def copy(self):
         return self.__class__(self.matrix.copy(), self.cell_ids.copy(), self.features.copy())
@@ -247,27 +248,22 @@ class Counts(csr_matrix):
             raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
 
     @staticmethod
-    def _index_col_swap(df, col: Union[str, int] = 0, new_index_colname="i"):
+    def _index_col_swap(df, col_ind: Union[str, int] = 0, new_index_colname="i"):
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
             df = pd.DataFrame(df)
         df[new_index_colname] = df.index
-        df.index = df[col]
-        df.drop(columns=col, inplace=True)
+        df.index = df.iloc[:, col_ind]
+        df.index.name = "cell_id"
+        df.drop(columns=df.columns[col_ind], inplace=True)
         return df
 
     @staticmethod
-    def _save(filepath, matrix, cell_ids, features, rds=False):
+    def _save(filepath, matrix, cell_ids, features, create_rds=False):
         filepath = Path(filepath)
-        store = CountsStore()
-        store.matrix = matrix
-        store.cell_ids = cell_ids
-        store.features = features
-        os.makedirs(filepath.parent, exist_ok=True)
-        with open(filepath, "wb") as f:
-            pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
-        if rds:
+        build_counts_store(matrix, cell_ids, features, save_path=filepath)
+        if create_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
 
     @staticmethod
@@ -281,6 +277,9 @@ class Counts(csr_matrix):
 
     def __repr__(self):
         return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
+
+    def __len__(self):
+        return self.shape[0]
 
     @staticmethod
     def wrap_super(func):

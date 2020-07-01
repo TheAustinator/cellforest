@@ -4,7 +4,7 @@ from dataforest.templates.ProcessMethods import ProcessMethods
 from pathlib import Path
 import pandas as pd
 
-from cellforest.utils.r.seurat_rds_to_pickle import seurat_rds_to_sparse_pickle
+from cellforest.utils.r.old_rds_to_pickle import old_rds_to_pickle
 from cellforest.utils.r.shell_command import process_shell_command
 from cellforest.templates.dataprocess_sc import dataprocess_sc
 
@@ -14,13 +14,13 @@ if TYPE_CHECKING:
 
 class ProcessMethodsSC(ProcessMethods):
     @staticmethod
-    @dataprocess_sc(requires="root")
+    @dataprocess_sc(requires="root", matrix_layer=True)
     def normalize(forest: "CellForest"):
         process_name = "normalize"
         input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
-        input_dir = forest.root_dir
-        # TODO: current position
-        output_rds_path = forest[process_name].path_map["matrix_r"]
+        # TODO: add a root filepaths lookup
+        input_rds_path = forest.root_dir / "rna.rds"
+        output_rds_path = forest[process_name].path_map["rna_r"]
         min_genes = forest.spec[process_name]["min_genes"]
         max_genes = forest.spec[process_name]["max_genes"]
         min_cells = forest.spec[process_name]["min_cells"]
@@ -29,7 +29,7 @@ class ProcessMethodsSC(ProcessMethods):
         method = forest.spec[process_name]["method"]
         arg_list = [
             input_metadata_path,
-            input_dir,
+            input_rds_path,
             output_rds_path,
             min_genes,
             max_genes,
@@ -51,7 +51,6 @@ class ProcessMethodsSC(ProcessMethods):
         else:
             raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
         ProcessMethodsSC._run_r_script(forest, r_normalize_script, arg_list, process_name)
-        seurat_rds_to_sparse_pickle(forest.paths["combine"], output_rds_path, forest.paths[process_name])
 
     @staticmethod
     @dataprocess_sc(requires="normalize", comparative=True, temp_meta=False)
