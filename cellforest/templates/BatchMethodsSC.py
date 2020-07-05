@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from dataforest.templates.BatchMethods import BatchMethods
+from dataforest.processes.core.BatchMethods import BatchMethods
 
 # from scgsea.GSEAGroup import GSEAGroup
 import pandas as pd
@@ -32,7 +32,7 @@ class BatchMethodsSC(BatchMethods):
         Returns:
             gsea_grp:
         """
-        gsea_grp = GSEAGroup(forest, batch_vars, "gsea_bulk")
+        gsea_grp = GSEAGroup(forest, batch_vars, "gsea")
         for grp_vals in gsea_grp.groups:
             BatchMethodsSC.logger.info(f"Running GSEA for {grp_vals}")
             gsea_grp.run_grp(grp_vals, **kwargs)

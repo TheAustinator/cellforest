@@ -1,13 +1,14 @@
-library("reticulate")
-use_python("/Users/austinmckay/code/cellforest/venv/bin/python")
-library("Matrix")
-
 args <- commandArgs(trailingOnly = TRUE)
 
 input_rds_path <- args[1]
 output_meta_path <- args[2]
 output_pickle_path <- args[3]
 counts_store_module <- args[4]
+python_executable <- args[5]
+
+library("reticulate")
+use_python(python_executable)
+library("Matrix")
 
 source_python(counts_store_module)
 

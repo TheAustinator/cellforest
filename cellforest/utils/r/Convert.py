@@ -1,18 +1,22 @@
+import sys
+
 from pathlib import Path
 
 from cellforest.utils import r
-from cellforest.utils.r.shell_command import shell_command
+from cellforest.utils.shell.shell_command import shell_command
 
-r_utils = Path(r.__file__).parent
-_PICKLE_TO_RDS_SCRIPT = r_utils / "pickle_to_rds.R"
-_RDS_TO_PICKLE_SCRIPT = r_utils / "rds_to_pickle.R"
-_COUNTS_STORE_MODULE = r_utils.parent.parent / "structures/build_counts_store.py"
+_PYTHON_EXECUTABLE = sys.executable
+_R_UTILS_DIR = Path(r.__file__).parent
+_PICKLE_TO_RDS_SCRIPT = _R_UTILS_DIR / "pickle_to_rds.R"
+_RDS_TO_PICKLE_SCRIPT = _R_UTILS_DIR / "rds_to_pickle.R"
+_COUNTS_STORE_MODULE = _R_UTILS_DIR.parent.parent / "structures/build_counts_store.py"
 
 
 class Convert:
+    # TODO: rewrite using stem rather than hard-coding filenames (used in Counts, too)
     @staticmethod
     def pickle_to_rds(pickle_path, meta_path, output_rds_path):
-        arg_list = [pickle_path, meta_path, output_rds_path]
+        arg_list = [pickle_path, meta_path, output_rds_path, _PYTHON_EXECUTABLE]
         Convert._run_r_script(_PICKLE_TO_RDS_SCRIPT, arg_list)
 
     @staticmethod
@@ -22,7 +26,7 @@ class Convert:
 
     @staticmethod
     def rds_to_pickle(rds_path, output_meta_path, output_pickle_path):
-        arg_list = [rds_path, output_meta_path, output_pickle_path, _COUNTS_STORE_MODULE]
+        arg_list = [rds_path, output_meta_path, output_pickle_path, _COUNTS_STORE_MODULE, _PYTHON_EXECUTABLE]
         Convert._run_r_script(_RDS_TO_PICKLE_SCRIPT, arg_list)
 
     @staticmethod

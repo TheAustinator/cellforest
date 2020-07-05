@@ -25,19 +25,19 @@ def test_from_cellranger_gz(sample_1_gz):
 
 
 def test_load(test_save_fix):
-    rna = Counts.load(test_save)
+    rna = Counts.load(test_save_fix)
     return rna
 
 
 def test_concatenate(test_from_cellranger_fix):
-    rna = test_from_cellranger[:50, :50]
+    rna = test_from_cellranger_fix[:50, :50]
     assert rna.append(rna).shape[0] == 100
     assert rna.append(rna, axis=1).shape[1] == 100
     assert rna.append([rna, rna]).shape[0] == 150
 
 
 def test_slice(test_from_cellranger_fix):
-    rna = test_from_cellranger
+    rna = test_from_cellranger_fix
     assert rna.shape == (rna.cell_ids.shape[0], rna.genes.shape[0])
     assert rna["AAACATACAACCAC-1"].shape[0] == 1
     assert rna["AAACATACAACCAC-1", :].shape[0] == 1

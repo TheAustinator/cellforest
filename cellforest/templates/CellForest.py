@@ -9,8 +9,6 @@ import pandas as pd
 
 from cellforest.structures.Counts import Counts
 from cellforest.templates.PlotMethodsSC import PlotMethodsSC
-from cellforest.templates.ProcessMethodsSC import ProcessMethodsSC
-from cellforest.templates.ProcessSchemaSC import ProcessSchemaSC
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.SpecSC import SpecSC
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
@@ -19,8 +17,8 @@ from cellforest.utils.cellranger.DataMerge import DataMerge
 
 class CellForest(DataForest):
     """
-    DataForest for scRNAseq processed data. The `process_hierarchy` currently starts
-    at `combine`, where non-normalized counts data is combined.
+    DataForest for scRNAseq processed data. The `process_hierarchy` currently
+    starts at `combine`, where non-normalized counts data is combined.
 
     A path through specific `process_runs` of processes in the
     `process_hierarchy` are specified in the `spec_dict`, according to the
@@ -34,9 +32,7 @@ class CellForest(DataForest):
         "subset",
     }
     PLOT_METHODS = PlotMethodsSC
-    PROCESS_METHODS = ProcessMethodsSC
     SPEC_CLASS = SpecSC
-    SCHEMA_CLASS = ProcessSchemaSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
     READER_KWARGS_MAP = {
@@ -54,9 +50,10 @@ class CellForest(DataForest):
     _METADATA_NAME = "meta"
     _COPY_KWARGS = {**DataForest._COPY_KWARGS, "unversioned": "unversioned"}
     _ASSAY_OPTIONS = ["rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"]
+    _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/process_schema.yaml"
 
-    def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, unversioned=None):
-        super().__init__(root_dir, spec_dict, verbose)
+    def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, config=None, unversioned=None):
+        super().__init__(root_dir, spec_dict, verbose, config)
         self.assays = set()
         self._rna = None
         self._meta_unfiltered = None
@@ -208,29 +205,6 @@ class CellForest(DataForest):
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
-    def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
-        """
-
-        """
-        if compartment_name in self.ROOT_LEVEL_COMPARTMENTS:
-            spec = update_recursive(self.spec, update, inplace=False)
-        else:
-            spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
-        forest = self.copy(spec_dict=spec)
-        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
-        if sum(bool_selector) == 0:
-            import ipdb
-
-            ipdb.set_trace()
-        if compartment_name == "subset":
-            forest._meta = forest.meta[bool_selector]
-        elif compartment_name == "filter":
-            forest._meta = forest.meta[~bool_selector]
-        else:
-            raise ValueError()
-        forest._rna = forest.counts[forest.meta.index]
-        return forest
-
     def get_cell_meta(self, df=None):
         # TODO: MEMORY DUPLICATION - we want to keep file access pure?
         if df is None:
@@ -283,13 +257,36 @@ class CellForest(DataForest):
             self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
 
+    def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
+        """
+
+        """
+        if compartment_name in self.ROOT_LEVEL_COMPARTMENTS:
+            spec = update_recursive(self.spec, update, inplace=False)
+        else:
+            spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
+        forest = self.copy(spec_dict=spec)
+        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
+        if sum(bool_selector) == 0:
+            import ipdb
+
+            ipdb.set_trace()
+        if compartment_name == "subset":
+            forest._meta = forest.meta[bool_selector]
+        elif compartment_name == "filter":
+            forest._meta = forest.meta[~bool_selector]
+        else:
+            raise ValueError()
+        forest._rna = forest.counts[forest.meta.index]
+        return forest
+
     @staticmethod
     def _combine_datasets(
         root_dir: Union[str, Path],
         metadata: Optional[Union[str, Path, pd.DataFrame]] = None,
         input_paths: Optional[List[Union[str, Path]]] = None,
         metadata_read_kwargs: Optional[dict] = None,
-        mode: Optional[str] = "rna",
+        mode: Optional[str] = None,
     ):
         """
         Combine files from multiple cellranger output directories into a single
@@ -298,6 +295,7 @@ class CellForest(DataForest):
         such that the number of rows changes from n_samples to n_cells.
         """
         root_dir = Path(root_dir)
+        mode = mode if mode else "rna"
         if (input_paths and metadata) or (input_paths is None and metadata is None):
             raise ValueError("Must specify exactly one of `input_dirs` or `metadata`")
         elif metadata is not None:

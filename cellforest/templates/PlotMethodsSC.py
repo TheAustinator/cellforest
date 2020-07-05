@@ -1,4 +1,4 @@
-from dataforest.templates.PlotMethods import PlotMethods
+from dataforest.plot.PlotMethods import PlotMethods
 import matplotlib.pyplot as plt
 
 

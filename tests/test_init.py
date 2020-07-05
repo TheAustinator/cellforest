@@ -21,6 +21,13 @@ def build_root_fix(root_path, metadata):
     return cf
 
 
+def test_from_input_dirs_single(root_path, sample_1):
+    cf = CellForest.from_input_dirs(root_path, sample_1, mode="rna")
+    _ = cf.meta
+    _ = cf.rna
+    return sample_1
+
+
 def test_from_input_dirs(test_from_input_dirs_fix):
     pass
 

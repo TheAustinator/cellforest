@@ -24,7 +24,7 @@ class Counts(csr_matrix):
     def __init__(self, matrix, cell_ids, features, **kwargs):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
-        self.matrix = matrix
+        self._matrix = matrix
         self.chemistry = "v3" if "mode" in features.columns else "v2"
         self.features = features.iloc[:, :2].copy()
         self.features.columns = self.FEATURES_COLUMNS
@@ -65,20 +65,54 @@ class Counts(csr_matrix):
 
     def vstack(self, others: Union["Counts", Iterable["Counts"]]):
         others = others if isinstance(others, (list, tuple)) else [others]
-        matrix = vstack([self.matrix, *[x.matrix for x in others]])
+        matrix = vstack([self._matrix, *[x._matrix for x in others]])
         cell_ids = pd.concat([self.cell_ids, *[x.cell_ids for x in others]]).reset_index(drop=True)
         features = self.features
         return self.__class__(matrix, cell_ids, features)
 
     def hstack(self, others: Union["Counts", Iterable["Counts"]]):
         others = others if isinstance(others, (list, tuple)) else [others]
-        matrix = hstack([self.matrix, *[x.matrix for x in others]])
+        matrix = hstack([self._matrix, *[x._matrix for x in others]])
         cell_ids = self.cell_ids
         features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
         return self.__class__(matrix, cell_ids, features)
 
-    def to_df(self):
-        return pd.DataFrame(self.todense(), columns=self.columns, index=self.index)
+    def hist(self, axis=0, slices=None):
+        """
+
+        Args:
+            axis:
+            slices:
+
+        Returns:
+
+        """
+        # TODO: QUEUE
+        raise NotImplementedError()
+
+    def scatter(self, slices=None):
+        """
+
+        Args:
+            slices:
+
+        Returns:
+
+        """
+        raise NotImplementedError()
+
+    def drop(self, indices, axis=0):
+        """
+
+        Args:
+            indices:
+            axis:
+
+        Returns:
+
+        """
+        # TODO: QUEUE
+        raise NotImplementedError()
 
     def dropna(self, axis=None):
         if axis is None:
@@ -89,6 +123,9 @@ class Counts(csr_matrix):
             return self[selector]
         else:
             return self[:, selector]
+
+    def to_df(self):
+        return pd.DataFrame(self.todense(), columns=self.columns, index=self.index)
 
     @classmethod
     def from_cellranger(cls, cellranger_dir):
@@ -106,16 +143,27 @@ class Counts(csr_matrix):
         # TODO: memory duplication
         counts = self.as_chemistry_version(chemistry)
         features_filename = "features.tsv" if chemistry == "v3" else "genes.tsv"
-        crio.write_matrix(output_dir / "matrix.mtx", counts.matrix, gz)
+        crio.write_matrix(output_dir / "matrix.mtx", counts._matrix, gz)
         crio.write_features(output_dir / features_filename, counts.features, gz)
         crio.write_barcodes(output_dir / "barcodes.tsv", counts.cell_ids, gz)
 
     @classmethod
     def from_rds(cls, path):
+        """Convert rds to pickle, then load pickle"""
+        # TODO: QUEUE - test (Convert.rds_to_pickle_dir may overwrite any existing metadata)
         raise NotImplementedError()
+        parent = Path(path).parent
+        Convert.rds_to_pickle_dir(parent)
+        return cls.load(parent / "rna.pickle")
 
     def to_rds(self, path):
+        """Save pickle, then convert pickle to rds"""
+        # TODO: QUEUE - test (Convert.pickle_to_rds_dir may overwrite any existing metadata)
         raise NotImplementedError()
+        path = Path(path)
+        stem = path.stem
+        self.save(path.parent / f"{stem}.pickle")
+        Convert.pickle_to_rds_dir(path.parent)
 
     @classmethod
     def load(cls, filepath):
@@ -129,10 +177,10 @@ class Counts(csr_matrix):
         Save as pickle.
         Intermediate data store used to maintain future compatibility
         """
-        self._save(filepath, self.matrix, self.cell_ids, self.features, create_rds)
+        self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
 
     def copy(self):
-        return self.__class__(self.matrix.copy(), self.cell_ids.copy(), self.features.copy())
+        return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
 
     def as_chemistry_version(self, chemistry):
         """Duplicate with a different chemistry version"""
@@ -169,13 +217,13 @@ class Counts(csr_matrix):
             cell_ids = pd.DataFrame(self._idx[key]).reset_index(drop=True)
         else:
             cell_ids = pd.DataFrame(self._idx.reindex(key)).reset_index(drop=True)
-        mat = csr_matrix(self.matrix)[key]
+        mat = csr_matrix(self._matrix)[key]
         return self.__class__(mat, cell_ids, self.features)
 
     def _gene_slice(self, key):
         """Slice columns (genes) with either gene names or ensemble names"""
         key = self._genes_convert_key(key)
-        mat = csr_matrix(self.matrix)[:, key]
+        mat = csr_matrix(self._matrix)[:, key]
         if isinstance(key, slice):
             features = self.features[key]
         else:
@@ -248,15 +296,17 @@ class Counts(csr_matrix):
             raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
 
     @staticmethod
-    def _index_col_swap(df, col_ind: Union[str, int] = 0, new_index_colname="i"):
+    def _index_col_swap(df, col: Union[str, int] = 0, new_index_colname="i"):
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
             df = pd.DataFrame(df)
+        if isinstance(col, int):
+            col = df.columns[col]
         df[new_index_colname] = df.index
-        df.index = df.iloc[:, col_ind]
+        df.index = df[col]
         df.index.name = "cell_id"
-        df.drop(columns=df.columns[col_ind], inplace=True)
+        df.drop(columns=col, inplace=True)
         return df
 
     @staticmethod
@@ -287,7 +337,7 @@ class Counts(csr_matrix):
 
         @wraps(func)
         def wrapper(counts, *args, **kwargs):
-            matrix = func(counts.matrix, *args, **kwargs)
+            matrix = func(counts._matrix, *args, **kwargs)
             return counts.__class__(matrix, counts.cell_ids, counts.genes)
 
         return wrapper

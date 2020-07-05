@@ -3,3 +3,6 @@ build
 dist
 tests/data
 venv
+*.egg-info
+*-checkpoint.ipynb
+*-checkpoint.txt

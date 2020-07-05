@@ -1,13 +1,15 @@
-library(reticulate)
-# TODO: move this to config
-use_python("/Users/austinmckay/code/cellforest/venv/bin/python")
-library(Seurat)
-library(Matrix)
-
 args <- commandArgs(trailingOnly = TRUE)
 pickle_path <- args[1]
 meta_path <- args[2]
 output_rds_path <- args[3]
+python_executable <- args[4]
+
+library(reticulate)
+# TODO: move this to config
+use_python(python_executable)
+library(Seurat)
+library(Matrix)
+
 
 store <- py_load_object(pickle_path)
 counts <- t(store$matrix)

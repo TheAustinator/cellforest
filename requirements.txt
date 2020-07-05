@@ -2,4 +2,5 @@ matplotlib
 numpy
 pandas
 pathlib
+pyyaml
 scipy
