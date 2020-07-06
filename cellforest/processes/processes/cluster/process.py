@@ -1,11 +1,11 @@
 from dataforest.hooks import dataprocess
 
 
-@dataprocess(requires="dim_reduce")
+@dataprocess(requires="reduce")
 def cluster(forest: "CellForest"):
     process_name = "cluster"
-    input_metadata_path = forest.get_temp_metadata_path(forest, process_name)
-    input_rds_path = forest["dim_reduce"].path_map["dimred_r"]
+    input_metadata_path = forest.get_temp_meta_path(forest, process_name)
+    input_rds_path = forest["reduce"].path_map["dimred_r"]
     output_rds_path = forest[process_name].path_map["cluster_r"]
     output_clusters_path = forest[process_name].path_map["clusters"]
     num_pcs = forest.spec[process_name]["num_pcs"]

@@ -4,7 +4,7 @@ from dataforest.hooks import dataprocess
 @dataprocess(requires="cluster")
 def markers(forest: "CellForest"):
     process_name = "markers"
-    input_metadata_path = ProcessMethodsSC._get_temp_metadata_path(forest, process_name)
+    input_metadata_path = ProcessMethodsSC._get_temp_meta_path(forest, process_name)
     meta = forest.READER_METHODS.tsv(input_metadata_path, header=0)
     cluster_counts = meta["cluster_id"].value_counts()
     deficient_clusters = cluster_counts[cluster_counts < 2].index.tolist()
@@ -32,7 +32,7 @@ def markers(forest: "CellForest"):
 @dataprocess(requires="normalize", comparative=True)
 def diffexp_bulk(forest: "CellForest"):
     process_name = "diffexp_bulk"
-    input_metadata_path = forest.get_temp_metadata_path(forest, process_name)
+    input_metadata_path = forest.get_temp_meta_path(forest, process_name)
     input_rds_path = forest["normalize"].path_map["matrix_r"]
     output_diffexp_path = forest[process_name].path_map["diffexp_bulk_result"]
     groups = forest[process_name].forest.meta["partition_code"].unique().astype("O")
@@ -63,7 +63,7 @@ def diffexp_bulk(forest: "CellForest"):
 def diffexp(forest: "CellForest"):
     # TODO: refactor both diffexp versions into `_get_diffexp_args`
     process_name = "diffexp"
-    input_metadata_path = forest.get_temp_metadata_path(forest, process_name)
+    input_metadata_path = forest.get_temp_meta_path(forest, process_name)
     input_rds_path = forest["cluster"].path_map["cluster_r"]
     output_diffexp_path = forest[process_name].path_map["diffexp_result"]
     groups = forest[process_name].forest.meta["partition_code"].unique().astype("O")

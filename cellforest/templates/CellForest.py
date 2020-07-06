@@ -21,9 +21,9 @@ class CellForest(DataForest):
     starts at `combine`, where non-normalized counts data is combined.
 
     A path through specific `process_runs` of processes in the
-    `process_hierarchy` are specified in the `spec_dict`, according to the
+    `process_hierarchy` are specified in the `spec`, according to the
     specifications of `dataforest.Spec`. Any root level (not under a process
-    name in `spec_dict`) `subset`s or `filter`s are applied to `counts` and
+    name in `spec`) `subset`s or `filter`s are applied to `counts` and
     `meta`, which are the preferred methods for accessing cell metadata and
     the normalized counts matrix
     """
@@ -36,7 +36,7 @@ class CellForest(DataForest):
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
     READER_KWARGS_MAP = {
-        "dim_reduce": {
+        "reduce": {
             "pca_embeddings": {"header": "infer"},
             "pca_loadings": {"header": "infer"},
             "umap_embeddings": {"header": "infer", "index_col": 0},
@@ -52,8 +52,10 @@ class CellForest(DataForest):
     _ASSAY_OPTIONS = ["rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"]
     _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/process_schema.yaml"
 
-    def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, config=None, unversioned=None):
-        super().__init__(root_dir, spec_dict, verbose, config)
+    def __init__(
+        self, root_dir, spec=None, process_order=None, verbose=False, meta=None, config=None, unversioned=None
+    ):
+        super().__init__(root_dir, spec, process_order, verbose, config)
         self.assays = set()
         self._rna = None
         self._meta_unfiltered = None
@@ -93,8 +95,8 @@ class CellForest(DataForest):
         # TODO: add embeddings and cluster ids
         if self._meta is None:
             self._meta = self.get_cell_meta()
-        elif "dim_reduce" in self.spec and "UMAP_1" not in self._meta.columns:
-            if self["dim_reduce"].done:
+        elif "reduce" in self.spec and "UMAP_1" not in self._meta.columns:
+            if self["reduce"].done:
                 self._meta = self.get_cell_meta()
         elif "cluster" in self.spec and "cluster_id" not in self._meta.columns:
             if self["cluster"].done:
@@ -233,28 +235,28 @@ class CellForest(DataForest):
         done = set()
         if "cluster" in self.spec:
             if self["cluster"].done:
-                done.update({"normalize", "dim_reduce", "cluster"})
-        if not done and "dim_reduce" in self.spec:
-            if self["dim_reduce"].done:
-                done.update({"normalize", "dim_reduce"})
+                done.update({"normalize", "reduce", "cluster"})
+        if not done and "reduce" in self.spec:
+            if self["reduce"].done:
+                done.update({"normalize", "reduce"})
         if not done and "normalize" in self.spec:
             if self["normalize"].done:
                 done.update({"normalize"})
-        if "cluster" in done:
-            clusters = self.f["cluster"]["clusters"].copy()
-            clusters.rename(columns={1: "cluster_id"}, inplace=True)
-            df = df.merge(clusters, how="left", left_index=True, right_index=True)
-            df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
-        if "dim_reduce" in done:
-            df = df.merge(self.f["dim_reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
-        if "normalize" in done:
-            pass
-            # df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        # TODO: temp during param mismatch
-        try:
-            df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        except Exception:
-            self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
+        # if "cluster" in done:
+        #     clusters = self.f["cluster"]["clusters"].copy()
+        #     clusters.rename(columns={1: "cluster_id"}, inplace=True)
+        #     df = df.merge(clusters, how="left", left_index=True, right_index=True)
+        #     df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
+        # if "reduce" in done:
+        #     df = df.merge(self.f["reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
+        # if "normalize" in done:
+        #     pass
+        #     # df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
+        # # TODO: temp during param mismatch
+        # try:
+        #     df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
+        # except Exception:
+        #     self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
 
     def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
@@ -265,7 +267,7 @@ class CellForest(DataForest):
             spec = update_recursive(self.spec, update, inplace=False)
         else:
             spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
-        forest = self.copy(spec_dict=spec)
+        forest = self.copy(spec=spec)
         bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
         if sum(bool_selector) == 0:
             import ipdb

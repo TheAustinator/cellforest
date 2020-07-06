@@ -2,8 +2,9 @@ import os
 import pickle
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional, Callable, Tuple
 
+from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, hstack, vstack
@@ -77,39 +78,39 @@ class Counts(csr_matrix):
         features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
         return self.__class__(matrix, cell_ids, features)
 
-    def hist(self, axis=0, slices=None):
+    def hist(self, agg: Callable = np.sum, axis: int = 0, labels: Optional[Union[pd.Series, list]] = None) -> Axes:
         """
-
+        Plots histogram along specified axis, optionally, stratified by label.
         Args:
-            axis:
-            slices:
+            agg: aggregation function for opposite axis (e.g. sum, min, mean, var, etc.)
+            axis: axis along which to create histogram, with `agg` applied to other axis
+            labels: cell or gene category labels by which to stratify plot
 
         Returns:
-
+            hist: histogram
         """
         # TODO: QUEUE
         raise NotImplementedError()
 
-    def scatter(self, slices=None):
-        """
-
-        Args:
-            slices:
-
-        Returns:
-
-        """
+    def scatter(
+        self,
+        agg_0: Callable = np.sum,
+        agg_1: Callable = np.var,
+        axis: int = 0,
+        labels: Optional[Union[pd.Series, list]] = None,
+    ) -> Axes:
+        # TODO: QUEUE - same as above, using a scatterplot rather than a histogram, agg_0 and agg_1 on respective axes
         raise NotImplementedError()
 
     def drop(self, indices, axis=0):
         """
-
+        
         Args:
             indices:
             axis:
 
         Returns:
-
+            counts_kept:
         """
         # TODO: QUEUE
         raise NotImplementedError()
@@ -175,7 +176,7 @@ class Counts(csr_matrix):
     def save(self, filepath, create_rds=False):
         """
         Save as pickle.
-        Intermediate data store used to maintain future compatibility
+        Intermediate data store object used to maintain future compatibility
         """
         self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
 
@@ -183,7 +184,7 @@ class Counts(csr_matrix):
         return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
 
     def as_chemistry_version(self, chemistry):
-        """Duplicate with a different chemistry version"""
+        """Duplicate with a different 10X chemistry version"""
         if chemistry not in self._SUPPORTED_CHEMISTRIES:
             raise ValueError(f"supported chemistries: {self._SUPPORTED_CHEMISTRIES}")
         counts = self.copy()
@@ -195,7 +196,7 @@ class Counts(csr_matrix):
                 counts.features.drop("mode", inplace=True)
         return counts
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[pd.Series, list, str, int, tuple]):
         if isinstance(key, tuple):
             return self._2d_slice(key)
         else:
