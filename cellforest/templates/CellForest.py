@@ -8,7 +8,7 @@ from dataforest.utils.utils import label_df_partitions, update_recursive
 import pandas as pd
 
 from cellforest.structures.Counts import Counts
-from cellforest.templates.PlotMethodsSC import PlotMethodsSC
+# from cellforest.templates.PlotMethodsSC import PlotMethodsSC
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.SpecSC import SpecSC
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
@@ -31,7 +31,7 @@ class CellForest(DataForest):
     ROOT_LEVEL_COMPARTMENTS = {
         "subset",
     }
-    PLOT_METHODS = PlotMethodsSC
+    # PLOT_METHODS = PlotMethodsSC
     SPEC_CLASS = SpecSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
