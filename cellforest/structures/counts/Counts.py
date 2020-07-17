@@ -1,16 +1,15 @@
-import os
 import pickle
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable, Optional, Callable, Tuple
+from typing import Union, Iterable, Optional, Callable
 
 from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix, hstack, vstack
 
-from cellforest.structures import const
-from cellforest.structures.build_counts_store import build_counts_store
+from cellforest.structures.counts import const
+from cellforest.structures.counts.build_counts_store import build_counts_store
 from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
 from cellforest.utils.cellranger import CellRangerIO
 from cellforest.utils.r.Convert import Convert

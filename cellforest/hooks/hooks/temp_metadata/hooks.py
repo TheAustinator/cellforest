@@ -11,9 +11,9 @@ def hook_store_temp_meta(dp):
     Stores a temporary metadata file in the current process
     """
     if dp.temp_meta:
-        dp._metadata_filepath = dp.forest[dp.process_name].path / dp.forest.schema.__class__.TEMP_METADATA_FILENAME
+        dp._metadata_filepath = dp.forest[dp.name].path / dp.forest.schema.__class__.TEMP_METADATA_FILENAME
         WriterMethodsSC.tsv(
-            dp._metadata_filepath, dp.forest[dp.process_name].forest.meta, header=True,
+            dp._metadata_filepath, dp.forest[dp.name].forest.meta, header=True,
         )
 
 

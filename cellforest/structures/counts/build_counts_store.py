@@ -2,7 +2,7 @@ import os
 import pickle
 from pathlib import Path
 
-from cellforest.structures.CountsStore import CountsStore
+from cellforest.structures.counts.CountsStore import CountsStore
 
 
 def build_counts_store(matrix, cell_ids, features, save_path=None):

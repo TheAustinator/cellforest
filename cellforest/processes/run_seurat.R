@@ -13,7 +13,7 @@ output_embeddings_path <- args[10]
 output_loadings_path <- args[11]
 num_pcs <- args[12]
 resolution <- as.numeric(args[13])
-# This is janky, but R sucks and I can't find a better way
+
 r_functions_filepath <- args[14]
 source(r_functions_filepath)
 

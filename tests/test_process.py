@@ -9,16 +9,19 @@ from tests.test_init import build_root_fix
 
 @pytest.fixture
 def test_normalize_fix(root_path, build_root_fix):
-    spec = {
-        "normalize": {
-            "min_genes": 5,
-            "max_genes": 5000,
-            "min_cells": 5,
-            "nfeatures": 30,
-            "perc_mito_cutoff": 20,
-            "method": "seurat_default",
-        },
-    }
+    spec = [
+        {
+            "process": "normalize",
+            "params": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "nfeatures": 30,
+                "perc_mito_cutoff": 20,
+                "method": "seurat_default",
+            },
+        }
+    ]
     cf = CellForest(root_dir=root_path, spec=spec)
     cf.process.normalize()
     return cf
@@ -29,13 +32,32 @@ def test_logging(test_normalize_fix):
     pass
 
 
+def test_aliasing():
+    pass
+
+
 def test_normalize_cf_at(test_normalize_fix):
     """Functionality not yet implemented"""
     return
 
     cf = test_normalize_fix
     rna = Counts.load(cf["normalize"].path_map["rna"])
-    cf = cf.at("normalize")
+    cf = cf.goto_process("normalize")
     assert cf.rna.shape == rna.shape
     assert len(cf.meta) == len(rna)
     assert len(cf.rna.features) == len(rna.features)
+
+
+def test_reduce_on_existing_normalize():
+    """
+    Test that reduce works on an existing normalize directory and normalize
+    isn't re-run
+    """
+    pass
+
+
+def test_fresh_normalize_reduce():
+    """
+    Test that normalize and reduce work sequentially from scratch
+    """
+    pass

@@ -5,6 +5,7 @@ standard_files:
   rna: rna.pickle
   rna_r: rna.rds
   rna_ann: rna.anndata
+
 file_map:
   normalize:
     corrected_umi: corrected_umi.mtx    # from sctransform
@@ -41,6 +42,8 @@ setup_hooks:
   - hook_comparative
   - hook_input_exists
   - hook_mkdirs
+  - hook_store_run_spec
+  - hook_catalogue
   - hook_store_temp_meta
 clean_hooks:
   - hook_garbage_collection

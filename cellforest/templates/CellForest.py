@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Optional, Union, List
 
 from dataforest.core.DataForest import DataForest
-from dataforest.utils.utils import label_df_partitions, update_recursive
+from dataforest.utils.utils import label_df_partitions
 import pandas as pd
 
-from cellforest.structures.Counts import Counts
+from cellforest.structures.counts.Counts import Counts
 from cellforest.templates.PlotMethodsSC import PlotMethodsSC
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.SpecSC import SpecSC
@@ -28,9 +28,6 @@ class CellForest(DataForest):
     the normalized counts matrix
     """
 
-    ROOT_LEVEL_COMPARTMENTS = {
-        "subset",
-    }
     PLOT_METHODS = PlotMethodsSC
     SPEC_CLASS = SpecSC
     READER_METHODS = ReaderMethodsSC
@@ -53,9 +50,9 @@ class CellForest(DataForest):
     _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/process_schema.yaml"
 
     def __init__(
-        self, root_dir, spec=None, process_order=None, verbose=False, meta=None, config=None, unversioned=None
+        self, root_dir, spec=None, verbose=False, meta=None, config=None, current_process=None, unversioned=None
     ):
-        super().__init__(root_dir, spec, process_order, verbose, config)
+        super().__init__(root_dir, spec, verbose, config, current_process)
         self.assays = set()
         self._rna = None
         self._meta_unfiltered = None
@@ -120,6 +117,7 @@ class CellForest(DataForest):
                     f"CellForest.from_input_dirs. Not found: {counts_path}"
                 )
             self._rna = Counts.load(counts_path)
+        if not self._rna.index.equals(self.meta.index):
             self._rna = self._rna[self.meta.index]
         return self._rna
 
@@ -167,6 +165,7 @@ class CellForest(DataForest):
             forest: new DataForest which inherits `self.spec` with additional `subset`s
                 from `by`
         """
+        raise NotImplementedError("currently not functioning")
         if isinstance(by, (tuple, set)):
             by = list(by)
         for (name, df) in self.meta.groupby(by, **kwargs):
@@ -226,9 +225,10 @@ class CellForest(DataForest):
                 df["str_var_processed"] = df["str_var_preprocessed"].str.extract(r"([A-Z]\d)")
             # TODO: fill in once `process_run.done` feature is ready
             df = self._meta_add_downstream_data(df)
-        df = self._subset_filter(df, self.spec, self.schema)
-        if self.spec.partition_set:
-            df = label_df_partitions(df, self.spec.partition_set, encodings=True)
+        partitions_list = self.spec.get_partition_list(self.current_process)
+        partitions = set().union(*partitions_list)
+        if partitions:
+            df = label_df_partitions(df, partitions, encodings=True)
         return df
 
     def _meta_add_downstream_data(self, df):
@@ -258,29 +258,6 @@ class CellForest(DataForest):
         # except Exception:
         #     self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
-
-    def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
-        """
-
-        """
-        if compartment_name in self.ROOT_LEVEL_COMPARTMENTS:
-            spec = update_recursive(self.spec, update, inplace=False)
-        else:
-            spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
-        forest = self.copy(spec=spec)
-        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
-        if sum(bool_selector) == 0:
-            import ipdb
-
-            ipdb.set_trace()
-        if compartment_name == "subset":
-            forest._meta = forest.meta[bool_selector]
-        elif compartment_name == "filter":
-            forest._meta = forest.meta[~bool_selector]
-        else:
-            raise ValueError()
-        forest._rna = forest.counts[forest.meta.index]
-        return forest
 
     @staticmethod
     def _combine_datasets(

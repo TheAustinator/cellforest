@@ -7,7 +7,6 @@ output_embeddings_path <- args[4]
 output_loadings_path <- args[5]
 npcs <- as.numeric(args[6])
 
-# This is janky, but R sucks and I can't find a better way
 r_functions_filepath <- args[7]
 source(r_functions_filepath)
 

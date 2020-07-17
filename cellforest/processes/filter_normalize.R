@@ -14,7 +14,6 @@ perc_mito_cutoff <- as.numeric(args[5])
 num_features <- as.numeric(args[6])
 num_pcs <- as.numeric(args[7])
 
-# This is janky, but R sucks and I can't find a better way
 r_functions_filepath <- args[8]
 source(r_functions_filepath)
 
