@@ -6,3 +6,6 @@ venv
 *.egg-info
 *-checkpoint.ipynb
 *-checkpoint.txt
+playground/
+Pipfile
+Pipfile.lock

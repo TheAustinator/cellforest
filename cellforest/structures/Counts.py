@@ -77,28 +77,28 @@ class Counts(csr_matrix):
         features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
         return self.__class__(matrix, cell_ids, features)
 
-    def hist(self, axis=0, slices=None):
+    def hist(self, agg: Callable = np.sum, axis: int = 0, labels: Optional[Union[pd.Series, list]] = None) -> Axes:
         """
-
+        Plots histogram along specified axis, optionally, stratified by label.
         Args:
-            axis:
-            slices:
+            agg: aggregation function for opposite axis (e.g. sum, min, mean, var, etc.)
+            axis: axis along which to create histogram, with `agg` applied to other axis
+            labels: cell or gene category labels by which to stratify plot
 
         Returns:
-
+            hist: histogram
         """
         # TODO: QUEUE
         raise NotImplementedError()
 
-    def scatter(self, slices=None):
-        """
-
-        Args:
-            slices:
-
-        Returns:
-
-        """
+    def scatter(
+        self,
+        agg_0: Callable = np.sum,
+        agg_1: Callable = np.var,
+        axis: int = 0,
+        labels: Optional[Union[pd.Series, list]] = None,
+    ) -> Axes:
+        # TODO: QUEUE - same as above, using a scatterplot rather than a histogram, agg_0 and agg_1 on respective axes
         raise NotImplementedError()
 
     def drop(self, indices, axis=0):
