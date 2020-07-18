@@ -1,11 +1,15 @@
 .idea
 build
 dist
-tests/data
 venv
+
 *.egg-info
 *-checkpoint.ipynb
 *-checkpoint.txt
+
+tests/data
 playground/
+
 Pipfile
 Pipfile.lock
+.DS_Store
