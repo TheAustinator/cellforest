@@ -103,7 +103,7 @@ class Counts(csr_matrix):
             agg_func = getattr(csc_matrix, agg)
             rna_agg = agg_func(axis=agg_axis)
         elif agg in ["std", "var"]:
-            # TODO: might crash because there is still conversion to numpy matrix
+            # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
             rna_var = csc_matrix.power(2).mean(axis=agg_axis) - np.power(csc_matrix.mean(axis=agg_axis), 2)
             rna_agg = rna_var.power(0.5) if agg == np.std else rna_var  # std is sqrt(var)
         else:
