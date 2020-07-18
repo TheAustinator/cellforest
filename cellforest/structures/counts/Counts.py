@@ -1,7 +1,7 @@
 import pickle
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable, Optional, Callable
+from typing import Union, Iterable, Optional, Callable, List, get_type_hints
 
 from matplotlib.axes import Axes
 import numpy as np
@@ -128,7 +128,7 @@ class Counts(csr_matrix):
         return pd.DataFrame(self.todense(), columns=self.columns, index=self.index)
 
     @classmethod
-    def from_cellranger(cls, cellranger_dir):
+    def from_cellranger(cls, cellranger_dir: Union[str, Path]) -> "Counts":
         """Load from 10X Cellranger output format"""
         crio = CellRangerIO(cellranger_dir)
         matrix = crio.read_matrix()
@@ -136,7 +136,7 @@ class Counts(csr_matrix):
         features = crio.read_features()
         return cls(matrix, cell_ids, features)
 
-    def to_cellranger(self, output_dir, gz=True, chemistry="v3"):
+    def to_cellranger(self, output_dir: Union[str, Path], gz: bool = True, chemistry: str = "v3"):
         """Save in 10X Cellranger output format"""
         output_dir = Path(output_dir)
         crio = CellRangerIO
@@ -148,7 +148,7 @@ class Counts(csr_matrix):
         crio.write_barcodes(output_dir / "barcodes.tsv", counts.cell_ids, gz)
 
     @classmethod
-    def from_rds(cls, path):
+    def from_rds(cls, path: Union[str, Path]) -> "Counts":
         """Convert rds to pickle, then load pickle"""
         # TODO: QUEUE - test (Convert.rds_to_pickle_dir may overwrite any existing metadata)
         raise NotImplementedError()
@@ -156,7 +156,7 @@ class Counts(csr_matrix):
         Convert.rds_to_pickle_dir(parent)
         return cls.load(parent / "rna.pickle")
 
-    def to_rds(self, path):
+    def to_rds(self, path: Union[str, Path]):
         """Save pickle, then convert pickle to rds"""
         # TODO: QUEUE - test (Convert.pickle_to_rds_dir may overwrite any existing metadata)
         raise NotImplementedError()
@@ -166,20 +166,20 @@ class Counts(csr_matrix):
         Convert.pickle_to_rds_dir(path.parent)
 
     @classmethod
-    def load(cls, filepath):
+    def load(cls, filepath: Union[str, Path]) -> "Counts":
         """Load from pickle"""
-        with open(filepath, "rb") as f:
+        with open(str(filepath), "rb") as f:
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath, create_rds=False):
+    def save(self, filepath: Union[str, Path], create_rds: bool = False):
         """
         Save as pickle.
         Intermediate data store object used to maintain future compatibility
         """
         self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
 
-    def copy(self):
+    def copy(self) -> "Counts":
         return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
 
     def as_chemistry_version(self, chemistry):
@@ -260,7 +260,7 @@ class Counts(csr_matrix):
         return key
 
     @staticmethod
-    def _convert_key(key, df):
+    def _convert_key(key: Union[Iterable, str, int, slice], df: pd.DataFrame) -> Union[List[int], slice]:
         """Slice index dataframe with key and convert to integer indices"""
         if isinstance(key, (pd.Series, pd.Index, np.ndarray)):
             key = key.tolist()
@@ -277,26 +277,16 @@ class Counts(csr_matrix):
             key = [df.loc[key]["i"].tolist()]
         elif isinstance(key, int):
             key = [key]
-        else:
+        elif isinstance(key, slice):
             return key
+        else:
+            raise TypeError(f"Expected type {get_type_hints(Counts._convert_key)['key']}, not {type(key)}")
         if len(key) == 0:
             raise KeyError("No matching indices")
         return key
 
     @staticmethod
-    def _check_key(key, df):
-        """
-        NOTE: not currently used because metedata includes cells that were filtered out by cellranger
-        """
-        intersection = len(set(key).intersection(set(df.index.tolist()))) / len(key)
-        if intersection < 1:
-            import ipdb
-
-            ipdb.set_trace()
-            raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
-
-    @staticmethod
-    def _index_col_swap(df, col: Union[str, int] = 0, new_index_colname="i"):
+    def _index_col_swap(df: pd.DataFrame, col: Union[str, int] = 0, new_index_colname: str = "i") -> pd.DataFrame:
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
@@ -310,14 +300,20 @@ class Counts(csr_matrix):
         return df
 
     @staticmethod
-    def _save(filepath, matrix, cell_ids, features, create_rds=False):
+    def _save(
+        filepath: Union[str, Path],
+        matrix: csr_matrix,
+        cell_ids: pd.DataFrame,
+        features: pd.DataFrame,
+        create_rds: bool = False,
+    ):
         filepath = Path(filepath)
         build_counts_store(matrix, cell_ids, features, save_path=filepath)
         if create_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
 
     @staticmethod
-    def _convert_to_series(df):
+    def _convert_to_series(df: pd.DataFrame) -> pd.DataFrame:
         """If a dataframe, convert to series"""
         if isinstance(df, pd.DataFrame):
             df = df.iloc[:, 0].copy()
@@ -332,7 +328,7 @@ class Counts(csr_matrix):
         return self.shape[0]
 
     @staticmethod
-    def wrap_super(func):
+    def wrap_super(func: Callable) -> Callable:
         """Wrapper to pass scipy matrix methods through to .matrix attribute"""
 
         @wraps(func)
@@ -343,7 +339,7 @@ class Counts(csr_matrix):
         return wrapper
 
     @staticmethod
-    def decorate(method_names):
+    def decorate(method_names: Iterable[str]):
         """
         Wrap a list of scipy matrix `method_names` with `wrap_super` and
         re-tether them to class

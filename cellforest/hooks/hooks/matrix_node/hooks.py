@@ -7,7 +7,9 @@ from cellforest.utils.r.Convert import Convert
 def hook_unify_matrix_node(dp):
     """
     If node has counts matrix output, ensure that all desired formats are
-    present (e.g. pickle, rds, anndata, cellranger)
+    present (e.g. Counts pickle, Seurat rds, anndata, cellranger). If any are
+    missing, run the necessary conversions.
+    Note: only Counts pickle and Seurat rds currently implemented
     """
     # TODO: currently hardcoded to pickle and rds, but fix this later
     if dp.matrix_layer:

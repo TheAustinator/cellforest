@@ -1,9 +1,10 @@
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 
 from dataforest.core.DataForest import DataForest
+from dataforest.core.Spec import Spec
 from dataforest.utils.utils import label_df_partitions
 import pandas as pd
 
@@ -39,26 +40,30 @@ class CellForest(DataForest):
             "umap_embeddings": {"header": "infer", "index_col": 0},
         },
         "combine": {"cell_metadata": {"header": 0}},
-        # 'normalize': {
-        #     'cell_ids': {'index_col': 0}},
         "cluster": {"clusters": {"index_col": 0}},
         "diffexp": {"diffexp_result": {"header": 0}},
     }
     _METADATA_NAME = "meta"
     _COPY_KWARGS = {**DataForest._COPY_KWARGS, "unversioned": "unversioned"}
     _ASSAY_OPTIONS = ["rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"]
-    _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/process_schema.yaml"
+    _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/default_config.yaml"
 
     def __init__(
-        self, root_dir, spec=None, verbose=False, meta=None, config=None, current_process=None, unversioned=None
+        self,
+        root_dir: Union[str, Path],
+        spec: Optional[Union[list, Spec]] = None,
+        verbose: bool = False,
+        meta: Optional[pd.DataFrame] = None,
+        config: Optional[Union[str, Path, dict]] = None,
+        unversioned: Optional[bool] = None,
     ):
-        super().__init__(root_dir, spec, verbose, config, current_process)
+        super().__init__(root_dir, spec, verbose, config)
         self.assays = set()
         self._rna = None
         self._meta_unfiltered = None
         if meta is not None:
             meta = meta.copy()
-        self._meta = self.get_cell_meta(meta)
+        self._meta = self._get_cell_meta(meta)
         # TODO: use this to augment strings of output directories so manual tinkers don't
         #   affect downstream processing
         if meta is not None and unversioned is None:
@@ -91,13 +96,13 @@ class CellForest(DataForest):
         """
         # TODO: add embeddings and cluster ids
         if self._meta is None:
-            self._meta = self.get_cell_meta()
+            self._meta = self._get_cell_meta()
         elif "reduce" in self.spec and "UMAP_1" not in self._meta.columns:
             if self["reduce"].done:
-                self._meta = self.get_cell_meta()
+                self._meta = self._get_cell_meta()
         elif "cluster" in self.spec and "cluster_id" not in self._meta.columns:
             if self["cluster"].done:
-                self._meta = self.get_cell_meta()
+                self._meta = self._get_cell_meta()
         return self._meta
 
     @property
@@ -149,7 +154,7 @@ class CellForest(DataForest):
     def crispr(self):
         raise NotImplementedError()
 
-    def groupby(self, by: Union[str, list, set, tuple], **kwargs):
+    def groupby(self, by: Union[str, list, set, tuple], **kwargs) -> Tuple[str, "CellForest"]:
         """
         Operates like a pandas groupby, but does not return a GroupBy object,
         and yields (name, DataForest), where each DataForest is subset according to `by`,
@@ -181,10 +186,10 @@ class CellForest(DataForest):
             yield name, forest
 
     @property
-    def unversioned(self):
+    def unversioned(self) -> bool:
         return self._unversioned
 
-    def copy(self, reset: bool = False, **kwargs):
+    def copy(self, reset: bool = False, **kwargs) -> "CellForest":
         if kwargs.get("meta", None) is not None:
             kwargs["unversioned"] = True
         if not kwargs:
@@ -206,12 +211,19 @@ class CellForest(DataForest):
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
-    def get_cell_meta(self, df=None):
-        # TODO: MEMORY DUPLICATION - we want to keep file access pure?
+    def _get_cell_meta(self, df=None):
+        """
+         Read in cell metadata and performs modifications:
+             - replace any spaces with underscores
+             - add tertiary data from prior or precursor or current process runs
+             - performs data operations (subset, filter, partition)
+         Args:
+             df: if provided, skip first two steps and go straight to data ops
+         Returns:
+             df: modified metadata dataframe
+         """
         if df is None:
-            # TODO: fix this
             try:
-                # df = self.f["cell_metadata"].copy()
                 df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
             except FileNotFoundError:
                 df = pd.DataFrame(self.rna.cell_ids.copy())
@@ -219,11 +231,6 @@ class CellForest(DataForest):
                 df.index = df["cell_id"]
                 df.drop(columns=["cell_id"], inplace=True)
             df.replace(" ", "_", regex=True, inplace=True)
-            if "to_bucket_var" in df and "bucketed_var" not in df:
-                df["bucketed_var"] = pd.cut(df["to_bucket_var"], bins=(0, 20, 40, 60, 80), labels=(10, 30, 50, 70),)
-            if "str_var_preprocessed" in df and "str_var_processed" not in df:
-                df["str_var_processed"] = df["str_var_preprocessed"].str.extract(r"([A-Z]\d)")
-            # TODO: fill in once `process_run.done` feature is ready
             df = self._meta_add_downstream_data(df)
         partitions_list = self.spec.get_partition_list(self.current_process)
         partitions = set().union(*partitions_list)
@@ -231,7 +238,8 @@ class CellForest(DataForest):
             df = label_df_partitions(df, partitions, encodings=True)
         return df
 
-    def _meta_add_downstream_data(self, df):
+    def _meta_add_downstream_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        # TODO: change to add current process data (no downstream)
         done = set()
         if "cluster" in self.spec:
             if self["cluster"].done:

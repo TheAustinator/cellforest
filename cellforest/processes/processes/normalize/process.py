@@ -6,6 +6,21 @@ from cellforest.utils.r.run_r_script import run_process_r_script
 
 @dataprocess(matrix_layer=True)
 def normalize(forest: "CellForest"):
+    """
+    Performs:
+        - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
+        - gene filtering by `min_cells` expressing
+        - normalization via either:
+            - seurat default
+            - sctransform
+    Params:
+        min_genes (int):
+        max_genes (int):
+        min_cells (int):
+        perc_mito_cutoff (int, float):
+        method (str): from {"seurat_default", "sctransform"}
+        nfeatures (int): (seurat_default only)
+    """
     process_name = "normalize"
     input_metadata_path = forest.get_temp_meta_path(process_name)
     # TODO: add a root filepaths lookup
