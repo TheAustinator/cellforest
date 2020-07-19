@@ -45,6 +45,11 @@ def root_path(data_dir):
 
 
 @pytest.fixture
+def root_path_2(data_dir):
+    return data_dir / "root_2"
+
+
+@pytest.fixture
 def metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 

@@ -56,42 +56,6 @@ dataprocess_default_attrs:
 
 process_sources:
   - cellforest.processes
-default_process_order:
-  - normalize
-  - reduce
-  - cluster
-  - diffexp
-param_names:
-  normalize:
-    - max_genes
-    - min_genes
-    - perc_mito_cutoff
-    - method
-    - min_cells
-    - nfeatures
-  reduce:
-    - pca_npcs
-    - umap_n_neighbors
-    - umap_min_dist
-    - umap_n_components
-    - umap_metric
-  cluster:
-    - res
-    - eps
-    - num_pcs
-  diffexp_bulk:
-    - logfc_thresh
-    - test
-  diffexp:
-    - logfc_thresh
-    - test
-  markers:
-    - logfc_thresh
-    - test
-  gsea:
-    - gene_set
-  gsea_bulk:
-    - gene_set
 
 r_filenames:
   LOAD_DATA_SCRIPT: load_data.R
