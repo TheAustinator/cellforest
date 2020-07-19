@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pytest
 import pandas as pd
 
@@ -7,8 +9,11 @@ import tests
 from tests.test_init import build_root_fix
 
 
+# TODO: add output file checks
+
+
 @pytest.fixture
-def test_normalize_fix(root_path, build_root_fix):
+def norm_spec():
     spec = [
         {
             "process": "normalize",
@@ -22,8 +27,33 @@ def test_normalize_fix(root_path, build_root_fix):
             },
         }
     ]
-    cf = CellForest(root_dir=root_path, spec=spec)
+    return spec
+
+
+@pytest.fixture
+def process_chain_spec(norm_spec):
+    spec = deepcopy(norm_spec)
+    spec.append({"process": "test_process"})
+    return spec
+
+
+@pytest.fixture
+def alias_spec():
+    spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
+    return spec
+
+
+@pytest.fixture
+def test_normalize_fix(root_path, build_root_fix, norm_spec):
+    cf = CellForest(root_dir=root_path, spec=norm_spec)
     cf.process.normalize()
+    return cf
+
+
+def test_process_chain(root_path, build_root_fix, process_chain_spec):
+    cf = CellForest(root_dir=root_path, spec=process_chain_spec)
+    cf.process.normalize()
+    cf.process.test_process()
     return cf
 
 
@@ -32,8 +62,11 @@ def test_logging(test_normalize_fix):
     pass
 
 
-def test_aliasing():
-    pass
+def test_process_aliasing(root_path_2, sample_paths, alias_spec):
+    cf = CellForest.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
+    cf.process.process_1()
+    cf.process.process_2()
+    return cf
 
 
 def test_normalize_cf_at(test_normalize_fix):

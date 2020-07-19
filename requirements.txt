@@ -1,6 +1,7 @@
 matplotlib
 numpy
 pandas
+path
 pathlib
 pyyaml
 scipy
