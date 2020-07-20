@@ -7,7 +7,7 @@ from typing import Union, Iterable, Callable, Optional
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import Axes
+from matplotlib.axes._subplots import Axes
 from scipy.sparse import csr_matrix, hstack, vstack
 
 from cellforest.structures import const
@@ -22,7 +22,11 @@ class Counts(csr_matrix):
     # TODO: change to singular
     FEATURES_COLUMNS = ["ensgs", "genes"]
     SUPER_METHODS = const.SUPER_METHODS
-    _SUPPORTED_AGG_FUNCS = ["sum", "mean", "min", "max", "std", "var"]
+    _SUPPORTED_AGG_FUNCS = {
+        "built-in": ["sum", "mean", "min", "max"],
+        "derived": ["std", "var"],
+        "all": ["sum", "mean", "min", "max", "std", "var"],
+    }
 
     def __init__(self, matrix, cell_ids, features, **kwargs):
         # TODO: make a get_counts function that just takes the directory
@@ -80,13 +84,21 @@ class Counts(csr_matrix):
         features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
         return self.__class__(matrix, cell_ids, features)
 
-    def hist(self, agg: str = "sum", axis: int = 0, labels: Optional[Union[pd.Series, list]] = None, **kwargs) -> Axes:
+    def hist(
+        self,
+        agg: str = "sum",
+        axis: int = 0,
+        labels: Optional[Union[pd.Series, list]] = None,
+        ax: Axes = None,
+        **kwargs,
+    ) -> Axes:
         """
-        Plots histogram along specified axis, optionally, stratified by label.
+        Plots histogram along specified axis, optionally, stratified by label
         Args:
-            agg: name of aggregation function for opposite axis (e.g., "std"); options: in self._SUPPORTED_AGG_FUNCS
+            agg: name of aggregation function for opposite axis (e.g., "std"); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create histogram, with `agg` applied to other axis
             labels: cell or gene category labels by which to stratify plot
+            ax: matplotlib pyplot or axes object which defines the plot
             kwargs: keyword arguments for plt.hist()
 
         Returns:
@@ -97,53 +109,98 @@ class Counts(csr_matrix):
             raise ValueError("axis out of range")
 
         csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
-        agg_axis = abs(1 - axis)
+        agg_axis = abs(1 - axis)  # to aggregate opposite axis
+        rna_agg = self._agg_apply(csc_matrix, agg=agg, axis=axis)
 
-        if agg in ["sum", "mean", "min", "max"]:
-            agg_func = getattr(csc_matrix, agg)
-            rna_agg = agg_func(axis=agg_axis)
-        elif agg in ["std", "var"]:
-            # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
-            rna_var = csc_matrix.power(2).mean(axis=agg_axis) - np.power(csc_matrix.mean(axis=agg_axis), 2)
-            rna_agg = rna_var.power(0.5) if agg == np.std else rna_var  # std is sqrt(var)
-        else:
-            raise NotImplementedError(
-                'aggregation function "{0}" not supported, valid options are: {1}'.format(
-                    agg, self._SUPPORTED_AGG_FUNCS
-                )
-            )
+        ax = ax or plt.gca()  # use defined or get current axes
+        ax.hist(rna_agg, **kwargs)
 
-        ax = plt.axes()
-        ax.hist(rna_agg.reshape(-1, 1), **kwargs)
-
-        cells_axis = agg_axis in [0, "cells"]  # bool for naming axes
-        title = "cell count per gene" if cells_axis else "transcript count per cell"
+        cells_axis = axis in [1, "genes"]  # bool for aggregated axis' name
+        label = "cell count" if cells_axis else "transcript count"
+        title = label + " " + ("per gene" if cells_axis else "per cell")
         ax.set_title("{} of ".format(agg) + title)
         ax.set_ylabel("quantity")
-        ax.set_xlabel("cell count" if cells_axis else "transcript count")
+        ax.set_xlabel(label)
 
         return ax
 
     def scatter(
         self,
-        agg_0: Callable = np.sum,
-        agg_1: Callable = np.var,
+        agg_x: str = "sum",
+        agg_y: str = "var",
         axis: int = 0,
         labels: Optional[Union[pd.Series, list]] = None,
-    ) -> Axes:
+        ax: Axes = None,
+        **kwargs,
+    ) -> plt.axes:
         """
-        Plots histogram along specified axis, optionally, stratified by label.
+        Plots scatterplot along specified axes, optionally, stratified by label
         Args:
-            agg: aggregation function for opposite axis (e.g. sum, min, mean, var, etc.)
-            axis: axis along which to create histogram, with `agg` applied to other axis
+            agg_x: aggregation function for x-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
+            agg_y: aggregation function for y-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
+            axis: axis along which to create scatterplot, with `agg` applied to other axis
             labels: cell or gene category labels by which to stratify plot
+            ax: pyplot subplot or axes object which defines the plot
+            kwargs: keyword arguments for plt.scatter()
 
         Returns:
-            hist: histogram
+            ax: 2D scatterplot
         """
 
-        # TODO: QUEUE - same as above, using a scatterplot rather than a histogram, agg_0 and agg_1 on respective axes
-        raise NotImplementedError()
+        if not (0 <= axis <= 1):
+            raise ValueError("axis out of range")
+
+        csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
+        rna_agg_x = self._agg_apply(csc_matrix, agg=agg_x, axis=axis)
+        rna_agg_y = self._agg_apply(csc_matrix, agg=agg_y, axis=axis)
+
+        ax = ax or plt.gca()  # use defined or get current axes
+        ax.scatter(rna_agg_x, rna_agg_y, **kwargs)
+
+        cells_axis = axis in [1, "genes"]  # bool for aggregated axis' name
+        label = "cell count" if cells_axis else "transcript count"
+        title = label + " " + ("per gene" if cells_axis else "per cell")
+        ax.set_title(agg_y + " vs " + agg_x + " of " + title)
+        ax.set_xlabel(agg_x + " of " + label)
+        ax.set_ylabel(agg_y + " of " + label)
+
+        return ax
+
+    def _agg_apply(self, matrix: np.matrix, agg: str, axis: int):
+        """Apply aggregate function onto matrix along specified axis"""
+
+        agg_axis = abs(1 - axis)  # to aggregate opposite axis
+
+        if agg in self._SUPPORTED_AGG_FUNCS["built-in"]:
+            agg_func = getattr(matrix, agg)
+            rna_agg_out = agg_func(axis=agg_axis)
+        elif agg in self._SUPPORTED_AGG_FUNCS["derived"]:
+            # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
+            rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
+            rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
+        else:
+            raise NotImplementedError(
+                'aggregation function "{0}" not supported, valid options are: {1}'.format(
+                    agg, self._SUPPORTED_AGG_FUNCS["all"]
+                )
+            )
+
+        rna_agg = np.ravel(rna_agg_out.sum(axis=agg_axis))  # flatten matrix
+        return rna_agg
+
+    @staticmethod
+    def _get_agg_label(agg):
+        mapping = {
+            "sum": "",
+            "mean": "mean",
+            "std": "standard deviation of",
+            "var": "variance of",
+            "min": "minimum of",
+            "max": "maximum of",
+        }
+        agg_name = mapping[agg] + "of"
+
+        return agg_name
 
     def drop(self, indices, axis=0):
         """

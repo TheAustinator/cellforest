@@ -1,3 +1,4 @@
+# IDE
 .idea
 .vscode
 
@@ -5,6 +6,7 @@ build
 dist
 venv
 
+# checkpoints
 *.egg-info
 *-checkpoint.ipynb
 *-checkpoint.txt
@@ -12,6 +14,8 @@ venv
 tests/data
 playground/
 
+# pipenv
 Pipfile
 Pipfile.lock
 .DS_Store
+*.cpython-*.pyc
