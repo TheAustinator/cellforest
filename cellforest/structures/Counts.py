@@ -103,6 +103,17 @@ class Counts(csr_matrix):
 
         Returns:
             ax: histogram
+
+        Examples:
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
+            >>> ax1 = rna.hist("sum", axis=0, ax=ax1, bins=30)
+            >>> ax2 = rna.hist("std", axis=0, ax=ax2)
+            >>> fig.show()
+
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
+            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)
+            >>> plt.show()
         """
 
         if not (0 <= axis <= 1):
@@ -145,6 +156,17 @@ class Counts(csr_matrix):
 
         Returns:
             ax: 2D scatterplot
+
+        Examples:
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
+            >>> ax1 = rna.scatter("sum", axis=0, ax=ax1, bins=30)
+            >>> ax2 = rna.scatter("std", axis=0, ax=ax2)
+            >>> fig.show()
+
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
+            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)
+            >>> plt.show()
         """
 
         if not (0 <= axis <= 1):
