@@ -1,11 +1,6 @@
 ---
 # FILE STRUCTURE
 #
-standard_files:
-  rna: rna.pickle
-  rna_r: rna.rds
-  rna_ann: rna.anndata
-
 file_map:
   normalize:
     corrected_umi: corrected_umi.mtx    # from sctransform
@@ -23,7 +18,16 @@ file_map:
   markers:
     markers: markers.tsv
 
-
+layers:
+  matrix:
+    rna: rna.pickle
+    rna_r: rna.rds
+    rna_ann: rna.anndata
+process_layers:
+  normalize:
+    - matrix
+  root:
+    - matrix
 # HOOKS
 #   Hook will be collected recursively from directories or processes specified
 #   in `hook_sources`. Hook containing files must be named `hooks.py`, and hook
@@ -33,8 +37,8 @@ file_map:
 #   hook_sources:
 #     Paths to search recursively for hooks. Can be specified in module or
 #     absolute path syntax.
-#   setup_hooks: Hooks to run prior to process run.
-#   clean_hooks: Hooks to run after process run.
+#   setup_hooks: Hooks to run prior to process run. (ordered)
+#   clean_hooks: Hooks to run after process run. (ordered)
 hook_sources:
   - dataforest.hooks
   - cellforest.hooks
@@ -42,6 +46,7 @@ setup_hooks:
   - hook_comparative
   - hook_input_exists
   - hook_mkdirs
+  - hook_goto_process
   - hook_store_run_spec
   - hook_catalogue
   - hook_store_temp_meta
@@ -50,6 +55,7 @@ clean_hooks:
   - hook_unify_matrix_node
   - hook_clean_temp_meta
   - hook_clean_unversioned
+  - hook_clear_metadata_cache
 dataprocess_default_attrs:
   temp_meta: true
   matrix_layer: false
@@ -57,18 +63,4 @@ dataprocess_default_attrs:
 process_sources:
   - cellforest.processes
 
-r_filenames:
-  LOAD_DATA_SCRIPT: load_data.R
-  DIFF_EXP_BULK_SCRIPT: diff_exp_bulk.R
-  DIFF_EXP_CLUSTER_SCRIPT: diff_exp_cluster_wise.R
-  SCTRANSFORM_SCRIPT: run_sctransform.R
-  PCA_SCRIPT: run_pca.R
-  FIND_CLUSTERS_SCRIPT: find_clusters.R
-  FIND_CLUSTER_MARKERS_SCRIPT: find_cluster_markers.R
-  SEURAT_SCRIPT: run_seurat.R
-  FUNCTIONS_FILE_PATH: functions.R
-  SUBSET_RDS_SCRIPT: subset_rds.R
-  FILTER_NORMALIZE_SCRIPT: filter_normalize.R
-  SEURAT_DEFAULT_NORMALIZE_SCRIPT: seurat_default_normalize.R
-r_scripts_module: cellforest.processes
 temp_meta_filename: temp_meta.tsv

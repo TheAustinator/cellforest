@@ -24,4 +24,4 @@ build_counts_store(matrix, cell_ids, features, output_pickle_path)
 meta <- srat[[]]
 # TODO: update colnames here
 
-write.table(meta, output_meta_path)
+write.table(meta, output_meta_path, sep = "\t", quote = FALSE)

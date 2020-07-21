@@ -27,7 +27,7 @@ seurat_object <- filter_cells(seurat_object, min_detected_genes, max_detected_ge
 print("Running standard workflow")
 seurat_object <- run_standard_workflow(seurat_object, nfeatures = num_features, npcs = num_pcs, verbose = TRUE)
 print("Saving RDS")
-saveRDS(seurat_object, output_rds_path)
+#saveRDS(seurat_object, output_rds_path)
 write.table(colnames(seurat_object), filtered_barcodes_path, sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
 print("Writing embeddings")
 save_embeddings(seurat_object, rdata_output_dir)

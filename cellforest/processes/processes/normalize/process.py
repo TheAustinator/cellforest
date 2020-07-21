@@ -1,11 +1,17 @@
+from pathlib import Path
+
 from dataforest.hooks import dataprocess
 
 # TODO: what to do about core/utility methods? core module? move to utils?
 from cellforest.utils.r.run_r_script import run_process_r_script
+from cellforest.processes import R_FUNCTIONS_FILEPATH
+
+R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
+R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
 
 
-@dataprocess(matrix_layer=True)
-def normalize(forest: "CellForest", run_name):
+@dataprocess(matrix_layer=True, output="rds")
+def normalize(forest: "CellForest", run_name: str):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
@@ -30,7 +36,6 @@ def normalize(forest: "CellForest", run_name):
     max_genes = params["max_genes"]
     min_cells = params["min_cells"]
     perc_mito_cutoff = params["perc_mito_cutoff"]
-    r_functions_filepath = forest.schema.__class__.R_FILEPATHS["FUNCTIONS_FILE_PATH"]
     method = params["method"]
     arg_list = [
         input_metadata_path,
@@ -40,19 +45,19 @@ def normalize(forest: "CellForest", run_name):
         max_genes,
         min_cells,
         perc_mito_cutoff,
-        r_functions_filepath,
+        R_FUNCTIONS_FILEPATH,
     ]
     if method == "sctransform":
         output_corrected_umi_path = forest[run_name].path_map["corrected_umi"]
         output_pearson_residual_path = forest[run_name].path_map["pearson_residual"]
         arg_list += [output_corrected_umi_path, output_pearson_residual_path]
-        r_normalize_script = str(forest.schema.__class__.R_FILEPATHS["SCTRANSFORM_SCRIPT"])
+        r_normalize_script = R_SCTRANSFORM_SCRIPT
     elif method == "seurat_default":
         verbose = True
         verbose = str(verbose).upper()
         nfeatures = params["nfeatures"]
         arg_list += [verbose, nfeatures]
-        r_normalize_script = str(forest.schema.__class__.R_FILEPATHS["SEURAT_DEFAULT_NORMALIZE_SCRIPT"])
+        r_normalize_script = R_SEURAT_DEFAULT_NORM_SCRIPT
     else:
         raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
     run_process_r_script(forest, r_normalize_script, arg_list, run_name)

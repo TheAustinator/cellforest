@@ -22,7 +22,7 @@ metadata_filter_paths <- function(input_metadata_path, input_rds_path) {
 metadata_filter_objs <- function(meta, srat) {
   print(paste0("filtering cells by metadata and keeping ", nrow(meta), " / ", nrow(srat@meta.data))); print(date())
   srat <- subset(srat, cells = rownames(meta))
-  AddMetaData(srat, meta)
+  srat <- AddMetaData(srat, meta)
   if (nrow(srat@meta.data) != nrow(meta)) {
     stop("Seurat object must contain all cell_ids present in metadata for filtering")
   }
