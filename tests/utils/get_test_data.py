@@ -23,7 +23,7 @@ def get_test_data():
     """
     # create sample metadata
     data_dir = Path(__file__).parent.parent / "data"
-    os.makedirs(data_dir)
+    os.makedirs(data_dir, exist_ok=True)
     subdirs = ["v3_gz/sample_1", "v3_gz/sample_2"]
     sample_metadata = pd.DataFrame(
         {"sample": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}

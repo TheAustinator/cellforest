@@ -99,7 +99,7 @@ class Counts(csr_matrix):
         Args:
             agg: name of aggregation function for opposite axis (e.g., "std"); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create histogram, with `agg` applied to other axis
-            labels: cell or gene category labels by which to stratify plot
+            labels: list or pd.Series of cell or gene category labels by which to stratify plot
             ax: matplotlib pyplot or axes object which defines the plot
             kwargs: keyword arguments for plt.hist()
 
@@ -108,8 +108,10 @@ class Counts(csr_matrix):
 
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
+            >>> half_of_cells = rna._matrix.shape[0] // 2
+            >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # create cell labels
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
-            >>> rna.hist("sum", axis="cells", ax=ax1, bins=30)  # plot on 1st axes object
+            >>> rna.hist("sum", axis="cells", ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
             >>> rna.hist("std", axis=0, ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
@@ -118,24 +120,27 @@ class Counts(csr_matrix):
             >>> plt.show()  # display current figure with axes
         """
 
-        if axis in self._SUPPORTED_AGG_AXES:
-            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
-        else:
-            raise ValueError("axis must be in {}".format(self._SUPPORTED_AGG_AXES))
+        axis = self._get_numeric_axis(axis)
+        labels = self._get_agg_labels(labels, axis)
 
-        csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
-        agg_axis = abs(1 - axis)  # to aggregate opposite axis
-        rna_agg = self._agg_apply(csc_matrix, agg=agg, axis=axis)
+        cells_axis = axis == 0  # bool for aggregated axis' name
+        cs_matrix = (
+            self._matrix.tocsr() if cells_axis else self._matrix.tocsc()
+        )  # convert to compressed sparse column/row for fast arithmetics
 
         ax = ax or plt.gca()  # use defined or get current axes
-        ax.hist(rna_agg, **kwargs)
+        for label in set(labels):
+            where_label = np.where(np.array(labels) == label)[0]
+            matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            rna_agg = self._agg_apply(matrix_slice, agg=agg, axis=axis)
+            ax.hist(rna_agg, label=label, **kwargs)
 
-        cells_axis = axis in [1, "genes"]  # bool for aggregated axis' name
-        label = "cell count" if cells_axis else "transcript count"
-        title = label + " " + ("per gene" if cells_axis else "per cell")
+        x_label = "transcript count" if cells_axis else "cell count"
+        title = x_label + " " + ("per cell" if cells_axis else "per gene")
         ax.set_title("{} of ".format(agg) + title)
         ax.set_ylabel("quantity")
-        ax.set_xlabel(label)
+        ax.set_xlabel(x_label)
+        ax.legend()
 
         return ax
 
@@ -154,7 +159,7 @@ class Counts(csr_matrix):
             agg_x: aggregation function for x-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
             agg_y: aggregation function for y-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create scatterplot, with `agg` applied to other axis
-            labels: cell or gene category labels by which to stratify plot
+            labels: list or pd.Series of cell or gene category labels by which to stratify plot
             ax: pyplot subplot or axes object which defines the plot
             kwargs: keyword arguments for plt.scatter()
 
@@ -164,35 +169,63 @@ class Counts(csr_matrix):
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
-            >>> rna.scatter("mean", "var", axis="cells", ax=ax1)  # plot on 1st axes object
-            >>> rna.scatter("mean", "var", axis="genes, ax=ax2)  # plot on 2nd axes object
+            >>> rna.scatter(agg_x="mean", agg_y="var", axis="cells", ax=ax1)  # plot on 1st axes object
+            >>> rna.scatter("mean", "var", axis="genes", ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
-            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
-            >>> rna.scatter("mean", "std", axis=0)  # plot on currect (or newly created) axes object
-            >>> plt.show()  # display current figure with axes
+            >>> num_genes = rna._matrix.shape[1]
+            >>> labels = ["sample_1"] * (num_genes // 2) + ["sample_2"] * (num_genes // 2)
+            >>> rna.scatter("sum", "std", axis="genes", labels=labels, alpha=0.2)
+            >>> plt.show()
         """
 
+        axis = self._get_numeric_axis(axis)
+        labels = self._get_agg_labels(labels, axis)
+
+        cells_axis = axis == 0  # bool for aggregated axis' name
+        cs_matrix = (
+            self._matrix.tocsr() if cells_axis else self._matrix.tocsc()
+        )  # convert to compressed sparse column/row for fast arithmetics
+
+        ax = ax or plt.gca()  # use defined or get current axes
+        for label in set(labels):
+            where_label = np.where(np.array(labels) == label)[0]
+            matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            rna_agg_x = self._agg_apply(matrix_slice, agg=agg_x, axis=axis)
+            rna_agg_y = self._agg_apply(matrix_slice, agg=agg_y, axis=axis)
+            ax.scatter(rna_agg_x, rna_agg_y, label=label, **kwargs)
+
+        ax_label = "transcript count" if cells_axis else "cell count"
+        title = ax_label + " " + ("per cell" if cells_axis else "per gene")
+        ax.set_title(agg_y + " vs " + agg_x + " of " + title)
+        ax.set_xlabel(agg_x + " of " + ax_label)
+        ax.set_ylabel(agg_y + " of " + ax_label)
+        ax.legend()
+
+        return ax
+
+    def _get_numeric_axis(self, axis):
+        """Get binary value for axis or check if it's out of range"""
         if axis in self._SUPPORTED_AGG_AXES:
             axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
         else:
             raise ValueError("axis must be in {}".format(self._SUPPORTED_AGG_AXES))
 
-        csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
-        rna_agg_x = self._agg_apply(csc_matrix, agg=agg_x, axis=axis)
-        rna_agg_y = self._agg_apply(csc_matrix, agg=agg_y, axis=axis)
+        return axis
 
-        ax = ax or plt.gca()  # use defined or get current axes
-        ax.scatter(rna_agg_x, rna_agg_y, **kwargs)
+    def _get_agg_labels(self, labels, axis):
+        """Check if labels for aggregation are of correct length or return singular label (one sample)"""
+        matrix_agg_len = self._matrix.get_shape()[axis]
+        if labels == None:
+            labels = ["sample"] * matrix_agg_len
+        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+            raise ValueError(
+                "labels list of length {} cannot be broadcasted with matrix aggregation axis length {}".format(
+                    len(labels), matrix_agg_len
+                )
+            )
 
-        cells_axis = axis in [1, "genes"]  # bool for aggregated axis' name
-        label = "cell count" if cells_axis else "transcript count"
-        title = label + " " + ("per gene" if cells_axis else "per cell")
-        ax.set_title(agg_y + " vs " + agg_x + " of " + title)
-        ax.set_xlabel(agg_x + " of " + label)
-        ax.set_ylabel(agg_y + " of " + label)
-
-        return ax
+        return labels
 
     def _agg_apply(self, matrix: np.matrix, agg: str, axis: int):
         """Apply aggregate function onto matrix along specified axis"""
