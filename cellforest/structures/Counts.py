@@ -91,7 +91,7 @@ class Counts(csr_matrix):
         agg: Union[str, int] = "sum",
         axis: int = 0,
         labels: Optional[Union[pd.Series, list]] = None,
-        ax: Axes = None,
+        ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
         """
@@ -133,6 +133,7 @@ class Counts(csr_matrix):
             where_label = np.where(np.array(labels) == label)[0]
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg = self._agg_apply(matrix_slice, agg=agg, axis=axis)
+            # TODO: kwargs customization for individual strata
             ax.hist(rna_agg, label=label, **kwargs)
 
         x_label = "transcript count" if cells_axis else "cell count"
@@ -150,7 +151,7 @@ class Counts(csr_matrix):
         agg_y: Union[str, int] = "var",
         axis: int = 0,
         labels: Optional[Union[pd.Series, list]] = None,
-        ax: Axes = None,
+        ax: Optional[Axes] = None,
         **kwargs,
     ) -> plt.axes:
         """
@@ -193,6 +194,7 @@ class Counts(csr_matrix):
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg_x = self._agg_apply(matrix_slice, agg=agg_x, axis=axis)
             rna_agg_y = self._agg_apply(matrix_slice, agg=agg_y, axis=axis)
+            # TODO: kwargs customization for individual strata
             ax.scatter(rna_agg_x, rna_agg_y, label=label, **kwargs)
 
         ax_label = "transcript count" if cells_axis else "cell count"
