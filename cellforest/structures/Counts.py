@@ -28,6 +28,7 @@ class Counts(csr_matrix):
         "derived": ["std", "var"],
         "all": ["sum", "mean", "min", "max", "std", "var"],
     }
+    _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
     def __init__(self, matrix, cell_ids, features, **kwargs):
         # TODO: make a get_counts function that just takes the directory
@@ -106,19 +107,21 @@ class Counts(csr_matrix):
             ax: histogram
 
         Examples:
-            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
-            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
-            >>> ax1 = rna.hist("sum", axis=0, ax=ax1, bins=30)
-            >>> ax2 = rna.hist("std", axis=0, ax=ax2)
-            >>> fig.show()
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
+            >>> rna.hist("sum", axis="cells", ax=ax1, bins=30)  # plot on 1st axes object
+            >>> rna.hist("std", axis=0, ax=ax2)  # plot on 2nd axes object
+            >>> fig.show()  # display figure state
 
-            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
-            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)
-            >>> plt.show()
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
+            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)  # plot on currect (or newly created) axes object
+            >>> plt.show()  # display current figure with axes
         """
 
-        if not (0 <= axis <= 1):
-            raise ValueError("axis out of range")
+        if axis in self._SUPPORTED_AGG_AXES:
+            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
+        else:
+            raise ValueError("axis must be in {}".format(self._SUPPORTED_AGG_AXES))
 
         csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
         agg_axis = abs(1 - axis)  # to aggregate opposite axis
@@ -159,19 +162,21 @@ class Counts(csr_matrix):
             ax: 2D scatterplot
 
         Examples:
-            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
-            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
-            >>> ax1 = rna.scatter("mean", "var", axis=0, ax=ax1)
-            >>> ax2 = rna.scatter("mean", "var", axis=1, ax=ax2)
-            >>> fig.show()
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
+            >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
+            >>> rna.scatter("mean", "var", axis="cells", ax=ax1)  # plot on 1st axes object
+            >>> rna.scatter("mean", "var", axis="genes, ax=ax2)  # plot on 2nd axes object
+            >>> fig.show()  # display figure state
 
-            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
-            >>> rna.scatter("mean", "std", axis=0)
-            >>> plt.show()
+            >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
+            >>> rna.scatter("mean", "std", axis=0)  # plot on currect (or newly created) axes object
+            >>> plt.show()  # display current figure with axes
         """
 
-        if not (0 <= axis <= 1):
-            raise ValueError("axis out of range")
+        if axis in self._SUPPORTED_AGG_AXES:
+            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
+        else:
+            raise ValueError("axis must be in {}".format(self._SUPPORTED_AGG_AXES))
 
         csc_matrix = self._matrix.tocsc()  # convert to CSC for fast arithmetics
         rna_agg_x = self._agg_apply(csc_matrix, agg=agg_x, axis=axis)
