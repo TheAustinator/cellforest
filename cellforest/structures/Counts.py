@@ -160,12 +160,12 @@ class Counts(csr_matrix):
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
-            >>> ax1 = rna.scatter("sum", axis=0, ax=ax1, bins=30)
-            >>> ax2 = rna.scatter("std", axis=0, ax=ax2)
+            >>> ax1 = rna.scatter("mean", "var", axis=0, ax=ax1)
+            >>> ax2 = rna.scatter("mean", "var", axis=1, ax=ax2)
             >>> fig.show()
 
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")
-            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)
+            >>> rna.scatter("mean", "std", axis=0)
             >>> plt.show()
         """
 
