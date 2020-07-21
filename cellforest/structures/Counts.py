@@ -137,8 +137,8 @@ class Counts(csr_matrix):
             ax.hist(rna_agg, label=label, **kwargs)
 
         x_label = "transcript count" if cells_axis else "cell count"
-        title = x_label + " " + ("per cell" if cells_axis else "per gene")
-        ax.set_title("{} of ".format(agg) + title)
+        title = f'{x_label} {"per cell" if cells_axis else "per gene"}'
+        ax.set_title(f"{agg} of {title}")
         ax.set_ylabel("quantity")
         ax.set_xlabel(x_label)
         ax.legend()
@@ -199,9 +199,9 @@ class Counts(csr_matrix):
 
         ax_label = "transcript count" if cells_axis else "cell count"
         title = ax_label + " " + ("per cell" if cells_axis else "per gene")
-        ax.set_title(agg_y + " vs " + agg_x + " of " + title)
-        ax.set_xlabel(agg_x + " of " + ax_label)
-        ax.set_ylabel(agg_y + " of " + ax_label)
+        ax.set_title(f"{agg_y} vs {agg_x} of {title}")
+        ax.set_xlabel(f"{agg_x} of {ax_label}")
+        ax.set_ylabel(f"{agg_y} of {ax_label}")
         ax.legend()
 
         return ax
@@ -211,7 +211,7 @@ class Counts(csr_matrix):
         if axis in self._SUPPORTED_AGG_AXES:
             axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
         else:
-            raise ValueError("axis must be in {}".format(self._SUPPORTED_AGG_AXES))
+            raise ValueError(f"axis cannot be {axis}, must be in {self._SUPPORTED_AGG_AXES}")
 
         return axis
 
@@ -222,15 +222,17 @@ class Counts(csr_matrix):
             labels = ["sample"] * matrix_agg_len
         elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
-                "labels list of length {} cannot be broadcasted with matrix aggregation axis length {}".format(
-                    len(labels), matrix_agg_len
-                )
+                f"labels list of length {len(labels)} cannot be broadcasted with matrix aggregation axis length {matrix_agg_len}"
             )
 
         return labels
 
     def _agg_apply(self, matrix: np.matrix, agg: str, axis: int):
-        """Apply aggregate function onto matrix along specified axis"""
+        """
+        Apply aggregate function onto matrix along specified axis. By default,
+        COO matrices support sum, mean, min, max methods ("built-in"). For other
+        operations("derived"), formula out of built-in methods is used.
+        """
 
         agg_axis = abs(1 - axis)  # to aggregate opposite axis
 
@@ -243,9 +245,7 @@ class Counts(csr_matrix):
             rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
         else:
             raise NotImplementedError(
-                'aggregation function "{0}" not supported, valid options are: {1}'.format(
-                    agg, self._SUPPORTED_AGG_FUNCS["all"]
-                )
+                f'aggregation function "{agg}" not supported, valid options are: {self._SUPPORTED_AGG_FUNCS["all"]}'
             )
 
         rna_agg = np.ravel(rna_agg_out.sum(axis=agg_axis))  # flatten matrix
@@ -253,6 +253,8 @@ class Counts(csr_matrix):
 
     @staticmethod
     def _get_agg_label(agg):
+        """Human language names of axis labels"""
+        # TODO: use this function to have prettier plot naming
         mapping = {
             "sum": "",
             "mean": "mean",
@@ -261,7 +263,7 @@ class Counts(csr_matrix):
             "min": "minimum of",
             "max": "maximum of",
         }
-        agg_name = mapping[agg] + "of"
+        agg_name = mapping[agg]
 
         return agg_name
 
