@@ -88,7 +88,7 @@ class Counts(csr_matrix):
 
     def hist(
         self,
-        agg: str = "sum",
+        agg: Union[str, int] = "sum",
         axis: int = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Axes = None,
@@ -146,8 +146,8 @@ class Counts(csr_matrix):
 
     def scatter(
         self,
-        agg_x: str = "sum",
-        agg_y: str = "var",
+        agg_x: Union[str, int] = "sum",
+        agg_y: Union[str, int] = "var",
         axis: int = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Axes = None,
