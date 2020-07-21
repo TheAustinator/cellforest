@@ -109,14 +109,14 @@ class Counts(csr_matrix):
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
             >>> half_of_cells = rna._matrix.shape[0] // 2
-            >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # create cell labels
+            >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # mock cell labels for 2 samples
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
-            >>> rna.hist("sum", axis="cells", ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
+            >>> rna.hist("sum", axis=0, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
             >>> rna.hist("std", axis=0, ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
-            >>> rna.hist("sum", axis=1, color="#7eaa53", bins=30)  # plot on currect (or newly created) axes object
+            >>> rna.hist("sum", axis="genes", color="#7eaa53", bins=30)  # plot on currect (or newly created) axes object
             >>> plt.show()  # display current figure with axes
         """
 
@@ -169,13 +169,13 @@ class Counts(csr_matrix):
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
-            >>> rna.scatter(agg_x="mean", agg_y="var", axis="cells", ax=ax1)  # plot on 1st axes object
+            >>> rna.scatter("mean", "var", axis="cells", ax=ax1)  # plot on 1st axes object
             >>> rna.scatter("mean", "var", axis="genes", ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
             >>> num_genes = rna._matrix.shape[1]
-            >>> labels = ["sample_1"] * (num_genes // 2) + ["sample_2"] * (num_genes // 2)
-            >>> rna.scatter("sum", "std", axis="genes", labels=labels, alpha=0.2)
+            >>> labels = ["family_1"] * (num_genes // 2) + ["family_2"] * (num_genes // 2)  # mock gene families for 2 samples
+            >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
             >>> plt.show()
         """
 
