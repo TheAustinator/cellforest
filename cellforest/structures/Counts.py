@@ -137,10 +137,11 @@ class Counts(csr_matrix):
             ax.hist(rna_agg, label=label, **kwargs)
 
         x_label = "transcript count" if cells_axis else "cell count"
+        y_label = "# of cells" if cells_axis else "# of genes"
         title = f'{x_label} {"per cell" if cells_axis else "per gene"}'
         ax.set_title(f"{agg} of {title}")
-        ax.set_ylabel("quantity")
         ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
         ax.legend()
 
         return ax
@@ -206,7 +207,7 @@ class Counts(csr_matrix):
 
         return ax
 
-    def _get_numeric_axis(self, axis):
+    def _get_numeric_axis(self, axis) -> int:
         """Get binary value for axis or check if it's out of range"""
         if axis in self._SUPPORTED_AGG_AXES:
             axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
@@ -215,7 +216,7 @@ class Counts(csr_matrix):
 
         return axis
 
-    def _get_agg_labels(self, labels, axis):
+    def _get_agg_labels(self, labels, axis) -> [Union[pd.Series, list]]:
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
         if labels == None:
@@ -227,7 +228,7 @@ class Counts(csr_matrix):
 
         return labels
 
-    def _agg_apply(self, matrix: np.matrix, agg: str, axis: int):
+    def _agg_apply(self, matrix: np.matrix, agg: str, axis: int) -> np.ndarray:
         """
         Apply aggregate function onto matrix along specified axis. By default,
         COO matrices support sum, mean, min, max methods ("built-in"). For other
@@ -252,9 +253,9 @@ class Counts(csr_matrix):
         return rna_agg
 
     @staticmethod
-    def _get_agg_label(agg):
+    def _get_agg_label(agg) -> str:
         """Human language names of axis labels"""
-        # TODO: use this function to have prettier plot naming
+        # TODO: use this function to have prettier plot labeling
         mapping = {
             "sum": "",
             "mean": "mean",
