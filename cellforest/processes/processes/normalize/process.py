@@ -7,7 +7,7 @@ from cellforest.utils.r.run_r_script import run_process_r_script
 @dataprocess(requires="root", matrix_layer=True)
 def normalize(forest: "CellForest"):
     process_name = "normalize"
-    input_metadata_path = forest.get_temp_metadata_path(process_name)
+    input_metadata_path = forest.get_temp_meta_path(process_name)
     # TODO: add a root filepaths lookup
     input_rds_path = forest.root_dir / "rna.rds"
     output_rds_path = forest[process_name].path_map["rna_r"]

@@ -19,7 +19,7 @@ def test_normalize_fix(root_path, build_root_fix):
             "method": "seurat_default",
         },
     }
-    cf = CellForest(root_dir=root_path, spec_dict=spec)
+    cf = CellForest(root_dir=root_path, spec=spec)
     cf.process.normalize()
     return cf
 

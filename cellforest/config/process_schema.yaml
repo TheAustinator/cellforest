@@ -7,9 +7,9 @@ standard_files:
   rna_ann: rna.anndata
 file_map:
   normalize:
-    corrected_umi: corrected_umi.mtx
-    pearson_residual: pearson_residuals.tsv
-  dim_reduce:
+    corrected_umi: corrected_umi.mtx    # from sctransform
+    pearson_residual: pearson_residuals.tsv    # from sctransform
+  reduce:
     pca_embeddings: pca_embeddings.tsv
     pca_loadings: pca_loadings.tsv
     umap_embeddings: umap_embeddings.tsv
@@ -41,11 +41,11 @@ setup_hooks:
   - hook_comparative
   - hook_input_exists
   - hook_mkdirs
-  - hook_store_temp_metadata
+  - hook_store_temp_meta
 clean_hooks:
   - hook_garbage_collection
   - hook_unify_matrix_node
-  - hook_clean_temp_metadata
+  - hook_clean_temp_meta
   - hook_clean_unversioned
 dataprocess_default_attrs:
   temp_meta: true
@@ -53,6 +53,11 @@ dataprocess_default_attrs:
 
 process_sources:
   - cellforest.processes
+default_process_order:
+  - normalize
+  - reduce
+  - cluster
+  - diffexp
 param_names:
   normalize:
     - max_genes
@@ -61,7 +66,7 @@ param_names:
     - method
     - min_cells
     - nfeatures
-  dim_reduce:
+  reduce:
     - pca_npcs
     - umap_n_neighbors
     - umap_min_dist
@@ -84,15 +89,7 @@ param_names:
     - gene_set
   gsea_bulk:
     - gene_set
-process_hierarchy:
-  normalize:
-    gsea_bulk:
-    diffexp_bulk:
-    dim_reduce:
-      cluster:
-        - diffexp
-        - gsea
-        - markers
+
 r_filenames:
   LOAD_DATA_SCRIPT: load_data.R
   DIFF_EXP_BULK_SCRIPT: diff_exp_bulk.R
@@ -107,4 +104,4 @@ r_filenames:
   FILTER_NORMALIZE_SCRIPT: filter_normalize.R
   SEURAT_DEFAULT_NORMALIZE_SCRIPT: seurat_default_normalize.R
 r_scripts_module: cellforest.processes
-temp_metadata_filename: temp_cell_metadata.tsv
+temp_meta_filename: temp_meta.tsv

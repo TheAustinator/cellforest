@@ -5,8 +5,8 @@ from dataforest.hooks import hook
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 
 
-@hook(attrs=["temp_metadata"])
-def hook_store_temp_metadata(dp):
+@hook(attrs=["temp_meta"])
+def hook_store_temp_meta(dp):
     """
     Stores a temporary metadata file in the current process
     """
@@ -17,7 +17,7 @@ def hook_store_temp_metadata(dp):
         )
 
 
-@hook(attrs=["temp_metadata"])
-def hook_clean_temp_metadata(dp):
+@hook(attrs=["temp_meta"])
+def hook_clean_temp_meta(dp):
     if dp.temp_meta:
         os.remove(dp._metadata_filepath)
