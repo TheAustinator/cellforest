@@ -33,6 +33,7 @@ class CellForest(DataForest):
     SPEC_CLASS = SpecSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
+    DATA_FILE_ALIASES = {"rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"}
     READER_KWARGS_MAP = {
         "reduce": {
             "pca_embeddings": {"header": "infer"},
@@ -53,25 +54,26 @@ class CellForest(DataForest):
         root_dir: Union[str, Path],
         spec: Optional[Union[list, Spec]] = None,
         verbose: bool = False,
-        meta: Optional[pd.DataFrame] = None,
+        # meta: Optional[pd.DataFrame] = None,
         config: Optional[Union[str, Path, dict]] = None,
         unversioned: Optional[bool] = None,
     ):
         super().__init__(root_dir, spec, verbose, config)
         self.assays = set()
         self._rna = None
-        self._meta_unfiltered = None
-        if meta is not None:
-            meta = meta.copy()
-        self._meta = self._get_cell_meta(meta)
+        # self._meta_unfiltered = None
+        # if meta is not None:
+        #     meta = meta.copy()
+        # self._meta = self._get_cell_meta(meta)
+        self._meta = None
         # TODO: use this to augment strings of output directories so manual tinkers don't
         #   affect downstream processing
-        if meta is not None and unversioned is None:
-            self._unversioned = True
-        else:
-            self._unversioned = bool(unversioned)
-        if self.unversioned:
-            self.logger.warning(f"Unversioned DataForest")
+        # if meta is not None and unversioned is None:
+        #     self._unversioned = True
+        # else:
+        #     self._unversioned = bool(unversioned)
+        # if self.unversioned:
+        #     self.logger.warning(f"Unversioned DataForest")
 
     @property
     def samples(self) -> pd.DataFrame:
@@ -96,13 +98,7 @@ class CellForest(DataForest):
         """
         # TODO: add embeddings and cluster ids
         if self._meta is None:
-            self._meta = self._get_cell_meta()
-        elif "reduce" in self.spec and "UMAP_1" not in self._meta.columns:
-            if self["reduce"].done:
-                self._meta = self._get_cell_meta()
-        elif "cluster" in self.spec and "cluster_id" not in self._meta.columns:
-            if self["cluster"].done:
-                self._meta = self._get_cell_meta()
+            self._meta = self._get_cell_meta(self.current_process)
         return self._meta
 
     @property
@@ -112,10 +108,13 @@ class CellForest(DataForest):
         around `scipy.sparse.csr_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
-        if self._rna is None:
-            # TODO: set to use normalized if exists by default -- see old version
-            # TODO: soft code filenames
-            counts_path = self.root_dir / "rna.pickle"
+        if self._rna is None or not self._rna.index.equals(self.meta.index):
+            if self.current_process is not None:
+                path_map = self[self.current_process].path_map
+                counts_path = path_map["rna"]
+            else:
+                # TODO: fix hardcoding
+                counts_path = self.root_dir / "rna.pickle"
             if not counts_path.exists():
                 raise FileNotFoundError(
                     f"Ensure that you initialized the root directory with CellForest.from_metadata or "
@@ -201,70 +200,42 @@ class CellForest(DataForest):
             kwargs = base_kwargs
         return self.__class__(**kwargs)
 
-    @property
-    def meta_unfiltered(self) -> pd.DataFrame:
-        # TODO: not used anywhere, figure out use and add docstring or delete
-        return self._meta_unfiltered
-
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from spec"""
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
-    def _get_cell_meta(self, df=None):
+    def _get_cell_meta(self, process_name: str) -> pd.DataFrame:
         """
-         Read in cell metadata and performs modifications:
-             - replace any spaces with underscores
-             - add tertiary data from prior or precursor or current process runs
-             - performs data operations (subset, filter, partition)
-         Args:
-             df: if provided, skip first two steps and go straight to data ops
-         Returns:
-             df: modified metadata dataframe
-         """
-        if df is None:
-            try:
-                df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
-            except FileNotFoundError:
-                df = pd.DataFrame(self.rna.cell_ids.copy())
-                df.columns = ["cell_id"]
-                df.index = df["cell_id"]
-                df.drop(columns=["cell_id"], inplace=True)
-            df.replace(" ", "_", regex=True, inplace=True)
-            df = self._meta_add_downstream_data(df)
-        partitions_list = self.spec.get_partition_list(self.current_process)
+        Read in cell metadata and performs modifications:
+            - replace any spaces with underscores
+            - merge metadata from process precursors and current process
+            - performs data operations (subset, filter, partition)
+        Args:
+            df: if provided, skip first two steps and go straight to data ops
+        Returns:
+            df: modified metadata dataframe
+        """
+        try:
+            df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
+        except FileNotFoundError:
+            df = pd.DataFrame(self.rna.cell_ids.copy())
+            df.columns = ["cell_id"]
+            df.index = df["cell_id"]
+            df.drop(columns=["cell_id"], inplace=True)
+        if process_name is not None:
+            precursor_names = self.spec.get_precursors_lookup(incl_current=True)[process_name]
+            for precursor_name in precursor_names:
+                process_meta = self[precursor_name].process_meta
+                if process_meta is not None:
+                    intersect_cols = set(df.columns).intersection(set(process_meta.columns))
+                    process_meta.drop(intersect_cols, axis=1, inplace=True)
+                    df = df.merge(process_meta, left_index=True, right_index=True)
+        df.replace(" ", "_", regex=True, inplace=True)
+        partitions_list = self.spec.get_partition_list(process_name)
         partitions = set().union(*partitions_list)
         if partitions:
             df = label_df_partitions(df, partitions, encodings=True)
-        return df
-
-    def _meta_add_downstream_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        # TODO: change to add current process data (no downstream)
-        done = set()
-        if "cluster" in self.spec:
-            if self["cluster"].done:
-                done.update({"normalize", "reduce", "cluster"})
-        if not done and "reduce" in self.spec:
-            if self["reduce"].done:
-                done.update({"normalize", "reduce"})
-        if not done and "normalize" in self.spec:
-            if self["normalize"].done:
-                done.update({"normalize"})
-        # if "cluster" in done:
-        #     clusters = self.f["cluster"]["clusters"].copy()
-        #     clusters.rename(columns={1: "cluster_id"}, inplace=True)
-        #     df = df.merge(clusters, how="left", left_index=True, right_index=True)
-        #     df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
-        # if "reduce" in done:
-        #     df = df.merge(self.f["reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
-        # if "normalize" in done:
-        #     pass
-        #     # df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        # # TODO: temp during param mismatch
-        # try:
-        #     df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        # except Exception:
-        #     self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
         return df
 
     @staticmethod

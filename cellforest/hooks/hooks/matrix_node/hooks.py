@@ -15,7 +15,9 @@ def hook_unify_matrix_node(dp):
     if dp.matrix_layer:
         pickle_path = dp.forest[dp.name].path_map["rna"]
         rds_path = dp.forest[dp.name].path_map["rna_r"]
-        if pickle_path.exists() and not rds_path.exists():
+        if dp.output == "pickle":
             Convert.pickle_to_rds_dir(pickle_path.parent)
-        elif rds_path.exists() and not pickle_path.exists():
+        elif dp.output == "rds":
             Convert.rds_to_pickle_dir(rds_path.parent)
+        else:
+            raise NotImplementedError(f"Only rds and pickle outputs currently supported")

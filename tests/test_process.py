@@ -8,39 +8,7 @@ from tests.fixtures import *
 import tests
 from tests.test_init import build_root_fix
 
-
 # TODO: add output file checks
-
-
-@pytest.fixture
-def norm_spec():
-    spec = [
-        {
-            "process": "normalize",
-            "params": {
-                "min_genes": 5,
-                "max_genes": 5000,
-                "min_cells": 5,
-                "nfeatures": 30,
-                "perc_mito_cutoff": 20,
-                "method": "seurat_default",
-            },
-        }
-    ]
-    return spec
-
-
-@pytest.fixture
-def process_chain_spec(norm_spec):
-    spec = deepcopy(norm_spec)
-    spec.append({"process": "test_process"})
-    return spec
-
-
-@pytest.fixture
-def alias_spec():
-    spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
-    return spec
 
 
 @pytest.fixture
