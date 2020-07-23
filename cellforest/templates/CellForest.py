@@ -30,7 +30,6 @@ class CellForest(DataForest):
     """
 
     PLOT_METHODS = PlotMethodsSC
-    SPEC_CLASS = SpecSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
     DATA_FILE_ALIASES = {"rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"}
