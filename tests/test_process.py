@@ -7,6 +7,7 @@ from cellforest import CellForest, Counts
 from tests.fixtures import *
 import tests
 from tests.test_init import build_root_fix
+from tests.test_data_ops import test_subset_fix
 
 # TODO: add output file checks
 
@@ -37,15 +38,16 @@ def test_process_aliasing(root_path_2, sample_paths, alias_spec):
     return cf
 
 
-def test_normalize_cf_at(test_normalize_fix):
-    """Functionality not yet implemented"""
-    return
-
-    cf = test_normalize_fix
+def test_normalize_cf_goto(test_subset_fix):
+    cf = test_subset_fix
     rna = Counts.load(cf["normalize"].path_map["rna"])
+    cf.goto_process("root")
+    assert len(cf.meta) == 400
+    assert len(cf.rna) == 400
     cf = cf.goto_process("normalize")
+    assert len(cf.meta) == 11
+    assert len(cf.rna) == 11
     assert cf.rna.shape == rna.shape
-    assert len(cf.meta) == len(rna)
     assert len(cf.rna.features) == len(rna.features)
 
 
