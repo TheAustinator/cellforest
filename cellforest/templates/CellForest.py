@@ -8,7 +8,6 @@ from dataforest.core.Spec import Spec
 from dataforest.utils.utils import label_df_partitions
 import pandas as pd
 
-# from cellforest.templates.PlotMethodsSC import PlotMethodsSC
 from cellforest.structures.counts.Counts import Counts
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.SpecSC import SpecSC
@@ -29,7 +28,6 @@ class CellForest(DataForest):
     the normalized counts matrix
     """
 
-    # PLOT_METHODS = PlotMethodsSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
     DATA_FILE_ALIASES = {"rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"}

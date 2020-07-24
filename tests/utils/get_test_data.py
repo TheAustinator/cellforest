@@ -23,6 +23,7 @@ def get_test_data():
     """
     # create sample metadata
     data_dir = Path(__file__).parent.parent / "data"
+    os.makedirs(data_dir, exist_ok=True)
     subdirs = ["v3_gz/sample_1", "v3_gz/sample_2"]
     sample_metadata = pd.DataFrame(
         {"sample": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
@@ -31,13 +32,7 @@ def get_test_data():
 
     # pull and unzip data from 10X
     data_dir_gzip = data_dir / "v3_gz"
-    download_path = data_dir / "pbmc3k_filtered_gene_bc_matrices.tar.gz"
-    urllib.request.urlretrieve(
-        DATA_URL, filename=download_path,
-    )
-    tar = tarfile.open(download_path, "r:gz")
-    tar.extractall(data_dir)
-    tar.close()
+    download_data(data_dir)
 
     # cut data into two samples of 200 cells x 100 genes
     src = data_dir / "filtered_gene_bc_matrices/hg19/"
@@ -73,6 +68,32 @@ def get_test_data():
     compress_move(files, dst_2_v3, dst_2_gz)
 
     # remove downloads
+    shutil.rmtree(data_dir / "filtered_gene_bc_matrices",)
+    os.remove(data_dir / "pbmc3k_filtered_gene_bc_matrices.tar.gz")
+
+
+def download_data(data_dir):
+    download_path = data_dir / "pbmc3k_filtered_gene_bc_matrices.tar.gz"
+    urllib.request.urlretrieve(
+        DATA_URL, filename=download_path,
+    )
+    tar = tarfile.open(download_path, "r:gz")
+    tar.extractall(data_dir)
+    tar.close()
+
+
+def get_test_data_full():
+    """
+    Similar to `get_test_data`, but gets full dataset without slicing and saves
+    it to data/full
+    """
+    data_dir = Path(__file__).parent.parent / "data"
+    download_data(data_dir)
+    src = data_dir / "filtered_gene_bc_matrices/hg19/"
+    dst = data_dir / "full"
+    dst.mkdir(exist_ok=True)
+    rna = Counts.from_cellranger(src)
+    rna.to_cellranger(dst, gz=False, chemistry="v3")
     shutil.rmtree(data_dir / "filtered_gene_bc_matrices",)
     os.remove(data_dir / "pbmc3k_filtered_gene_bc_matrices.tar.gz")
 
