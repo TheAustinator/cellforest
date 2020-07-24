@@ -29,13 +29,14 @@ def reduce(forest: "CellForest", run_name: str):
         r_functions_filepath,
     ]
     run_process_r_script(forest, R_PCA_SCRIPT, arg_list, run_name)
-    umap_df = run_umap(
+    meta = run_umap(
         output_embeddings_path,
         n_neighbors=params["umap_n_neighbors"],
         min_dist=params["umap_min_dist"],
         n_components=params["umap_n_components"],
         metric=params["umap_metric"],
     )
-    umap_df.index = forest.meta.index
-    # output_umap_embeddings_path = process_run.path_map["umap_embeddings"]
-    forest.w["umap_embeddings"](umap_df, index=True, header=True)
+    meta.index = forest.meta.index
+    output_meta_path = process_run.path_map["meta"]
+    meta.to_csv(output_meta_path, sep="\t")
+    # forest.w["umap_embeddings"](meta, index=True, header=True)

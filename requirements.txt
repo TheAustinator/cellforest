@@ -6,4 +6,4 @@ path
 pathlib
 pyyaml
 scipy
-umap
+umap-learn

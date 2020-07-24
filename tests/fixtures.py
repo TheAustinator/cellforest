@@ -95,8 +95,8 @@ def norm_reduce_spec(norm_spec):
     reduce_run_spec = {
         "process": "reduce",
         "params": {
-            "pca_npcs": 30,
-            "umap_n_neighbors": 10,
+            "pca_npcs": 3,
+            "umap_n_neighbors": 3,
             "umap_min_dist": 0.1,
             "umap_n_components": 2,
             "umap_metric": "euclidean",

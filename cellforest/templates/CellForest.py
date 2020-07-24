@@ -216,7 +216,7 @@ class CellForest(DataForest):
             df: modified metadata dataframe
         """
         try:
-            df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
+            df = pd.read_csv(self["root"].path_map["meta"], sep="\t", index_col=0)
         except FileNotFoundError:
             df = pd.DataFrame(self.rna.cell_ids.copy())
             df.columns = ["cell_id"]
