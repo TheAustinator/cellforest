@@ -12,7 +12,7 @@ def build_counts_store(matrix, cell_ids, features, save_path=None):
     store.features = features
     if save_path:
         save_path = Path(save_path)
-        os.makedirs(save_path.parent, exist_ok=True)
-        with open(save_path, "wb") as f:
+        os.makedirs(str(save_path.parent), exist_ok=True)
+        with open(str(save_path), "wb") as f:
             pickle.dump(store, f, protocol=pickle.HIGHEST_PROTOCOL)
     return store
