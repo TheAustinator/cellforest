@@ -21,6 +21,10 @@ def get_test_data():
     Returns:
 
     """
+    _get_test_data_slice(300, 150)
+
+
+def _get_test_data_slice(n_cells, n_genes):
     # create sample metadata
     data_dir = Path(__file__).parent.parent / "data"
     os.makedirs(data_dir, exist_ok=True)
@@ -38,8 +42,8 @@ def get_test_data():
     src = data_dir / "filtered_gene_bc_matrices/hg19/"
     files = os.listdir(src)
     rna = Counts.from_cellranger(src)
-    rna_1 = rna[:200, :100]
-    rna_2 = rna[200:400, :100]
+    rna_1 = rna[:n_cells, :n_genes]
+    rna_2 = rna[n_cells : 2 * n_cells, :n_genes]
 
     # save a v2 chemistry version
     dst_1_v2 = data_dir / "v2/sample_1/"

@@ -23,11 +23,18 @@ layers:
     rna: rna.pickle
     rna_r: rna.rds
     rna_ann: rna.anndata
+  meta:
+    meta: meta.tsv
 process_layers:
-  normalize:
-    - matrix
   root:
     - matrix
+    - meta
+  normalize:
+    - matrix
+    - meta
+  reduce:
+    - meta
+
 # HOOKS
 #   Hook will be collected recursively from directories or processes specified
 #   in `hook_sources`. Hook containing files must be named `hooks.py`, and hook
