@@ -48,11 +48,11 @@ def test_normalize_cf_goto(test_subset_fix):
     cf = test_subset_fix
     rna = Counts.load(cf["normalize"].path_map["rna"])
     cf.goto_process("root")
-    assert len(cf.meta) == 400
-    assert len(cf.rna) == 400
+    assert len(cf.meta) == 600
+    assert len(cf.rna) == 600
     cf = cf.goto_process("normalize")
-    assert len(cf.meta) == 11
-    assert len(cf.rna) == 11
+    assert len(cf.meta) == 59
+    assert len(cf.rna) == 59
     assert cf.rna.shape == rna.shape
     assert len(cf.rna.features) == len(rna.features)
 

@@ -21,7 +21,7 @@ def get_test_data():
     Returns:
 
     """
-    _get_test_data_slice(200, 100)
+    _get_test_data_slice(300, 150)
 
 
 def _get_test_data_slice(n_cells, n_genes):
@@ -48,7 +48,7 @@ def _get_test_data_slice(n_cells, n_genes):
     files = os.listdir(src)
     rna = Counts.from_cellranger(src)
     rna_1 = rna[:n_cells, :n_genes]
-    rna_2 = rna[n_cells : 2 * n_cells, :n_cells]
+    rna_2 = rna[n_cells : 2 * n_cells, :n_genes]
 
     # save a v2 chemistry version
     dst_1_v2 = data_dir / "v2/sample_1/"
