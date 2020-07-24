@@ -13,9 +13,15 @@ from tests.test_data_ops import test_subset_fix
 
 
 @pytest.fixture
-def test_normalize_fix(root_path, build_root_fix, norm_spec):
+def test_norm_fix(root_path, build_root_fix, norm_spec):
     cf = CellForest(root_dir=root_path, spec=norm_spec)
     cf.process.normalize()
+    return cf
+
+
+def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
+    cf = CellForest(root_dir=root_path, spec=norm_reduce_spec)
+    cf.process.reduce()
     return cf
 
 
@@ -26,7 +32,7 @@ def test_process_chain(root_path, build_root_fix, process_chain_spec):
     return cf
 
 
-def test_logging(test_normalize_fix):
+def test_logging(test_norm_fix):
     # TODO: QUEUE
     pass
 
