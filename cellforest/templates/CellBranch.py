@@ -224,8 +224,11 @@ class CellBranch(DataBranch):
         if process_name is not None:
             precursor_names = self.spec.get_precursors_lookup(incl_current=True)[process_name]
             for precursor_name in precursor_names:
-                process_meta = self[precursor_name].process_meta
-                if process_meta is not None:
+                try:
+                    process_meta = self[precursor_name].process_meta
+                except FileNotFoundError:
+                    pass
+                else:
                     intersect_cols = set(df.columns).intersection(set(process_meta.columns))
                     process_meta.drop(intersect_cols, axis=1, inplace=True)
                     df = df.merge(process_meta, left_index=True, right_index=True)
