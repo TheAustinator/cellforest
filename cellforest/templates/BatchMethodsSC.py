@@ -5,22 +5,22 @@ from dataforest.processes.core.BatchMethods import BatchMethods
 # from scgsea.GSEAGroup import GSEAGroup
 import pandas as pd
 
-from cellforest.templates.CellForest import CellForest
+from cellforest.templates.CellBranch import CellBranch
 
 
 class BatchMethodsSC(BatchMethods):
     @staticmethod
     def gsea_bulk(
-        forest: CellForest, batch_vars: Union[str, list, set, tuple], overwrite: bool = False, **kwargs,
+        forest: CellBranch, batch_vars: Union[str, list, set, tuple], overwrite: bool = False, **kwargs,
     ) -> pd.DataFrame:
         """
         Run multiple GSEAs over a set of varying conditions as specified by
         `batch_vars`.
         Example:
             GSEA between healthy and diseased over `batch_vars`:
-            `{experiment_name, cluster_id}`. In this case, `forest`
+            `{experiment_name, cluster_id}`. In this case, `branch`
             would not be used to subset by either of the `batch_vars`, as this
-            is done automatically, but the `forest` would need to include
+            is done automatically, but the `branch` would need to include
             `disease_state` for `partition`.
 
         Args:
@@ -40,7 +40,7 @@ class BatchMethodsSC(BatchMethods):
 
     @staticmethod
     def gsea_bulk_repeat(
-        forest: CellForest,
+        forest: CellBranch,
         batch_vars: Union[str, list, set, tuple],
         overwrite: bool = True,
         n_repeat: int = 20,

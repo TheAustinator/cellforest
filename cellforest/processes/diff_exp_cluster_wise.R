@@ -13,7 +13,7 @@ ident1 <- args[5]
 ident2 <- args[6]
 groupby <- args[7]
 logfc_thresh <- as.numeric(args[8])
-# This is janky, but R sucks and I can't find a better way
+
 r_functions_filepath <- args[9]
 source(r_functions_filepath)
 

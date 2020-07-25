@@ -6,7 +6,6 @@ output_rds_path <- args[2]
 seurat_metadata_path <- args[3]
 min_cells <- args[4]
 
-# This is janky, but R sucks and I can't find a better way
 r_functions_filepath <- args[5]
 source(r_functions_filepath)
 

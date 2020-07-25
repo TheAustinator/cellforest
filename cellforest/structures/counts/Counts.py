@@ -1,8 +1,8 @@
-import os
 import pickle
+from collections import Counter
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable, Optional, Callable, Tuple
+from typing import Union, Iterable, Optional, Callable, List, get_type_hints
 
 from matplotlib.axes import Axes
 import numpy as np
@@ -10,33 +10,58 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.axes._subplots import Axes
 from scipy.sparse import csr_matrix, hstack, vstack
+from scipy.sparse.base import spmatrix
 
-from cellforest.structures import const
-from cellforest.structures.build_counts_store import build_counts_store
+from cellforest.structures.counts import const
+from cellforest.structures.counts.build_counts_store import build_counts_store
 from cellforest.structures.exceptions import CellsNotFound, GenesNotFound
 from cellforest.utils.cellranger import CellRangerIO
 from cellforest.utils.r.Convert import Convert
 
 
 class Counts(csr_matrix):
+    """
+    A sparse matrix data structure for 10X single cell transcriptomic data.
+    Args:
+        matrix: cells x genes with entries representing number of UMIs detected
+        cell_ids: single column dataframe or series with cell ids (barcodes)
+        features: two or three column dataframe with ensembl ids, gene names,
+            and optionally, mode, for newer 10X versions. Order required, but
+            not column names.
+    Attributes & Properties:
+        chemistry: "v3" if features contains third column, otherwise, "v2"
+            (not accurate, but helpful for IO)
+        features: ensembl id and gene name columns of `features` arg
+        genes, columns: gene names
+        ensgs: ensembl ids
+        cell_ids, rows: cell IDs or "barcodes"
+
+    """
+
     _SUPPORTED_CHEMISTRIES = ["v1", "v2", "v3"]
     # TODO: change to singular
-    FEATURES_COLUMNS = ["ensgs", "genes"]
-    SUPER_METHODS = const.SUPER_METHODS
+    _FEATURES_COLUMNS = ["ensgs", "genes"]
+    _SUPER_METHODS = const.SUPER_METHODS
     _SUPPORTED_AGG_FUNCS = {
         "built-in": ["sum", "mean", "min", "max"],
-        "derived": ["std", "var"],
-        "all": ["sum", "mean", "min", "max", "std", "var"],
+        "derived": ["std", "var", "nonzero"],
+        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero"],
     }
     _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
-    def __init__(self, matrix, cell_ids, features, **kwargs):
+    def __init__(
+        self,
+        matrix: Union[np.ndarray, spmatrix],
+        cell_ids: Union[pd.DataFrame, pd.Series],
+        features: pd.DataFrame,
+        **kwargs,
+    ):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
-        self._matrix = matrix
-        self.chemistry = "v3" if "mode" in features.columns else "v2"
+        self._matrix = csr_matrix(matrix)
+        self.chemistry = "v3" if len(features.columns) == 3 else "v2"
         self.features = features.iloc[:, :2].copy()
-        self.features.columns = self.FEATURES_COLUMNS
+        self.features.columns = self._FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
         self._ids = self._index_col_swap(cell_ids)
 
@@ -88,8 +113,8 @@ class Counts(csr_matrix):
 
     def hist(
         self,
-        agg: Union[str, int] = "sum",
-        axis: int = 0,
+        agg: str = "sum",
+        axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
@@ -108,7 +133,7 @@ class Counts(csr_matrix):
 
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
-            >>> half_of_cells = rna._matrix.shape[0] // 2
+            >>> half_of_cells = rna.shape[0] // 2
             >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # mock cell labels for 2 samples
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
             >>> rna.hist("sum", axis=0, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
@@ -148,9 +173,9 @@ class Counts(csr_matrix):
 
     def scatter(
         self,
-        agg_x: Union[str, int] = "sum",
-        agg_y: Union[str, int] = "var",
-        axis: int = 0,
+        agg_x: str = "sum",
+        agg_y: str = "var",
+        axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
@@ -175,7 +200,7 @@ class Counts(csr_matrix):
             >>> rna.scatter("mean", "var", axis="genes", ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
-            >>> num_genes = rna._matrix.shape[1]
+            >>> num_genes = rna.shape[1]
             >>> labels = ["family_1"] * (num_genes // 2) + ["family_2"] * (num_genes // 2)  # mock gene families for 2 samples
             >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
             >>> plt.show()
@@ -241,14 +266,16 @@ class Counts(csr_matrix):
             agg_func = getattr(matrix, agg)
             rna_agg_out = agg_func(axis=agg_axis)
         elif agg in self._SUPPORTED_AGG_FUNCS["derived"]:
-            # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
-            rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
-            rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
+            if agg == "nonzero":
+                rna_agg_out = (matrix > 0).sum(agg_axis)
+            else:
+                # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
+                rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
+                rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
         else:
             raise NotImplementedError(
                 f'aggregation function "{agg}" not supported, valid options are: {self._SUPPORTED_AGG_FUNCS["all"]}'
             )
-
         rna_agg = np.ravel(rna_agg_out.sum(axis=agg_axis))  # flatten matrix
         return rna_agg
 
@@ -295,7 +322,7 @@ class Counts(csr_matrix):
         return pd.DataFrame(self.todense(), columns=self.columns, index=self.index)
 
     @classmethod
-    def from_cellranger(cls, cellranger_dir):
+    def from_cellranger(cls, cellranger_dir: Union[str, Path]) -> "Counts":
         """Load from 10X Cellranger output format"""
         crio = CellRangerIO(cellranger_dir)
         matrix = crio.read_matrix()
@@ -303,7 +330,7 @@ class Counts(csr_matrix):
         features = crio.read_features()
         return cls(matrix, cell_ids, features)
 
-    def to_cellranger(self, output_dir, gz=True, chemistry="v3"):
+    def to_cellranger(self, output_dir: Union[str, Path], gz: bool = True, chemistry: str = "v3"):
         """Save in 10X Cellranger output format"""
         output_dir = Path(output_dir)
         crio = CellRangerIO
@@ -315,7 +342,7 @@ class Counts(csr_matrix):
         crio.write_barcodes(output_dir / "barcodes.tsv", counts.cell_ids, gz)
 
     @classmethod
-    def from_rds(cls, path):
+    def from_rds(cls, path: Union[str, Path]) -> "Counts":
         """Convert rds to pickle, then load pickle"""
         # TODO: QUEUE - test (Convert.rds_to_pickle_dir may overwrite any existing metadata)
         raise NotImplementedError()
@@ -323,7 +350,7 @@ class Counts(csr_matrix):
         Convert.rds_to_pickle_dir(parent)
         return cls.load(parent / "rna.pickle")
 
-    def to_rds(self, path):
+    def to_rds(self, path: Union[str, Path]):
         """Save pickle, then convert pickle to rds"""
         # TODO: QUEUE - test (Convert.pickle_to_rds_dir may overwrite any existing metadata)
         raise NotImplementedError()
@@ -333,20 +360,20 @@ class Counts(csr_matrix):
         Convert.pickle_to_rds_dir(path.parent)
 
     @classmethod
-    def load(cls, filepath):
+    def load(cls, filepath: Union[str, Path]) -> "Counts":
         """Load from pickle"""
-        with open(filepath, "rb") as f:
+        with open(str(filepath), "rb") as f:
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath, create_rds=False):
+    def save(self, filepath: Union[str, Path], create_rds: bool = False):
         """
         Save as pickle.
         Intermediate data store object used to maintain future compatibility
         """
         self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
 
-    def copy(self):
+    def copy(self) -> "Counts":
         return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
 
     def as_chemistry_version(self, chemistry):
@@ -427,7 +454,7 @@ class Counts(csr_matrix):
         return key
 
     @staticmethod
-    def _convert_key(key, df):
+    def _convert_key(key: Union[Iterable, str, int, slice], df: pd.DataFrame) -> Union[List[int], slice]:
         """Slice index dataframe with key and convert to integer indices"""
         if isinstance(key, (pd.Series, pd.Index, np.ndarray)):
             key = key.tolist()
@@ -444,26 +471,16 @@ class Counts(csr_matrix):
             key = [df.loc[key]["i"].tolist()]
         elif isinstance(key, int):
             key = [key]
-        else:
+        elif isinstance(key, slice):
             return key
+        else:
+            raise TypeError(f"Expected type {get_type_hints(Counts._convert_key)['key']}, not {type(key)}")
         if len(key) == 0:
             raise KeyError("No matching indices")
         return key
 
     @staticmethod
-    def _check_key(key, df):
-        """
-        NOTE: not currently used because metedata includes cells that were filtered out by cellranger
-        """
-        intersection = len(set(key).intersection(set(df.index.tolist()))) / len(key)
-        if intersection < 1:
-            import ipdb
-
-            ipdb.set_trace()
-            raise KeyError(f"some of provided keys missing from counts matrix. Intersection: {intersection}")
-
-    @staticmethod
-    def _index_col_swap(df, col: Union[str, int] = 0, new_index_colname="i"):
+    def _index_col_swap(df: pd.DataFrame, col: Union[str, int] = 0, new_index_colname: str = "i") -> pd.DataFrame:
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
@@ -477,14 +494,20 @@ class Counts(csr_matrix):
         return df
 
     @staticmethod
-    def _save(filepath, matrix, cell_ids, features, create_rds=False):
+    def _save(
+        filepath: Union[str, Path],
+        matrix: csr_matrix,
+        cell_ids: pd.DataFrame,
+        features: pd.DataFrame,
+        create_rds: bool = False,
+    ):
         filepath = Path(filepath)
         build_counts_store(matrix, cell_ids, features, save_path=filepath)
         if create_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
 
     @staticmethod
-    def _convert_to_series(df):
+    def _convert_to_series(df: pd.DataFrame) -> pd.DataFrame:
         """If a dataframe, convert to series"""
         if isinstance(df, pd.DataFrame):
             df = df.iloc[:, 0].copy()
@@ -499,7 +522,7 @@ class Counts(csr_matrix):
         return self.shape[0]
 
     @staticmethod
-    def wrap_super(func):
+    def wrap_super(func: Callable) -> Callable:
         """Wrapper to pass scipy matrix methods through to .matrix attribute"""
 
         @wraps(func)
@@ -510,7 +533,7 @@ class Counts(csr_matrix):
         return wrapper
 
     @staticmethod
-    def decorate(method_names):
+    def decorate(method_names: Iterable[str]):
         """
         Wrap a list of scipy matrix `method_names` with `wrap_super` and
         re-tether them to class
@@ -521,4 +544,4 @@ class Counts(csr_matrix):
             setattr(Counts, name, wrapped_method)
 
 
-Counts.decorate(Counts.SUPER_METHODS)
+Counts.decorate(Counts._SUPER_METHODS)

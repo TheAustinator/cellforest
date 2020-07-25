@@ -1,1 +1,1 @@
-include cellforest/config/process_schema.json
+include cellforest/config/default_config.yaml

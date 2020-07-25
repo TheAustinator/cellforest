@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import pandas as pd
 from pathlib import Path
 import pytest
@@ -45,6 +47,16 @@ def root_path(data_dir):
 
 
 @pytest.fixture
+def root_path_2(data_dir):
+    return data_dir / "root_2"
+
+
+@pytest.fixture
+def root_path_3(data_dir):
+    return data_dir / "root_3"
+
+
+@pytest.fixture
 def metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 
@@ -57,3 +69,51 @@ def metadata(metadata_path):
 @pytest.fixture
 def counts_path(root_path):
     return root_path / "rna.pickle"
+
+
+@pytest.fixture
+def norm_spec():
+    spec = [
+        {
+            "process": "normalize",
+            "params": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "nfeatures": 30,
+                "perc_mito_cutoff": 20,
+                "method": "seurat_default",
+            },
+        }
+    ]
+    return spec
+
+
+@pytest.fixture
+def norm_reduce_spec(norm_spec):
+    spec = deepcopy(norm_spec)
+    reduce_run_spec = {
+        "process": "reduce",
+        "params": {
+            "pca_npcs": 3,
+            "umap_n_neighbors": 3,
+            "umap_min_dist": 0.1,
+            "umap_n_components": 2,
+            "umap_metric": "euclidean",
+        },
+    }
+    spec.append(reduce_run_spec)
+    return spec
+
+
+@pytest.fixture
+def process_chain_spec(norm_spec):
+    spec = deepcopy(norm_spec)
+    spec.append({"process": "test_process"})
+    return spec
+
+
+@pytest.fixture
+def alias_spec():
+    spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
+    return spec

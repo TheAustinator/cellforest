@@ -1,3 +1,5 @@
+from matplotlib import pyplot as plt
+
 from cellforest import Counts
 from tests.fixtures import *
 
@@ -60,3 +62,14 @@ def test_from_cellranger(test_from_cellranger_fix):
 
 def test_save(test_save_fix):
     pass
+
+
+def test_plotting(test_from_cellranger_fix):
+    rna = test_from_cellranger_fix
+    for agg in rna._SUPPORTED_AGG_FUNCS["all"]:
+        rna.hist(agg)
+        half_genes = rna.shape[1] // 2
+        labels = ["sample_1"] * half_genes + ["sample_2"] * half_genes
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))
+        rna.hist(agg, axis=1, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype="step")
+        rna.scatter(agg, agg)
