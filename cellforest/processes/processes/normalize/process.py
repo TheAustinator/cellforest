@@ -11,7 +11,7 @@ R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize
 
 
 @dataprocess(matrix_layer=True, output="rds")
-def normalize(forest: "CellForest", run_name: str):
+def normalize(forest: "CellBranch", run_name: str):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`

@@ -1,4 +1,3 @@
-import gzip
 import os
 import shutil
 import tarfile
@@ -8,7 +7,7 @@ import pandas as pd
 from pathlib import Path
 
 from cellforest import Counts
-from cellforest.utils import compress, compress_move, attempt_move
+from cellforest.utils import compress_move
 
 DATA_URL = "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz"
 

@@ -10,7 +10,7 @@ R_PCA_SCRIPT = Path(__file__).parent / "pca.R"
 
 
 @dataprocess(requires="normalize")
-def reduce(forest: "CellForest", run_name: str):
+def reduce(forest: "CellBranch", run_name: str):
     input_metadata_path = forest.get_temp_meta_path(run_name)
     run_spec = forest.spec[run_name]
     params = run_spec.params
@@ -39,4 +39,4 @@ def reduce(forest: "CellForest", run_name: str):
     meta.index = forest.meta.index
     output_meta_path = process_run.path_map["meta"]
     meta.to_csv(output_meta_path, sep="\t")
-    # forest.w["umap_embeddings"](meta, index=True, header=True)
+    # branch.w["umap_embeddings"](meta, index=True, header=True)

@@ -1,9 +1,6 @@
-from copy import deepcopy
-
 import pytest
-import pandas as pd
 
-from cellforest import CellForest, Counts
+from cellforest import CellBranch, Counts
 from tests.fixtures import *
 import tests
 from tests.test_init import build_root_fix
@@ -14,19 +11,19 @@ from tests.test_data_ops import test_subset_fix
 
 @pytest.fixture
 def test_norm_fix(root_path, build_root_fix, norm_spec):
-    cf = CellForest(root_dir=root_path, spec=norm_spec)
+    cf = CellBranch(root_dir=root_path, spec=norm_spec)
     cf.process.normalize()
     return cf
 
 
 def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
-    cf = CellForest(root_dir=root_path, spec=norm_reduce_spec)
+    cf = CellBranch(root_dir=root_path, spec=norm_reduce_spec)
     cf.process.reduce()
     return cf
 
 
 def test_process_chain(root_path, build_root_fix, process_chain_spec):
-    cf = CellForest(root_dir=root_path, spec=process_chain_spec)
+    cf = CellBranch(root_dir=root_path, spec=process_chain_spec)
     cf.process.normalize()
     cf.process.test_process()
     return cf
@@ -38,7 +35,7 @@ def test_logging(test_norm_fix):
 
 
 def test_process_aliasing(root_path_2, sample_paths, alias_spec):
-    cf = CellForest.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
+    cf = CellBranch.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
     cf.process.process_1()
     cf.process.process_2()
     return cf
