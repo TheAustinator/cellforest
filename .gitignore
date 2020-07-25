@@ -1,12 +1,26 @@
+# IDE
 .idea
+.vscode
+
 build
 dist
-tests/data
 venv
+
+tests/data
+playground/
+docs/
+
+# pipenv
+Pipfile
+Pipfile.lock
+.DS_Store
+*.cpython-*.pyc
+
+
+# checkpoints
 *.egg-info
 *-checkpoint.ipynb
 *-checkpoint.txt
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
