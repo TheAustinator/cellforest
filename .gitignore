@@ -1,14 +1,10 @@
-# IDE
-.idea
-.vscode
-
-build
-dist
-venv
-
 tests/data
 playground/
 docs/
+
+# IDE
+.idea
+.vscode
 
 # pipenv
 Pipfile

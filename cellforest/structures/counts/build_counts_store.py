@@ -13,7 +13,7 @@ def build_counts_store(
     matrix: Union[np.ndarray, spmatrix],
     cell_ids: pd.Series,
     features: pd.DataFrame,
-    save_path: Optional[str, Path] = None,
+    save_path: Optional[Union[str, Path]] = None,
 ) -> CountsStore:
     """
     Method for saving counts matrix data as a pickle file. Intended for use in

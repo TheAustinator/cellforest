@@ -1,4 +1,5 @@
 import pickle
+from collections import Counter
 from functools import wraps
 from pathlib import Path
 from typing import Union, Iterable, Optional, Callable, List, get_type_hints
@@ -43,8 +44,8 @@ class Counts(csr_matrix):
     _SUPER_METHODS = const.SUPER_METHODS
     _SUPPORTED_AGG_FUNCS = {
         "built-in": ["sum", "mean", "min", "max"],
-        "derived": ["std", "var"],
-        "all": ["sum", "mean", "min", "max", "std", "var"],
+        "derived": ["std", "var", "nonzero"],
+        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero"],
     }
     _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
@@ -57,7 +58,7 @@ class Counts(csr_matrix):
     ):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
-        self._matrix = matrix
+        self._matrix = csr_matrix(matrix)
         self.chemistry = "v3" if len(features.columns) == 3 else "v2"
         self.features = features.iloc[:, :2].copy()
         self.features.columns = self._FEATURES_COLUMNS
@@ -112,8 +113,8 @@ class Counts(csr_matrix):
 
     def hist(
         self,
-        agg: Union[str, int] = "sum",
-        axis: int = 0,
+        agg: str = "sum",
+        axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
@@ -132,7 +133,7 @@ class Counts(csr_matrix):
 
         Examples:
             >>> rna = Counts.from_cellranger("../tests/data/v3_gz/sample_1")  # load Counts matrix
-            >>> half_of_cells = rna._matrix.shape[0] // 2
+            >>> half_of_cells = rna.shape[0] // 2
             >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # mock cell labels for 2 samples
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
             >>> rna.hist("sum", axis=0, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
@@ -172,9 +173,9 @@ class Counts(csr_matrix):
 
     def scatter(
         self,
-        agg_x: Union[str, int] = "sum",
-        agg_y: Union[str, int] = "var",
-        axis: int = 0,
+        agg_x: str = "sum",
+        agg_y: str = "var",
+        axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
@@ -199,7 +200,7 @@ class Counts(csr_matrix):
             >>> rna.scatter("mean", "var", axis="genes", ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
-            >>> num_genes = rna._matrix.shape[1]
+            >>> num_genes = rna.shape[1]
             >>> labels = ["family_1"] * (num_genes // 2) + ["family_2"] * (num_genes // 2)  # mock gene families for 2 samples
             >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
             >>> plt.show()
@@ -265,14 +266,16 @@ class Counts(csr_matrix):
             agg_func = getattr(matrix, agg)
             rna_agg_out = agg_func(axis=agg_axis)
         elif agg in self._SUPPORTED_AGG_FUNCS["derived"]:
-            # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
-            rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
-            rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
+            if agg == "nonzero":
+                rna_agg_out = (matrix > 0).sum(agg_axis)
+            else:
+                # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
+                rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
+                rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
         else:
             raise NotImplementedError(
                 f'aggregation function "{agg}" not supported, valid options are: {self._SUPPORTED_AGG_FUNCS["all"]}'
             )
-
         rna_agg = np.ravel(rna_agg_out.sum(axis=agg_axis))  # flatten matrix
         return rna_agg
 
