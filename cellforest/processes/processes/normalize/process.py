@@ -11,7 +11,7 @@ R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize
 
 
 @dataprocess(matrix_layer=True, output="rds")
-def normalize(forest: "CellForest", run_name: str):
+def normalize(forest: "CellBranch", run_name: str):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
@@ -29,9 +29,11 @@ def normalize(forest: "CellForest", run_name: str):
     """
     input_metadata_path = forest.get_temp_meta_path(run_name)
     # TODO: add a root filepaths lookup
-    params = forest.spec[run_name].params
-    input_rds_path = forest.root_dir / "rna.rds"
-    output_rds_path = forest[run_name].path_map["rna_r"]
+    run_spec = forest.spec[run_name]
+    params = run_spec.params
+    process_run = forest[run_name]
+    input_rds_path = process_run.path_map_prior["rna_r"]
+    output_rds_path = process_run.path_map["rna_r"]
     min_genes = params["min_genes"]
     max_genes = params["max_genes"]
     min_cells = params["min_cells"]
@@ -48,8 +50,8 @@ def normalize(forest: "CellForest", run_name: str):
         R_FUNCTIONS_FILEPATH,
     ]
     if method == "sctransform":
-        output_corrected_umi_path = forest[run_name].path_map["corrected_umi"]
-        output_pearson_residual_path = forest[run_name].path_map["pearson_residual"]
+        output_corrected_umi_path = process_run.path_map["corrected_umi"]
+        output_pearson_residual_path = process_run.path_map["pearson_residual"]
         arg_list += [output_corrected_umi_path, output_pearson_residual_path]
         r_normalize_script = R_SCTRANSFORM_SCRIPT
     elif method == "seurat_default":

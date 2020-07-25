@@ -32,7 +32,7 @@ pip install cellforest
 ```
 **Import**
 ```python
-from cellforest import CellForest
+from cellforest import CellBranch
 ```
 
 ### Examples

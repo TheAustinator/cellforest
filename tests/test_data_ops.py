@@ -8,7 +8,7 @@ def test_subset_fix(root_path_3, metadata, norm_spec):
     spec[0]["subset"] = {"sample": "sample_1"}
     cf = cellforest.from_metadata(root_path_3, metadata, spec=spec)
     cf.process.normalize()
-    output_meta_path = cf["normalize"].path / "meta.tsv"
+    output_meta_path = cf["normalize"].path_map["meta"]
     output_meta = pd.read_csv(output_meta_path, sep="\t")
     assert (output_meta["sample"] == "sample_1").all()
     assert len(cf.meta) == len(cf.rna)

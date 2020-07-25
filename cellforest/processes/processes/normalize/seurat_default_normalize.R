@@ -15,7 +15,7 @@ nfeatures <- as.numeric(args[10])
 source(r_functions_filepath)
 
 
-print("creating Seurat object")
+print("creating Seurat object"); print(date())
 srat <- readRDS(input_rds_path)
 print("reading metadata"); print(date())
 meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1)

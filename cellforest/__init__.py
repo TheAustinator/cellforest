@@ -1,7 +1,7 @@
 from cellforest.structures.counts.Counts import Counts
-from .templates.CellForest import CellForest
+from .templates.CellBranch import CellBranch
 from .templates.SpecSC import SpecSC as Spec
 
-from_metadata = CellForest.from_metadata
-from_input_dirs = CellForest.from_input_dirs
-load = CellForest.load
+from_metadata = CellBranch.from_metadata
+from_input_dirs = CellBranch.from_input_dirs
+load = CellBranch.load

@@ -12,12 +12,12 @@ def hook_store_temp_meta(dp: dataprocess):
     removed by `hook_clean_temp_metadata`
     """
     if dp.temp_meta:
-        dp._metadata_filepath = dp.forest[dp.name].path / dp.forest.schema.__class__.TEMP_METADATA_FILENAME
-        process_name = dp.forest.current_process
-        precursors = dp.forest.spec.get_precursors_lookup()[process_name]
+        dp._metadata_filepath = dp.branch[dp.name].path / dp.branch.schema.__class__.TEMP_METADATA_FILENAME
+        process_name = dp.branch.current_process
+        precursors = dp.branch.spec.get_precursors_lookup()[process_name]
         precursor = precursors[-1] if precursors else None
-        temp_meta = dp.forest[dp.name].forest._get_cell_meta(precursor)
-        temp_meta = dp.forest._apply_data_ops(dp.name, temp_meta)
+        temp_meta = dp.branch[dp.name].branch._get_cell_meta(precursor)
+        temp_meta = dp.branch._apply_data_ops(dp.name, temp_meta)
         WriterMethodsSC.tsv(dp._metadata_filepath, temp_meta, header=True)
 
 
@@ -33,4 +33,4 @@ def hook_clear_metadata_cache(dp: dataprocess):
     """
     Clear metadata attribute after process run so that it can be recalculated
     """
-    dp.forest._meta = None
+    dp.branch._meta = None
