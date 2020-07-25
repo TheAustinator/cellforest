@@ -7,7 +7,7 @@ output_clusters_path <- args[4]
 num_pcs <- as.numeric(args[5])
 resolution <- as.numeric(args[6])
 eps <- as.numeric(args[7])
-# This is janky, but R sucks and I can't find a better way
+
 r_functions_filepath <- args[8]
 print("eps"); print(eps)
 print("functions"); print(r_functions_filepath)

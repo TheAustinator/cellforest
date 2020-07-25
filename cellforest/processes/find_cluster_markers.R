@@ -12,7 +12,6 @@ output_markers_dir <- args[3]
 test <- args[4]
 logfc_thresh <- as.numeric(args[5])
 
-# This is janky, but R sucks and I can't find a better way
 r_functions_filepath <- args[6]
 source(r_functions_filepath)
 

@@ -1,0 +1,73 @@
+---
+# FILE STRUCTURE
+#
+file_map:
+  normalize:
+    corrected_umi: corrected_umi.mtx    # from sctransform
+    pearson_residual: pearson_residuals.tsv    # from sctransform
+  reduce:
+    pca_embeddings: pca_embeddings.tsv
+    pca_loadings: pca_loadings.tsv
+    umap_embeddings: umap_embeddings.tsv
+  cluster:
+    clusters: clusters.tsv
+  diffexp_bulk:
+    diffexp_bulk_result: diffexp.tsv
+  diffexp:
+    diffexp_result: diffexp.tsv
+  markers:
+    markers: markers.tsv
+
+layers:
+  matrix:
+    rna: rna.pickle
+    rna_r: rna.rds
+    rna_ann: rna.anndata
+  meta:
+    meta: meta.tsv
+process_layers:
+  root:
+    - matrix
+    - meta
+  normalize:
+    - matrix
+    - meta
+  reduce:
+    - meta
+
+# HOOKS
+#   Hook will be collected recursively from directories or processes specified
+#   in `hook_sources`. Hook containing files must be named `hooks.py`, and hook
+#   functions names must begin with `hook_`.
+#   (not tested on Windows)
+#
+#   hook_sources:
+#     Paths to search recursively for hooks. Can be specified in module or
+#     absolute path syntax.
+#   setup_hooks: Hooks to run prior to process run. (ordered)
+#   clean_hooks: Hooks to run after process run. (ordered)
+hook_sources:
+  - dataforest.hooks
+  - cellforest.hooks
+setup_hooks:
+  - hook_comparative
+  - hook_input_exists
+  - hook_mkdirs
+  - hook_goto_process
+  - hook_store_run_spec
+  - hook_catalogue
+  - hook_store_temp_meta
+clean_hooks:
+  - hook_garbage_collection
+  - hook_unify_matrix_node
+  - hook_clean_temp_meta
+  - hook_clean_unversioned
+  - hook_clear_metadata_cache
+dataprocess_default_attrs:
+  temp_meta: true
+  matrix_layer: false
+
+process_sources:
+  - cellforest.processes
+
+temp_meta_filename: temp_meta.tsv

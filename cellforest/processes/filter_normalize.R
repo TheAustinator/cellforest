@@ -14,7 +14,6 @@ perc_mito_cutoff <- as.numeric(args[5])
 num_features <- as.numeric(args[6])
 num_pcs <- as.numeric(args[7])
 
-# This is janky, but R sucks and I can't find a better way
 r_functions_filepath <- args[8]
 source(r_functions_filepath)
 
@@ -28,7 +27,7 @@ seurat_object <- filter_cells(seurat_object, min_detected_genes, max_detected_ge
 print("Running standard workflow")
 seurat_object <- run_standard_workflow(seurat_object, nfeatures = num_features, npcs = num_pcs, verbose = TRUE)
 print("Saving RDS")
-saveRDS(seurat_object, output_rds_path)
+#saveRDS(seurat_object, output_rds_path)
 write.table(colnames(seurat_object), filtered_barcodes_path, sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
 print("Writing embeddings")
 save_embeddings(seurat_object, rdata_output_dir)

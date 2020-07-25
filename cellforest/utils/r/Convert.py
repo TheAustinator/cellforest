@@ -2,6 +2,7 @@ import sys
 
 from pathlib import Path
 
+from cellforest.structures.counts import build_counts_store
 from cellforest.utils import r
 from cellforest.utils.shell.shell_command import shell_command
 
@@ -9,7 +10,7 @@ _PYTHON_EXECUTABLE = sys.executable
 _R_UTILS_DIR = Path(r.__file__).parent
 _PICKLE_TO_RDS_SCRIPT = _R_UTILS_DIR / "pickle_to_rds.R"
 _RDS_TO_PICKLE_SCRIPT = _R_UTILS_DIR / "rds_to_pickle.R"
-_COUNTS_STORE_MODULE = _R_UTILS_DIR.parent.parent / "structures/build_counts_store.py"
+_COUNTS_STORE_MODULE = build_counts_store.__file__
 
 
 class Convert:

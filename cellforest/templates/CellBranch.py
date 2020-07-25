@@ -1,79 +1,81 @@
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 
-from dataforest.core.DataForest import DataForest
-from dataforest.utils.utils import label_df_partitions, update_recursive
+from dataforest.core.DataBranch import DataBranch
+from dataforest.core.Spec import Spec
+from dataforest.utils.utils import label_df_partitions
 import pandas as pd
 
-from cellforest.structures.Counts import Counts
-from cellforest.templates.PlotMethodsSC import PlotMethodsSC
+from cellforest.structures.counts.Counts import Counts
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
-from cellforest.templates.SpecSC import SpecSC
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 from cellforest.utils.cellranger.DataMerge import DataMerge
 
 
-class CellForest(DataForest):
+class CellBranch(DataBranch):
     """
-    DataForest for scRNAseq processed data. The `process_hierarchy` currently
+    DataBranch for scRNAseq processed data. The `process_hierarchy` currently
     starts at `combine`, where non-normalized counts data is combined.
 
     A path through specific `process_runs` of processes in the
-    `process_hierarchy` are specified in the `spec_dict`, according to the
+    `process_hierarchy` are specified in the `spec`, according to the
     specifications of `dataforest.Spec`. Any root level (not under a process
-    name in `spec_dict`) `subset`s or `filter`s are applied to `counts` and
+    name in `spec`) `subset`s or `filter`s are applied to `counts` and
     `meta`, which are the preferred methods for accessing cell metadata and
     the normalized counts matrix
     """
 
-    ROOT_LEVEL_COMPARTMENTS = {
-        "subset",
-    }
-    PLOT_METHODS = PlotMethodsSC
-    SPEC_CLASS = SpecSC
     READER_METHODS = ReaderMethodsSC
     WRITER_METHODS = WriterMethodsSC
+    DATA_FILE_ALIASES = {"rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"}
     READER_KWARGS_MAP = {
-        "dim_reduce": {
+        "reduce": {
             "pca_embeddings": {"header": "infer"},
             "pca_loadings": {"header": "infer"},
             "umap_embeddings": {"header": "infer", "index_col": 0},
         },
         "combine": {"cell_metadata": {"header": 0}},
-        # 'normalize': {
-        #     'cell_ids': {'index_col': 0}},
         "cluster": {"clusters": {"index_col": 0}},
         "diffexp": {"diffexp_result": {"header": 0}},
     }
     _METADATA_NAME = "meta"
-    _COPY_KWARGS = {**DataForest._COPY_KWARGS, "unversioned": "unversioned"}
+    _COPY_KWARGS = {**DataBranch._COPY_KWARGS, "unversioned": "unversioned"}
     _ASSAY_OPTIONS = ["rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"]
-    _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/process_schema.yaml"
+    _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/default_config.yaml"
 
-    def __init__(self, root_dir, spec_dict=None, verbose=False, meta=None, config=None, unversioned=None):
-        super().__init__(root_dir, spec_dict, verbose, config)
+    def __init__(
+        self,
+        root_dir: Union[str, Path],
+        spec: Optional[Union[list, Spec]] = None,
+        verbose: bool = False,
+        # meta: Optional[pd.DataFrame] = None,
+        config: Optional[Union[str, Path, dict]] = None,
+        unversioned: Optional[bool] = None,
+    ):
+        super().__init__(root_dir, spec, verbose, config)
         self.assays = set()
         self._rna = None
-        self._meta_unfiltered = None
-        if meta is not None:
-            meta = meta.copy()
-        self._meta = self.get_cell_meta(meta)
+        # self._meta_unfiltered = None
+        # if meta is not None:
+        #     meta = meta.copy()
+        # self._meta = self._get_cell_meta(meta)
+        self._meta = None
         # TODO: use this to augment strings of output directories so manual tinkers don't
         #   affect downstream processing
-        if meta is not None and unversioned is None:
-            self._unversioned = True
-        else:
-            self._unversioned = bool(unversioned)
-        if self.unversioned:
-            self.logger.warning(f"Unversioned DataForest")
+        # if meta is not None and unversioned is None:
+        #     self._unversioned = True
+        # else:
+        #     self._unversioned = bool(unversioned)
+        # if self.unversioned:
+        #     self.logger.warning(f"Unversioned DataBranch")
 
     @property
     def samples(self) -> pd.DataFrame:
         """
         Hierarchical categorization of all samples in dataset with cell counts.
-        The canonical use case would be to use it on a broad DataForest to choose
+        The canonical use case would be to use it on a broad DataBranch to choose
         a dataset.
         Returns:
 
@@ -92,13 +94,7 @@ class CellForest(DataForest):
         """
         # TODO: add embeddings and cluster ids
         if self._meta is None:
-            self._meta = self.get_cell_meta()
-        elif "dim_reduce" in self.spec and "UMAP_1" not in self._meta.columns:
-            if self["dim_reduce"].done:
-                self._meta = self.get_cell_meta()
-        elif "cluster" in self.spec and "cluster_id" not in self._meta.columns:
-            if self["cluster"].done:
-                self._meta = self.get_cell_meta()
+            self._meta = self._get_cell_meta(self.current_process)
         return self._meta
 
     @property
@@ -108,16 +104,20 @@ class CellForest(DataForest):
         around `scipy.sparse.csr_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
-        if self._rna is None:
-            # TODO: set to use normalized if exists by default -- see old version
-            # TODO: soft code filenames
-            counts_path = self.root_dir / "rna.pickle"
+        if self._rna is None or not self._rna.index.equals(self.meta.index):
+            if self.current_process is not None:
+                path_map = self[self.current_process].path_map
+                counts_path = path_map["rna"]
+            else:
+                # TODO: fix hardcoding
+                counts_path = self.root_dir / "rna.pickle"
             if not counts_path.exists():
                 raise FileNotFoundError(
-                    f"Ensure that you initialized the root directory with CellForest.from_metadata or "
-                    f"CellForest.from_input_dirs. Not found: {counts_path}"
+                    f"Ensure that you initialized the root directory with CellBranch.from_metadata or "
+                    f"CellBranch.from_input_dirs. Not found: {counts_path}"
                 )
             self._rna = Counts.load(counts_path)
+        if not self._rna.index.equals(self.meta.index):
             self._rna = self._rna[self.meta.index]
         return self._rna
 
@@ -149,22 +149,23 @@ class CellForest(DataForest):
     def crispr(self):
         raise NotImplementedError()
 
-    def groupby(self, by: Union[str, list, set, tuple], **kwargs):
+    def groupby(self, by: Union[str, list, set, tuple], **kwargs) -> Tuple[str, "CellBranch"]:
         """
         Operates like a pandas groupby, but does not return a GroupBy object,
-        and yields (name, DataForest), where each DataForest is subset according to `by`,
+        and yields (name, DataBranch), where each DataBranch is subset according to `by`,
         which corresponds to columns of `self.meta`.
         This is useful for batching analysis across various conditions, where
-        each run requires an DataForest.
+        each run requires an DataBranch.
         Args:
             by: variables over which to group (like pandas)
             **kwargs: for pandas groupby on `self.meta`
 
         Yields:
-            name: values for DataForest `subset` according to keys specified in `by`
-            forest: new DataForest which inherits `self.spec` with additional `subset`s
+            name: values for DataBranch `subset` according to keys specified in `by`
+            branch: new DataBranch which inherits `self.spec` with additional `subset`s
                 from `by`
         """
+        raise NotImplementedError("currently not functioning")
         if isinstance(by, (tuple, set)):
             by = list(by)
         for (name, df) in self.meta.groupby(by, **kwargs):
@@ -176,14 +177,14 @@ class CellForest(DataForest):
             else:
                 subset_dict = {by: name}
             forest = self.get_subset(subset_dict)
-            # forest._meta = df
+            # branch._meta = df
             yield name, forest
 
     @property
-    def unversioned(self):
+    def unversioned(self) -> bool:
         return self._unversioned
 
-    def copy(self, reset: bool = False, **kwargs):
+    def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         if kwargs.get("meta", None) is not None:
             kwargs["unversioned"] = True
         if not kwargs:
@@ -195,90 +196,46 @@ class CellForest(DataForest):
             kwargs = base_kwargs
         return self.__class__(**kwargs)
 
-    @property
-    def meta_unfiltered(self) -> pd.DataFrame:
-        # TODO: not used anywhere, figure out use and add docstring or delete
-        return self._meta_unfiltered
-
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from spec"""
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
-    def get_cell_meta(self, df=None):
-        # TODO: MEMORY DUPLICATION - we want to keep file access pure?
-        if df is None:
-            # TODO: fix this
-            try:
-                # df = self.f["cell_metadata"].copy()
-                df = pd.read_csv(self.root_dir / "meta.tsv", sep="\t", index_col=0)
-            except FileNotFoundError:
-                df = pd.DataFrame(self.rna.cell_ids.copy())
-                df.columns = ["cell_id"]
-                df.index = df["cell_id"]
-                df.drop(columns=["cell_id"], inplace=True)
-            df.replace(" ", "_", regex=True, inplace=True)
-            if "to_bucket_var" in df and "bucketed_var" not in df:
-                df["bucketed_var"] = pd.cut(df["to_bucket_var"], bins=(0, 20, 40, 60, 80), labels=(10, 30, 50, 70),)
-            if "str_var_preprocessed" in df and "str_var_processed" not in df:
-                df["str_var_processed"] = df["str_var_preprocessed"].str.extract(r"([A-Z]\d)")
-            # TODO: fill in once `process_run.done` feature is ready
-            df = self._meta_add_downstream_data(df)
-        df = self._subset_filter(df, self.spec, self.schema)
-        if self.spec.partition_set:
-            df = label_df_partitions(df, self.spec.partition_set, encodings=True)
-        return df
-
-    def _meta_add_downstream_data(self, df):
-        done = set()
-        if "cluster" in self.spec:
-            if self["cluster"].done:
-                done.update({"normalize", "dim_reduce", "cluster"})
-        if not done and "dim_reduce" in self.spec:
-            if self["dim_reduce"].done:
-                done.update({"normalize", "dim_reduce"})
-        if not done and "normalize" in self.spec:
-            if self["normalize"].done:
-                done.update({"normalize"})
-        if "cluster" in done:
-            clusters = self.f["cluster"]["clusters"].copy()
-            clusters.rename(columns={1: "cluster_id"}, inplace=True)
-            df = df.merge(clusters, how="left", left_index=True, right_index=True)
-            df["cluster_id"] = df["cluster_id"].astype(pd.Int16Dtype())
-        if "dim_reduce" in done:
-            df = df.merge(self.f["dim_reduce"]["umap_embeddings"], how="left", left_index=True, right_index=True)
-        if "normalize" in done:
-            pass
-            # df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        # TODO: temp during param mismatch
+    def _get_cell_meta(self, process_name: str) -> pd.DataFrame:
+        """
+        Read in cell metadata and performs modifications:
+            - replace any spaces with underscores
+            - merge metadata from process precursors and current process
+            - performs data operations (subset, filter, partition)
+        Args:
+            df: if provided, skip first two steps and go straight to data ops
+        Returns:
+            df: modified metadata dataframe
+        """
         try:
-            df = df[df.index.isin(self.f["normalize"]["cell_ids"][0])]
-        except Exception:
-            self.logger.info("Could not find filtered cell ids. Using all cells in metadata")
+            df = pd.read_csv(self["root"].path_map["meta"], sep="\t", index_col=0)
+        except FileNotFoundError:
+            df = pd.DataFrame(self.rna.cell_ids.copy())
+            df.columns = ["cell_id"]
+            df.index = df["cell_id"]
+            df.drop(columns=["cell_id"], inplace=True)
+        if process_name is not None:
+            precursor_names = self.spec.get_precursors_lookup(incl_current=True)[process_name]
+            for precursor_name in precursor_names:
+                try:
+                    process_meta = self[precursor_name].process_meta
+                except FileNotFoundError:
+                    pass
+                else:
+                    intersect_cols = set(df.columns).intersection(set(process_meta.columns))
+                    process_meta.drop(intersect_cols, axis=1, inplace=True)
+                    df = df.merge(process_meta, left_index=True, right_index=True)
+        df.replace(" ", "_", regex=True, inplace=True)
+        partitions_list = self.spec.get_partition_list(process_name)
+        partitions = set().union(*partitions_list)
+        if partitions:
+            df = label_df_partitions(df, partitions, encodings=True)
         return df
-
-    def _get_compartment_updated(self, compartment_name: str, update: dict) -> "CellForest":
-        """
-
-        """
-        if compartment_name in self.ROOT_LEVEL_COMPARTMENTS:
-            spec = update_recursive(self.spec, update, inplace=False)
-        else:
-            spec = update_recursive(self.spec, {compartment_name: update}, inplace=False)
-        forest = self.copy(spec_dict=spec)
-        bool_selector = pd.concat([forest.meta[key] == value for key, value in update.items()], axis=1).all(axis=1)
-        if sum(bool_selector) == 0:
-            import ipdb
-
-            ipdb.set_trace()
-        if compartment_name == "subset":
-            forest._meta = forest.meta[bool_selector]
-        elif compartment_name == "filter":
-            forest._meta = forest.meta[~bool_selector]
-        else:
-            raise ValueError()
-        forest._rna = forest.counts[forest.meta.index]
-        return forest
 
     @staticmethod
     def _combine_datasets(
@@ -307,7 +264,7 @@ class CellForest(DataForest):
             if len(assays) == 0:
                 raise ValueError(
                     f"metadata must contain at least once column named with the prefix, `path_`, and one of the "
-                    f"following assays as a suffix: {CellForest._ASSAY_OPTIONS}"
+                    f"following assays as a suffix: {CellBranch._ASSAY_OPTIONS}"
                 )
             for assay in assays:
                 paths = metadata[f"{prefix}{assay}"].tolist()

@@ -1,1 +1,1 @@
-from .Counts import Counts
+from cellforest.structures.counts.Counts import Counts
