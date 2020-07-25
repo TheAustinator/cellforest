@@ -1,22 +1,31 @@
 import os
 import pickle
 from pathlib import Path
+from typing import Union, Optional
 
 from cellforest.structures.counts.CountsStore import CountsStore
+import numpy as np
+import pandas as pd
+from scipy.sparse.base import spmatrix
 
 
-def build_counts_store(matrix, cell_ids, features, save_path=None):
+def build_counts_store(
+    matrix: Union[np.ndarray, spmatrix],
+    cell_ids: pd.Series,
+    features: pd.DataFrame,
+    save_path: Optional[str, Path] = None,
+) -> CountsStore:
     """
     Method for saving counts matrix data as a pickle file. Intended for use in
     python or R (via Reticulate).
     Args:
-        matrix: sparse matrix
-        cell_ids:
-        features:
-        save_path:
+        matrix: see `cellforest.structures.counts.Counts.Counts`
+        cell_ids: see `cellforest.structures.counts.Counts.Counts`
+        features: see `cellforest.structures.counts.Counts.Counts`
+        save_path: path to store pickle object
 
     Returns:
-
+        store: dummy object to hold data for pickling
     """
     store = CountsStore()
     store.matrix = matrix

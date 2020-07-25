@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.axes._subplots import Axes
 from scipy.sparse import csr_matrix, hstack, vstack
+from scipy.sparse.base import spmatrix
 
 from cellforest.structures.counts import const
 from cellforest.structures.counts.build_counts_store import build_counts_store
@@ -18,10 +19,28 @@ from cellforest.utils.r.Convert import Convert
 
 
 class Counts(csr_matrix):
+    """
+    A sparse matrix data structure for 10X single cell transcriptomic data.
+    Args:
+        matrix: cells x genes with entries representing number of UMIs detected
+        cell_ids: single column dataframe or series with cell ids (barcodes)
+        features: two or three column dataframe with ensembl ids, gene names,
+            and optionally, mode, for newer 10X versions. Order required, but
+            not column names.
+    Attributes & Properties:
+        chemistry: "v3" if features contains third column, otherwise, "v2"
+            (not accurate, but helpful for IO)
+        features: ensembl id and gene name columns of `features` arg
+        genes, columns: gene names
+        ensgs: ensembl ids
+        cell_ids, rows: cell IDs or "barcodes"
+
+    """
+
     _SUPPORTED_CHEMISTRIES = ["v1", "v2", "v3"]
     # TODO: change to singular
-    FEATURES_COLUMNS = ["ensgs", "genes"]
-    SUPER_METHODS = const.SUPER_METHODS
+    _FEATURES_COLUMNS = ["ensgs", "genes"]
+    _SUPER_METHODS = const.SUPER_METHODS
     _SUPPORTED_AGG_FUNCS = {
         "built-in": ["sum", "mean", "min", "max"],
         "derived": ["std", "var"],
@@ -29,13 +48,19 @@ class Counts(csr_matrix):
     }
     _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
-    def __init__(self, matrix, cell_ids, features, **kwargs):
+    def __init__(
+        self,
+        matrix: Union[np.ndarray, spmatrix],
+        cell_ids: Union[pd.DataFrame, pd.Series],
+        features: pd.DataFrame,
+        **kwargs,
+    ):
         # TODO: make a get_counts function that just takes the directory
         super().__init__(matrix, **kwargs)
         self._matrix = matrix
-        self.chemistry = "v3" if "mode" in features.columns else "v2"
+        self.chemistry = "v3" if len(features.columns) == 3 else "v2"
         self.features = features.iloc[:, :2].copy()
-        self.features.columns = self.FEATURES_COLUMNS
+        self.features.columns = self._FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
         self._ids = self._index_col_swap(cell_ids)
 
@@ -516,4 +541,4 @@ class Counts(csr_matrix):
             setattr(Counts, name, wrapped_method)
 
 
-Counts.decorate(Counts.SUPER_METHODS)
+Counts.decorate(Counts._SUPER_METHODS)
