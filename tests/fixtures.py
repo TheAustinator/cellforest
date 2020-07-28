@@ -57,6 +57,16 @@ def root_path_3(data_dir):
 
 
 @pytest.fixture
+def merge_root_1(data_dir):
+    return data_dir / "merge/root_1"
+
+
+@pytest.fixture
+def merge_root_2(data_dir):
+    return data_dir / "merge/root_2"
+
+
+@pytest.fixture
 def metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 

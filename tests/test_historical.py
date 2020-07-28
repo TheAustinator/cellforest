@@ -3,7 +3,7 @@ from tests.fixtures import *
 
 
 def test_spec_change(data_dir, metadata):
-    root_dir = data_dir / "root_4"
+    root = data_dir / "root_4"
     spec = [
         {
             "process": "normalize",
@@ -18,7 +18,7 @@ def test_spec_change(data_dir, metadata):
             "subset": {"sample": "sample_1"},
         }
     ]
-    cf = cellforest.from_metadata(root_dir, metadata, spec=spec)
+    cf = cellforest.from_metadata(root, metadata, spec=spec)
     cf.process.normalize()
     cf.rna  # works fine during first go
     spec = [
@@ -35,6 +35,6 @@ def test_spec_change(data_dir, metadata):
             "subset": {"sample": "sample_1"},
         }
     ]
-    cf = cellforest.load(root_dir, spec=spec)
+    cf = cellforest.load(root, spec=spec)
     cf.process.normalize()  # breaks
     cf.rna  # breaks

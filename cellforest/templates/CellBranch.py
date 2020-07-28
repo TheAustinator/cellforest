@@ -47,29 +47,19 @@ class CellBranch(DataBranch):
 
     def __init__(
         self,
-        root_dir: Union[str, Path],
+        root: Union[str, Path],
         spec: Optional[Union[list, Spec]] = None,
         verbose: bool = False,
-        # meta: Optional[pd.DataFrame] = None,
         config: Optional[Union[str, Path, dict]] = None,
+        current_process: Optional[str] = None,
+        remote_root: Optional[str, Path] = None,
         unversioned: Optional[bool] = None,
     ):
-        super().__init__(root_dir, spec, verbose, config)
+        super().__init__(root, spec, verbose, config, current_process, remote_root)
         self.assays = set()
         self._rna = None
-        # self._meta_unfiltered = None
-        # if meta is not None:
-        #     meta = meta.copy()
-        # self._meta = self._get_cell_meta(meta)
         self._meta = None
-        # TODO: use this to augment strings of output directories so manual tinkers don't
-        #   affect downstream processing
-        # if meta is not None and unversioned is None:
-        #     self._unversioned = True
-        # else:
-        #     self._unversioned = bool(unversioned)
-        # if self.unversioned:
-        #     self.logger.warning(f"Unversioned DataBranch")
+        self._unversioned = unversioned
 
     @property
     def samples(self) -> pd.DataFrame:
@@ -81,21 +71,6 @@ class CellBranch(DataBranch):
 
         """
         raise NotImplementedError()
-
-    @property
-    def meta(self) -> pd.DataFrame:
-        """
-        Interface for cell metadata, which is derived from the sample
-        metadata and the scrnaseq experimental data. Available UMAP embeddings
-        and cluster identifiers will be included, and the data will be subset,
-        filtered, and partitioned based on the specifications in `self.spec`.
-        Primarily for this reason, this is the preferred interface to metadata
-        over direct file access.
-        """
-        # TODO: add embeddings and cluster ids
-        if self._meta is None:
-            self._meta = self._get_cell_meta(self.current_process)
-        return self._meta
 
     @property
     def rna(self) -> Counts:
@@ -110,7 +85,7 @@ class CellBranch(DataBranch):
                 counts_path = path_map["rna"]
             else:
                 # TODO: fix hardcoding
-                counts_path = self.root_dir / "rna.pickle"
+                counts_path = self.root / "rna.pickle"
             if not counts_path.exists():
                 raise FileNotFoundError(
                     f"Ensure that you initialized the root directory with CellBranch.from_metadata or "
@@ -180,10 +155,6 @@ class CellBranch(DataBranch):
             # branch._meta = df
             yield name, forest
 
-    @property
-    def unversioned(self) -> bool:
-        return self._unversioned
-
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         if kwargs.get("meta", None) is not None:
             kwargs["unversioned"] = True
@@ -201,7 +172,7 @@ class CellBranch(DataBranch):
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
-    def _get_cell_meta(self, process_name: str) -> pd.DataFrame:
+    def _get_meta(self, process_name: str) -> pd.DataFrame:
         """
         Read in cell metadata and performs modifications:
             - replace any spaces with underscores
@@ -239,7 +210,7 @@ class CellBranch(DataBranch):
 
     @staticmethod
     def _combine_datasets(
-        root_dir: Union[str, Path],
+        root: Union[str, Path],
         metadata: Optional[Union[str, Path, pd.DataFrame]] = None,
         input_paths: Optional[List[Union[str, Path]]] = None,
         metadata_read_kwargs: Optional[dict] = None,
@@ -251,7 +222,7 @@ class CellBranch(DataBranch):
         replicate each row corresponding to the number of cells in the sample
         such that the number of rows changes from n_samples to n_cells.
         """
-        root_dir = Path(root_dir)
+        root_dir = Path(root)
         mode = mode if mode else "rna"
         if (input_paths and metadata) or (input_paths is None and metadata is None):
             raise ValueError("Must specify exactly one of `input_dirs` or `metadata`")
@@ -268,9 +239,9 @@ class CellBranch(DataBranch):
                 )
             for assay in assays:
                 paths = metadata[f"{prefix}{assay}"].tolist()
-                DataMerge.merge_assay(paths, assay, metadata, save_dir=root_dir)
+                DataMerge.merge_assay(paths, assay, metadata, save_dir=root)
         else:
-            DataMerge.merge_assay(input_paths, mode, save_dir=root_dir)
+            DataMerge.merge_assay(input_paths, mode, save_dir=root)
         return dict()
 
     @staticmethod
