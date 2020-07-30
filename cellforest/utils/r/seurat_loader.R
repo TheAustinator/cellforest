@@ -1,22 +1,24 @@
 library(Seurat)
 library(reticulate)
 
-PCA_EMBED_KEY = "pca_cf"
-UMAP_EMBED_KEY = "umap_cf"
+PCA_EMBED_KEY = "pca"
+UMAP_EMBED_KEY = "umap"
 
 #' Load RDS matrix and embeddings at process run
 #'
 #' @param cf_branch Cellforest branch at selected process
 #' 
+#' @return Seurat object with cached dimensionality reduction embeddings
+#' 
 #' @examples
 #' library(reticulate)
 #' cellforest <- import("cellforest")
 #' 
-#' source_python("playground/spec.py")
+#' source_python("tests/utils/spec.py")
 #' source("cellforest/utils/r/seurat_loader.R")
 #' 
 #' root_dir <- "tests/data/example_usage/root"
-#' cf_branch <- cellforest$load(root_dir, spec=spec)
+#' cf_branch <- cellforest$load(root_dir, spec = get_spec())
 #' cf_branch$goto_process("reduce")
 #' seurat_obj <- get_seurat_object(cf_branch)  # loads RDS and adds embeddings
 #' 
