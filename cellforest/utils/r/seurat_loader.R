@@ -22,7 +22,7 @@ UMAP_EMBED_KEY = "umap"
 #' cf_branch$goto_process("reduce")
 #' seurat_obj <- get_seurat_object(cf_branch)  # loads RDS and adds embeddings
 #' 
-#' DimPlot(seurat_obj, reduction = "pca_cf")
+#' DimPlot(seurat_obj, reduction = "pca")
 get_seurat_object <- function(cf_branch) {
   current_process <- cf_branch$current_process
   current_path_map <- cf_branch[current_process]$path_map
