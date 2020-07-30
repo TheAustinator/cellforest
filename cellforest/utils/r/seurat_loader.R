@@ -6,7 +6,7 @@ UMAP_EMBED_KEY = "umap_cf"
 
 #' Load RDS matrix and embeddings at process run
 #'
-#' @param cf_branch Cellforest branch at desired process
+#' @param cf_branch Cellforest branch at selected process
 #' 
 #' @examples
 #' library(reticulate)
@@ -23,7 +23,7 @@ UMAP_EMBED_KEY = "umap_cf"
 #' DimPlot(seurat_obj, reduction = "pca_cf")
 get_seurat_object <- function(cf_branch) {
   current_process <- cf_branch$current_process
-  current_path_map <- cf_branch[current_process]
+  current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
   seurat_object <- readRDS(file = rds_path)
   sprintf('Creating Seurat object at process "%s"', current_process); print(date())
