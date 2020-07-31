@@ -1,4 +1,4 @@
-def get_spec():
+def get_example_spec():
     spec = [
         {
             "process": "normalize",
