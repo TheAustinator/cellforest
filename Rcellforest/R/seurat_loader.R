@@ -1,27 +1,39 @@
-library(Seurat)
-library(reticulate)
-library(glue)
+#' @include example_spec.R
 
 PCA_EMBED_KEY = "pca"
 UMAP_EMBED_KEY = "umap"
 
-#' Load RDS matrix and embeddings at process run
+#' @title Load RDS matrix and embeddings at process run
+#'
+#' @description Loads RDS from most recent layer (including current layer).
+#' If RDS comes from parental folder, append embeddings from the current layer.
+#'
+#' @importFrom reticulate import
+#' @importFrom Seurat CreateDimReducObject
+#' @importFrom glue glue
 #'
 #' @param cf_branch Cellforest branch at selected process
-#' 
+#'
 #' @return Seurat object with cached dimensionality reduction embeddings
-#' 
+#'
+#' @section Installation:
+#' 1. `setwd(PATH_TO_CELLFOREST)`
+#' 2. `install(Rcellforest)`
+#'
+#' @export
+#'
 #' @examples
 #' library(reticulate)
+#' library(Seurat)
+#'
+#' library(Rcellforest)
 #' cellforest <- import("cellforest")
-#' 
-#' source("cellforest/utils/r/seurat_loader.R")
-#' 
+#'
 #' root_dir <- "tests/data/example_usage/root"
 #' cf_branch <- cellforest$load(root_dir, spec = example_spec_r)
 #' cf_branch$goto_process("reduce")
-#' seurat_obj <- get_seurat_object(cf_branch)  # loads RDS and adds embeddings
-#' 
+#' seurat_obj <- get_seurat_object(cf_branch)
+#'
 #' DimPlot(seurat_obj, reduction = "pca")
 get_seurat_object <- function(cf_branch) {
   current_process <- cf_branch$current_process
@@ -36,15 +48,17 @@ get_seurat_object <- function(cf_branch) {
   meta_path_prefix <- substr(meta_path, start = 1, stop = tail(which(strsplit(meta_path, "")[[1]] == "/"), n = 1))
 
   if (rds_path_prefix != meta_path_prefix) {
-    # is there a prettier way to get precursors for current process?
+    # TO-DO: is there a prettier way to get precursors for current process?
     precursors <- cf_branch$spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
     for (process in precursors) {
-      if (process == "reduce") {  # how to check for actual process name rather than alias?
+      if (process == "reduce") {  # TO-DO: how to check for actual process name rather than alias?
         seurat_object <- add_dim_reduc_embed(
           seurat_object,
           current_path_map
         )
       }
+
+      # TO-DO: Add loading for new processes
     }
   }
   print(toString(glue("Seurat object at process '{current_process}' created"))); print(date())
@@ -58,7 +72,7 @@ add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pc
     seurat_object <- add_pca_embed(seurat_object, path_map)
     print(toString(glue("PCA embeddings and loadings loaded. Access them at seurat_object${PCA_EMBED_KEY}"))); print(date())
   }
-  
+
   if ("umap" %in% dim_reduc_funcs) {
     print("Loading UMAP embeddings"); print(date())
     seurat_object <- add_umap_embed(seurat_object, path_map)
@@ -96,58 +110,3 @@ add_umap_embed <- function(seurat_object, path_map) {
 
   return(seurat_object)
 }
-
-# list of names lists will convert to list of dictionaries in Python
-example_spec_r <- type.convert(list(
-  list(
-    "process" = "normalize",
-    "params" = list(
-      "min_genes" = 4,
-      "max_genes" = 5002,
-      "min_cells" = 5,
-      "nfeatures" = 30,
-      "perc_mito_cutoff" = 20,
-      "method" = "seurat_default"
-    ),
-    "subset" = list(
-      "sample" = "sample_1"
-    )
-  ),
-  
-  list(
-    "process" = "reduce",
-    "params" = list(
-      "pca_npcs" = 3,
-      "umap_n_neighbors" = 3,
-      "umap_min_dist" = 0.1,
-      "umap_n_components" = 2,
-      "umap_metric" = "euclidean"
-    )
-  )
-))
-
-# conversion of Python list of dicts into a reticulate object
-example_spec_py <- py_run_string('[
-  {
-      "process": "normalize",
-      "params": {
-          "min_genes": 4,
-          "max_genes": 5002,
-          "min_cells": 5,
-          "nfeatures": 30,
-          "perc_mito_cutoff": 20,
-          "method": "seurat_default",
-      },
-      "subset": {"sample": "sample_1"},
-  },
-  {
-      "process": "reduce",
-      "params": {
-          "pca_npcs": 3,
-          "umap_n_neighbors": 3,
-          "umap_min_dist": 0.1,
-          "umap_n_components": 2,
-          "umap_metric": "euclidean",
-      },
-  },
-]')$spec
