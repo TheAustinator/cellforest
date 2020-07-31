@@ -18,7 +18,7 @@ UMAP_EMBED_KEY = "umap"
 #' source("cellforest/utils/r/seurat_loader.R")
 #' 
 #' root_dir <- "tests/data/example_usage/root"
-#' cf_branch <- cellforest$load(root_dir, spec = example_spec)
+#' cf_branch <- cellforest$load(root_dir, spec = example_spec_r)
 #' cf_branch$goto_process("reduce")
 #' seurat_obj <- get_seurat_object(cf_branch)  # loads RDS and adds embeddings
 #' 
@@ -98,7 +98,7 @@ add_umap_embed <- function(seurat_object, path_map) {
 }
 
 # list of names lists will convert to list of dictionaries in Python
-example_spec <- type.convert(list(
+example_spec_r <- type.convert(list(
   list(
     "process" = "normalize",
     "params" = list(
@@ -125,3 +125,29 @@ example_spec <- type.convert(list(
     )
   )
 ))
+
+# conversion of Python list of dicts into a reticulate object
+example_spec_py <- py_run_string('[
+  {
+      "process": "normalize",
+      "params": {
+          "min_genes": 4,
+          "max_genes": 5002,
+          "min_cells": 5,
+          "nfeatures": 30,
+          "perc_mito_cutoff": 20,
+          "method": "seurat_default",
+      },
+      "subset": {"sample": "sample_1"},
+  },
+  {
+      "process": "reduce",
+      "params": {
+          "pca_npcs": 3,
+          "umap_n_neighbors": 3,
+          "umap_min_dist": 0.1,
+          "umap_n_components": 2,
+          "umap_metric": "euclidean",
+      },
+  },
+]')$spec
