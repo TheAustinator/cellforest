@@ -36,6 +36,7 @@ get_seurat_object <- function(cf_branch) {
   meta_path_prefix <- substr(meta_path, start = 1, stop = tail(which(strsplit(meta_path, "")[[1]] == "/"), n = 1))
 
   if (rds_path_prefix != meta_path_prefix) {
+    # is there a prettier way to get precursors for current process?
     precursors <- cf_branch$spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
     for (process in precursors) {
       if (process == "reduce") {  # how to check for actual process name rather than alias?
