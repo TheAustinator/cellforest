@@ -1,4 +1,5 @@
 #' @include example_spec.R
+#' @include helper_functions.R
 
 PCA_EMBED_KEY = "pca"
 UMAP_EMBED_KEY = "umap"
@@ -12,7 +13,7 @@ UMAP_EMBED_KEY = "umap"
 #' @importFrom Seurat CreateDimReducObject
 #' @importFrom glue glue
 #'
-#' @param cf_branch Cellforest branch at selected process
+#' @param cf_branch CellForest branch at selected process
 #'
 #' @return Seurat object with cached dimensionality reduction embeddings
 #'
@@ -31,7 +32,7 @@ UMAP_EMBED_KEY = "umap"
 #'
 #' root_dir <- "tests/data/example_usage/root"
 #' cf_branch <- cellforest$load(root_dir, spec = example_spec_r)
-#' cf_branch$goto_process("reduce")
+#' cf_branch$goto_process("reduce")  # put process or alias (if exists)
 #' seurat_obj <- get_seurat_object(cf_branch)
 #'
 #' DimPlot(seurat_obj, reduction = "pca")
@@ -42,16 +43,17 @@ get_seurat_object <- function(cf_branch) {
   seurat_object <- readRDS(file = rds_path)
   print(toString(glue("Creating Seurat object at process '{current_process}'"))); print(date())
 
-  # check if rds path prefix matches process run path prefix
+  # check if rds is located in the same folder as metadata (if not -> needs update)
   meta_path <- toString(current_path_map$meta)
-  rds_path_prefix <- substr(rds_path, start = 1, stop = tail(which(strsplit(rds_path, "")[[1]] == "/"), n = 1))
-  meta_path_prefix <- substr(meta_path, start = 1, stop = tail(which(strsplit(meta_path, "")[[1]] == "/"), n = 1))
+  rds_path_prefix <- get_prefix_from_path(rds_path)
+  meta_path_prefix <- get_prefix_from_path(meta_path)
 
   if (rds_path_prefix != meta_path_prefix) {
     # TO-DO: is there a prettier way to get precursors for current process?
     precursors <- cf_branch$spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
-    for (process in precursors) {
-      if (process == "reduce") {  # TO-DO: how to check for actual process name rather than alias?
+    for (process_name in precursors) {
+      process <- cf_branch[process_name]$process
+      if (process == "reduce") {
         seurat_object <- add_dim_reduc_embed(
           seurat_object,
           current_path_map

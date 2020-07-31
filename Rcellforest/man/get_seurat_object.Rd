@@ -7,7 +7,7 @@
 get_seurat_object(cf_branch)
 }
 \arguments{
-\item{cf_branch}{Cellforest branch at selected process}
+\item{cf_branch}{CellForest branch at selected process}
 }
 \value{
 Seurat object with cached dimensionality reduction embeddings
@@ -33,7 +33,7 @@ cellforest <- import("cellforest")
 
 root_dir <- "tests/data/example_usage/root"
 cf_branch <- cellforest$load(root_dir, spec = example_spec_r)
-cf_branch$goto_process("reduce")
+cf_branch$goto_process("reduce")  # put process or alias (if exists)
 seurat_obj <- get_seurat_object(cf_branch)
 
 DimPlot(seurat_obj, reduction = "pca")

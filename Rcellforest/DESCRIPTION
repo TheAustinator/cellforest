@@ -16,4 +16,5 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1.9000
 Collate: 
     'example_spec.R'
+    'helper_functions.R'
     'seurat_loader.R'

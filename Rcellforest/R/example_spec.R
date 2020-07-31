@@ -36,8 +36,8 @@ py_run_string('example_spec_py = [
   {
       "process": "normalize",
       "params": {
-          "min_genes": 4,
-          "max_genes": 5002,
+          "min_genes": 5,
+          "max_genes": 5000,
           "min_cells": 5,
           "nfeatures": 30,
           "perc_mito_cutoff": 20,
@@ -47,6 +47,7 @@ py_run_string('example_spec_py = [
   },
   {
       "process": "reduce",
+      "alias": "pca+umap",
       "params": {
           "pca_npcs": 3,
           "umap_n_neighbors": 3,
