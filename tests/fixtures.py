@@ -90,6 +90,23 @@ def norm_spec():
 
 
 @pytest.fixture
+def norm_sctransform_spec():
+    spec = [
+        {
+            "process": "normalize",
+            "params": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "perc_mito_cutoff": 20,
+                "method": "sctransform",
+            },
+        }
+    ]
+    return spec
+
+
+@pytest.fixture
 def norm_reduce_spec(norm_spec):
     spec = deepcopy(norm_spec)
     reduce_run_spec = {

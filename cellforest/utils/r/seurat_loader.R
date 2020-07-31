@@ -1,5 +1,6 @@
 library(Seurat)
 library(reticulate)
+library(glue)
 
 PCA_EMBED_KEY = "pca"
 UMAP_EMBED_KEY = "umap"
@@ -14,11 +15,10 @@ UMAP_EMBED_KEY = "umap"
 #' library(reticulate)
 #' cellforest <- import("cellforest")
 #' 
-#' source_python("tests/utils/spec.py")
 #' source("cellforest/utils/r/seurat_loader.R")
 #' 
 #' root_dir <- "tests/data/example_usage/root"
-#' cf_branch <- cellforest$load(root_dir, spec = get_spec())
+#' cf_branch <- cellforest$load(root_dir, spec = example_spec)
 #' cf_branch$goto_process("reduce")
 #' seurat_obj <- get_seurat_object(cf_branch)  # loads RDS and adds embeddings
 #' 
@@ -28,7 +28,7 @@ get_seurat_object <- function(cf_branch) {
   current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
   seurat_object <- readRDS(file = rds_path)
-  sprintf('Creating Seurat object at process "%s"', current_process); print(date())
+  print(toString(glue("Creating Seurat object at process '{current_process}'"))); print(date())
 
   # check if rds path prefix matches process run path prefix
   meta_path <- toString(current_path_map$meta)
@@ -46,7 +46,7 @@ get_seurat_object <- function(cf_branch) {
       }
     }
   }
-  sprintf('Seurat object at process "%s" created.', current_path_map); print(date())
+  print(toString(glue("Seurat object at process '{current_process}' created"))); print(date())
 
   return(seurat_object)
 }
@@ -55,13 +55,13 @@ add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pc
   if ("pca" %in% dim_reduc_funcs) {
     print("Loading PCA embeddings and loadings"); print(date())
     seurat_object <- add_pca_embed(seurat_object, path_map)
-    sprintf("PCA embeddings and loadings loaded. Access them at seurat_object$%s", PCA_EMBED_KEY); print(date())
+    print(toString(glue("PCA embeddings and loadings loaded. Access them at seurat_object${PCA_EMBED_KEY}"))); print(date())
   }
   
   if ("umap" %in% dim_reduc_funcs) {
     print("Loading UMAP embeddings"); print(date())
     seurat_object <- add_umap_embed(seurat_object, path_map)
-    sprintf("UMAP embeddings loaded. Access them at seurat_object$%s", UMAP_EMBED_KEY); print(date())
+    print(toString(glue("UMAP embeddings loaded. Access them at seurat_object${UMAP_EMBED_KEY}"))); print(date())
   }
 
   return(seurat_object)
@@ -95,3 +95,32 @@ add_umap_embed <- function(seurat_object, path_map) {
 
   return(seurat_object)
 }
+
+# list of names lists will convert to list of dictionaries in Python
+example_spec <- type.convert(list(
+  list(
+    "process" = "normalize",
+    "params" = list(
+      "min_genes" = 4,
+      "max_genes" = 5002,
+      "min_cells" = 5,
+      "nfeatures" = 30,
+      "perc_mito_cutoff" = 20,
+      "method" = "seurat_default"
+    ),
+    "subset" = list(
+      "sample" = "sample_1"
+    )
+  ),
+  
+  list(
+    "process" = "reduce",
+    "params" = list(
+      "pca_npcs" = 3,
+      "umap_n_neighbors" = 3,
+      "umap_min_dist" = 0.1,
+      "umap_n_components" = 2,
+      "umap_metric" = "euclidean"
+    )
+  )
+))
