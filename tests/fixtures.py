@@ -86,7 +86,7 @@ def norm_spec():
     spec = [
         {
             "process": "normalize",
-            "params": {
+            "_PARAMS_": {
                 "min_genes": 5,
                 "max_genes": 5000,
                 "min_cells": 5,
@@ -94,7 +94,7 @@ def norm_spec():
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-        }
+        },
     ]
     return spec
 
@@ -104,7 +104,7 @@ def norm_reduce_spec(norm_spec):
     spec = deepcopy(norm_spec)
     reduce_run_spec = {
         "process": "reduce",
-        "params": {
+        "_PARAMS_": {
             "pca_npcs": 3,
             "umap_n_neighbors": 3,
             "umap_min_dist": 0.1,

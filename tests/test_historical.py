@@ -7,7 +7,7 @@ def test_spec_change(data_dir, metadata):
     spec = [
         {
             "process": "normalize",
-            "params": {
+            "_PARAMS_": {
                 "min_genes": 5,
                 "max_genes": 5000,
                 "min_cells": 5,
@@ -15,7 +15,7 @@ def test_spec_change(data_dir, metadata):
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-            "subset": {"sample": "sample_1"},
+            "_SUBSET_": {"sample": "sample_1"},
         }
     ]
     cf = cellforest.from_metadata(root, metadata, spec=spec)
@@ -24,7 +24,7 @@ def test_spec_change(data_dir, metadata):
     spec = [
         {
             "process": "normalize",
-            "params": {
+            "_PARAMS_": {
                 "min_genes": 2,
                 "max_genes": 5000,
                 "min_cells": 5,
@@ -32,7 +32,7 @@ def test_spec_change(data_dir, metadata):
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-            "subset": {"sample": "sample_1"},
+            "_SUBSET_": {"sample": "sample_1"},
         }
     ]
     cf = cellforest.load(root, spec=spec)

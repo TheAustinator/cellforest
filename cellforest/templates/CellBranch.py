@@ -218,11 +218,11 @@ class CellBranch(DataBranch):
     ):
         """
         Combine files from multiple cellranger output directories into a single
-        `Counts` and save it to `root_dir`. If sample metadata is provided,
+        `Counts` and save it to `root`. If sample metadata is provided,
         replicate each row corresponding to the number of cells in the sample
         such that the number of rows changes from n_samples to n_cells.
         """
-        root_dir = Path(root)
+        root = Path(root)
         mode = mode if mode else "rna"
         if (input_paths and metadata) or (input_paths is None and metadata is None):
             raise ValueError("Must specify exactly one of `input_dirs` or `metadata`")

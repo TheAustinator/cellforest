@@ -5,7 +5,7 @@ from tests.test_init import *
 @pytest.fixture
 def test_subset_fix(root_path_3, metadata, norm_spec):
     spec = deepcopy(norm_spec)
-    spec[0]["subset"] = {"sample": "sample_1"}
+    spec[0]["_SUBSET_"] = {"sample": "sample_1"}
     cf = cellforest.from_metadata(root_path_3, metadata, spec=spec)
     cf.process.normalize()
     output_meta_path = cf["normalize"].path_map["meta"]
