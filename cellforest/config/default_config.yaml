@@ -18,6 +18,27 @@ file_map:
   markers:
     markers: markers.tsv
 
+# plots for individual runs (e.g. clusters)
+plot_map:
+  normalize:
+  reduce:
+    umap: umap.png
+
+  cluster:
+  diffexp_bulk:
+  diffexp:
+  markers:
+
+# plots across runs parameters (e.g. elbow)
+meta_plot_path:
+  root:
+  normalize:
+  reduce:
+  cluster:
+  diffexp_bulk:
+  diffexp:
+  markers:
+
 layers:
   matrix:
     rna: rna.pickle

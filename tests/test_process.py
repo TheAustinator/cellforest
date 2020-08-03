@@ -11,22 +11,22 @@ from tests.test_data_ops import test_subset_fix
 
 @pytest.fixture
 def test_norm_fix(root_path, build_root_fix, norm_spec):
-    cf = CellBranch(root=root_path, spec=norm_spec)
-    cf.process.normalize()
-    return cf
+    branch = CellBranch(root=root_path, spec=norm_spec)
+    branch.process.normalize()
+    return branch
 
 
 def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
-    cf = CellBranch(root=root_path, spec=norm_reduce_spec)
-    cf.process.reduce()
-    return cf
+    branch = CellBranch(root=root_path, spec=norm_reduce_spec)
+    branch.process.reduce()
+    return branch
 
 
 def test_process_chain(root_path, build_root_fix, process_chain_spec):
-    cf = CellBranch(root=root_path, spec=process_chain_spec)
-    cf.process.normalize()
-    cf.process.test_process()
-    return cf
+    branch = CellBranch(root=root_path, spec=process_chain_spec)
+    branch.process.normalize()
+    branch.process.test_process()
+    return branch
 
 
 def test_logging(test_norm_fix):
@@ -35,23 +35,23 @@ def test_logging(test_norm_fix):
 
 
 def test_process_aliasing(root_path_2, sample_paths, alias_spec):
-    cf = CellBranch.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
-    cf.process.process_1()
-    cf.process.process_2()
-    return cf
+    branch = CellBranch.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
+    branch.process.process_1()
+    branch.process.process_2()
+    return branch
 
 
-def test_normalize_cf_goto(test_subset_fix):
-    cf = test_subset_fix
-    rna = Counts.load(cf["normalize"].path_map["rna"])
-    cf.goto_process("root")
-    assert len(cf.meta) == 600
-    assert len(cf.rna) == 600
-    cf = cf.goto_process("normalize")
-    assert len(cf.meta) == 59
-    assert len(cf.rna) == 59
-    assert cf.rna.shape == rna.shape
-    assert len(cf.rna.features) == len(rna.features)
+def test_normalize_branch_goto(test_subset_fix):
+    branch = test_subset_fix
+    rna = Counts.load(branch["normalize"].path_map["rna"])
+    branch.goto_process("root")
+    assert len(branch.meta) == 600
+    assert len(branch.rna) == 600
+    branch = branch.goto_process("normalize")
+    assert len(branch.meta) == 59
+    assert len(branch.rna) == 59
+    assert branch.rna.shape == rna.shape
+    assert len(branch.rna.features) == len(rna.features)
 
 
 def test_reduce_on_existing_normalize():

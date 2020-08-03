@@ -172,6 +172,9 @@ class CellBranch(DataBranch):
         columns = self.spec[process_name]["partition"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
+    def run_qc(self):
+        
+
     def _get_meta(self, process_name: str) -> pd.DataFrame:
         """
         Read in cell metadata and performs modifications:

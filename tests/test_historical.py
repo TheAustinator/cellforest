@@ -2,8 +2,8 @@ import cellforest
 from tests.fixtures import *
 
 
-def test_spec_change(data_dir, metadata):
-    root = data_dir / "root_4"
+def test_spec_change(data_dir, metadata, root_path_4):
+    root = root_path_4
     spec = [
         {
             "process": "normalize",
@@ -18,9 +18,9 @@ def test_spec_change(data_dir, metadata):
             "_SUBSET_": {"sample": "sample_1"},
         }
     ]
-    cf = cellforest.from_metadata(root, metadata, spec=spec)
-    cf.process.normalize()
-    cf.rna  # works fine during first go
+    branch = cellforest.from_metadata(root, metadata, spec=spec)
+    branch.process.normalize()
+    branch.rna  # works fine during first go
     spec = [
         {
             "process": "normalize",
@@ -35,6 +35,6 @@ def test_spec_change(data_dir, metadata):
             "_SUBSET_": {"sample": "sample_1"},
         }
     ]
-    cf = cellforest.load(root, spec=spec)
-    cf.process.normalize()  # breaks
-    cf.rna  # breaks
+    branch = cellforest.load(root, spec=spec)
+    branch.process.normalize()  # breaks
+    branch.rna  # breaks

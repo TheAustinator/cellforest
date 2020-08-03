@@ -57,6 +57,16 @@ def root_path_3(data_dir):
 
 
 @pytest.fixture
+def root_path_4(data_dir):
+    return data_dir / "root_4"
+
+
+@pytest.fixture
+def root_path_5(data_dir):
+    return data_dir / "root_5"
+
+
+@pytest.fixture
 def merge_root_1(data_dir):
     return data_dir / "merge/root_1"
 
