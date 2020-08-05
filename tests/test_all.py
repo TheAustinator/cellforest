@@ -4,6 +4,7 @@ from tests.test_process import *
 from tests.test_data_ops import *
 from tests.test_historical import *
 from tests.test_version_control import *
+from tests.test_datatree import *
 
 from path import Path  # pathlib doesn't have rmtree
 

@@ -77,13 +77,13 @@ def merge_root_2(data_dir):
 
 
 @pytest.fixture
-def metadata_path(data_dir):
+def sample_metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 
 
 @pytest.fixture
-def metadata(metadata_path):
-    return pd.read_csv(metadata_path, sep="\t")
+def sample_metadata(sample_metadata_path):
+    return pd.read_csv(sample_metadata_path, sep="\t")
 
 
 @pytest.fixture
@@ -92,10 +92,10 @@ def counts_path(root_path):
 
 
 @pytest.fixture
-def norm_spec():
+def branch_spec_norm():
     spec = [
         {
-            "process": "normalize",
+            "_PROCESS_": "normalize",
             "_PARAMS_": {
                 "min_genes": 5,
                 "max_genes": 5000,
@@ -110,10 +110,10 @@ def norm_spec():
 
 
 @pytest.fixture
-def norm_reduce_spec(norm_spec):
-    spec = deepcopy(norm_spec)
+def branch_spec_norm_reduce(branch_spec_norm):
+    spec = deepcopy(branch_spec_norm)
     reduce_run_spec = {
-        "process": "reduce",
+        "_PROCESS_": "reduce",
         "_PARAMS_": {
             "pca_npcs": 3,
             "umap_n_neighbors": 3,
@@ -127,13 +127,16 @@ def norm_reduce_spec(norm_spec):
 
 
 @pytest.fixture
-def process_chain_spec(norm_spec):
-    spec = deepcopy(norm_spec)
-    spec.append({"process": "test_process"})
+def process_chain_spec(branch_spec_norm):
+    spec = deepcopy(branch_spec_norm)
+    spec.append({"_PROCESS_": "test_process"})
     return spec
 
 
 @pytest.fixture
 def alias_spec():
-    spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
+    spec = [
+        {"_PROCESS_": "test_process", "_ALIAS_": "process_1",},
+        {"_PROCESS_": "test_process", "_ALIAS_": "process_2",},
+    ]
     return spec

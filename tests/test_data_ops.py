@@ -1,12 +1,12 @@
-import cellforest
+import cellforest as cf
 from tests.test_init import *
 
 
 @pytest.fixture
-def test_subset_fix(root_path_3, metadata, norm_spec):
-    spec = deepcopy(norm_spec)
-    spec[0]["_SUBSET_"] = {"sample": "sample_1"}
-    branch = cellforest.from_metadata(root_path_3, metadata, spec=spec)
+def test_subset_fix(root_path_3, sample_metadata, branch_spec_norm):
+    branch_spec = deepcopy(branch_spec_norm)
+    branch_spec[0]["_SUBSET_"] = {"sample": "sample_1"}
+    branch = cf.from_sample_metadata(root_path_3, sample_metadata, branch_spec=branch_spec)
     branch.process.normalize()
     output_meta_path = branch["normalize"].path_map["meta"]
     output_meta = pd.read_csv(output_meta_path, sep="\t")
@@ -19,7 +19,7 @@ def test_subset(test_subset_fix):
     pass
 
 
-def test_subset_multiple(root_path_3, metadata, norm_spec):
+def test_subset_multiple(root_path_3, sample_metadata, branch_spec_norm):
     pass
 
 

@@ -1,12 +1,12 @@
-import cellforest
+import cellforest as cf
 from tests.fixtures import *
 
 
-def test_spec_change(data_dir, metadata, root_path_4):
+def test_spec_change(data_dir, sample_metadata, root_path_4):
     root = root_path_4
     spec = [
         {
-            "process": "normalize",
+            "_PROCESS_": "normalize",
             "_PARAMS_": {
                 "min_genes": 5,
                 "max_genes": 5000,
@@ -18,12 +18,12 @@ def test_spec_change(data_dir, metadata, root_path_4):
             "_SUBSET_": {"sample": "sample_1"},
         }
     ]
-    branch = cellforest.from_metadata(root, metadata, spec=spec)
+    branch = cf.from_sample_metadata(root, sample_metadata, branch_spec=spec)
     branch.process.normalize()
     branch.rna  # works fine during first go
     spec = [
         {
-            "process": "normalize",
+            "_PROCESS_": "normalize",
             "_PARAMS_": {
                 "min_genes": 2,
                 "max_genes": 5000,
@@ -35,6 +35,6 @@ def test_spec_change(data_dir, metadata, root_path_4):
             "_SUBSET_": {"sample": "sample_1"},
         }
     ]
-    branch = cellforest.load(root, spec=spec)
+    branch = cf.load(root, branch_spec=spec)
     branch.process.normalize()  # breaks
     branch.rna  # breaks

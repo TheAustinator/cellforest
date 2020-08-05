@@ -1,20 +1,20 @@
 import pytest
 
-from cellforest import CellBranch
+import cellforest as cf
 from tests.fixtures import *
 
 
 @pytest.fixture
 def test_from_input_dirs_fix(root_path, sample_paths):
-    branch = CellBranch.from_input_dirs(root_path, sample_paths, mode="rna")
+    branch = cf.from_input_dirs(root_path, sample_paths, mode="rna")
     _ = branch.meta
     _ = branch.rna
     return sample_paths
 
 
 @pytest.fixture
-def build_root_fix(root_path, metadata):
-    branch = CellBranch.from_metadata(root_path, metadata)
+def build_root_fix(root_path, sample_metadata):
+    branch = cf.from_sample_metadata(root_path, sample_metadata)
     _ = branch.meta
     _ = branch.rna
     assert len(branch.meta.columns) > 0
@@ -22,7 +22,7 @@ def build_root_fix(root_path, metadata):
 
 
 def test_from_input_dirs_single(root_path, sample_1):
-    branch = CellBranch.from_input_dirs(root_path, sample_1, mode="rna")
+    branch = cf.from_input_dirs(root_path, sample_1, mode="rna")
     _ = branch.meta
     _ = branch.rna
     return sample_1

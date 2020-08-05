@@ -1,5 +1,6 @@
 import pytest
 
+import cellforest as cf
 from cellforest import CellBranch, Counts
 from tests.fixtures import *
 import tests
@@ -10,20 +11,20 @@ from tests.test_data_ops import test_subset_fix
 
 
 @pytest.fixture
-def test_norm_fix(root_path, build_root_fix, norm_spec):
-    branch = CellBranch(root=root_path, spec=norm_spec)
+def test_norm_fix(root_path, build_root_fix, branch_spec_norm):
+    branch = CellBranch(root=root_path, branch_spec=branch_spec_norm)
     branch.process.normalize()
     return branch
 
 
-def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
-    branch = CellBranch(root=root_path, spec=norm_reduce_spec)
+def test_norm_reduce(root_path, build_root_fix, branch_spec_norm_reduce, test_norm_fix):
+    branch = CellBranch(root=root_path, branch_spec=branch_spec_norm_reduce)
     branch.process.reduce()
     return branch
 
 
 def test_process_chain(root_path, build_root_fix, process_chain_spec):
-    branch = CellBranch(root=root_path, spec=process_chain_spec)
+    branch = CellBranch(root=root_path, branch_spec=process_chain_spec)
     branch.process.normalize()
     branch.process.test_process()
     return branch
@@ -35,7 +36,7 @@ def test_logging(test_norm_fix):
 
 
 def test_process_aliasing(root_path_2, sample_paths, alias_spec):
-    branch = CellBranch.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
+    branch = cf.from_input_dirs(root_path_2, sample_paths, branch_spec=alias_spec, mode="rna")
     branch.process.process_1()
     branch.process.process_2()
     return branch

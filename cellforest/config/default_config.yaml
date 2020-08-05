@@ -20,24 +20,22 @@ file_map:
 
 # plots for individual runs (e.g. clusters)
 plot_map:
-  normalize:
-  reduce:
-    umap: umap.png
-
-  cluster:
-  diffexp_bulk:
-  diffexp:
-  markers:
+  normalize: ~
+  reduce: ~
+  cluster: ~
+  diffexp_bulk: ~
+  diffexp: ~
+  markers: ~
 
 # plots across runs parameters (e.g. elbow)
-meta_plot_path:
-  root:
-  normalize:
-  reduce:
-  cluster:
-  diffexp_bulk:
-  diffexp:
-  markers:
+#meta_plot_path:
+#  root:
+#  normalize:
+#  reduce:
+#  cluster:
+#  diffexp_bulk:
+#  diffexp:
+#  markers:
 
 layers:
   matrix:
@@ -71,19 +69,21 @@ hook_sources:
   - dataforest.hooks
   - cellforest.hooks
 setup_hooks:
-  - hook_comparative
-  - hook_input_exists
-  - hook_mkdirs
   - hook_goto_process
+  - hook_mkdirs
+  - hook_mark_incomplete
+  - hook_input_exists
   - hook_store_run_spec
   - hook_catalogue
+  - hook_comparative
   - hook_store_temp_meta
 clean_hooks:
-  - hook_garbage_collection
   - hook_unify_matrix_node
+  - hook_clear_metadata_cache
   - hook_clean_temp_meta
   - hook_clean_unversioned
-  - hook_clear_metadata_cache
+  - hook_garbage_collection
+  - hook_mark_complete
 dataprocess_default_attrs:
   temp_meta: true
   matrix_layer: false
