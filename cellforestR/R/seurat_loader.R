@@ -24,6 +24,8 @@ UMAP_EMBED_KEY = "umap"
 #' @export
 #'
 #' @examples
+#' library(cellforestR)
+#'
 #' root_dir <- "tests/data/example_usage/root"
 #' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")
 #'

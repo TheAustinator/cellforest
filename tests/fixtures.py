@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 import pandas as pd
+from random import choice
 from pathlib import Path
 import pytest
 
@@ -54,6 +55,11 @@ def root_path_2(data_dir):
 @pytest.fixture
 def root_path_3(data_dir):
     return data_dir / "root_3"
+
+
+@pytest.fixture
+def root_path_example(data_dir):
+    return data_dir / "example_usage" / "root"
 
 
 @pytest.fixture
@@ -134,3 +140,9 @@ def process_chain_spec(norm_spec):
 def alias_spec():
     spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
     return spec
+
+
+@pytest.fixture
+def random_process():
+    AVAILABLE_PROCESSES = ["root", "normalize", "reduce"]
+    return choice(AVAILABLE_PROCESSES)
