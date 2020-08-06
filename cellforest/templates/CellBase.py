@@ -3,11 +3,12 @@ from pathlib import Path
 from typing import Union, Optional, List
 
 import pandas as pd
+from dataforest.core.DataBase import DataBase
 
 from cellforest.utils.cellranger.DataMerge import DataMerge
 
 
-class CellDataBase:
+class CellBase(DataBase):
     _ASSAY_OPTIONS = ["rna", "vdj", "surface", "antigen", "cnv", "atac", "spatial", "crispr"]
     _DEFAULT_CONFIG = Path(__file__).parent.parent / "config/default_config.yaml"
 
@@ -38,7 +39,7 @@ class CellDataBase:
             if len(assays) == 0:
                 raise ValueError(
                     f"metadata must contain at least once column named with the prefix, `path_`, and one of the "
-                    f"following assays as a suffix: {CellDataBase._ASSAY_OPTIONS}"
+                    f"following assays as a suffix: {CellBase._ASSAY_OPTIONS}"
                 )
             for assay in assays:
                 paths = metadata[f"{prefix}{assay}"].tolist()

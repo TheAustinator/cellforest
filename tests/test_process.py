@@ -35,10 +35,11 @@ def test_logging(test_norm_fix):
     pass
 
 
-def test_process_aliasing(root_path_2, sample_paths, alias_spec):
+def test_process_aliasing_and_plotting(root_path_2, sample_paths, alias_spec):
     branch = cf.from_input_dirs(root_path_2, sample_paths, branch_spec=alias_spec, mode="rna")
     branch.process.process_1()
     branch.process.process_2()
+    assert branch["process_2"].plot_map["plot_test"].exists()
     return branch
 
 

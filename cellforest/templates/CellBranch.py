@@ -9,13 +9,13 @@ from dataforest.utils.utils import label_df_partitions
 import pandas as pd
 
 from cellforest.structures.counts.Counts import Counts
-from cellforest.templates.CellDataBase import CellDataBase
+from cellforest.templates.CellBase import CellBase
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 from cellforest.utils.cellranger.DataMerge import DataMerge
 
 
-class CellBranch(CellDataBase, DataBranch):
+class CellBranch(CellBase, DataBranch):
     """
     DataBranch for scRNAseq processed data. The `process_hierarchy` currently
     starts at `combine`, where non-normalized counts data is combined.

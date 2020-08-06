@@ -18,14 +18,19 @@ file_map:
   markers:
     markers: markers.tsv
 
-# plots for individual runs (e.g. clusters)
+# plot method names from plot_sources (no need to include plots output by processes)
+plot_methods:
+  root:
+    - plot_test
+  test_process:
+    - plot_test
+# files for plotting
 plot_map:
-  normalize: ~
-  reduce: ~
-  cluster: ~
-  diffexp_bulk: ~
-  diffexp: ~
-  markers: ~
+  root:
+    plot_test: test_plot.png
+  test_process:
+    plot_test: test_plot.png
+
 
 # plots across runs parameters (e.g. elbow)
 #meta_plot_path:
@@ -65,9 +70,6 @@ process_layers:
 #     absolute path syntax.
 #   setup_hooks: Hooks to run prior to process run. (ordered)
 #   clean_hooks: Hooks to run after process run. (ordered)
-hook_sources:
-  - dataforest.hooks
-  - cellforest.hooks
 setup_hooks:
   - hook_goto_process
   - hook_mkdirs
@@ -78,6 +80,7 @@ setup_hooks:
   - hook_comparative
   - hook_store_temp_meta
 clean_hooks:
+  - hook_generate_plots
   - hook_unify_matrix_node
   - hook_clear_metadata_cache
   - hook_clean_temp_meta
@@ -90,5 +93,10 @@ dataprocess_default_attrs:
 
 process_sources:
   - cellforest.processes
+hook_sources:
+  - dataforest.hooks
+  - cellforest.hooks
+plot_sources:
+  - cellforest.plot
 
 temp_meta_filename: temp_meta.tsv
