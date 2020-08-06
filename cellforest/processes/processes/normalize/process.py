@@ -5,13 +5,14 @@ from dataforest.hooks import dataprocess
 # TODO: what to do about core/utility methods? core module? move to utils?
 from cellforest.utils.r.run_r_script import run_process_r_script
 from cellforest.processes import R_FUNCTIONS_FILEPATH
+from cellforest.processes.processes.normalize.qc import qc_normalize
 
 R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
 R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
 
 
 @dataprocess(matrix_layer=True, output="rds")
-def normalize(forest: "CellBranch", run_name: str):
+def normalize(branch: "CellBranch", run_name: str):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
@@ -27,11 +28,11 @@ def normalize(forest: "CellBranch", run_name: str):
         method (str): from {"seurat_default", "sctransform"}
         nfeatures (int): (seurat_default only)
     """
-    input_metadata_path = forest.get_temp_meta_path(run_name)
+    input_metadata_path = branch.get_temp_meta_path(run_name)
     # TODO: add a root filepaths lookup
-    run_spec = forest.spec[run_name]
+    run_spec = branch.spec[run_name]
     params = run_spec.params
-    process_run = forest[run_name]
+    process_run = branch[run_name]
     input_rds_path = process_run.path_map_prior["rna_r"]
     output_rds_path = process_run.path_map["rna_r"]
     min_genes = params["min_genes"]
@@ -62,4 +63,6 @@ def normalize(forest: "CellBranch", run_name: str):
         r_normalize_script = R_SEURAT_DEFAULT_NORM_SCRIPT
     else:
         raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
-    run_process_r_script(forest, r_normalize_script, arg_list, run_name)
+    run_process_r_script(branch, r_normalize_script, arg_list, run_name)
+
+    qc_normalize(branch)

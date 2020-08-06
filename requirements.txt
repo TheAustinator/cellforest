@@ -3,7 +3,6 @@ numba
 numpy
 pandas
 path
-pathlib
 pyyaml
 scipy
 umap-learn

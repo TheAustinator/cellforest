@@ -161,10 +161,7 @@ class Counts(csr_matrix):
             # TODO: kwargs customization for individual strata
             ax.hist(rna_agg, label=label, **kwargs)
 
-        x_label = "transcript count" if cells_axis else "cell count"
-        y_label = "# of cells" if cells_axis else "# of genes"
-        title = f'{x_label} {"per cell" if cells_axis else "per gene"}'
-        ax.set_title(f"{agg} of {title}")
+        x_label, y_label = self._get_axis_labels(agg, axis)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
         ax.legend()
@@ -223,11 +220,10 @@ class Counts(csr_matrix):
             # TODO: kwargs customization for individual strata
             ax.scatter(rna_agg_x, rna_agg_y, label=label, **kwargs)
 
-        ax_label = "transcript count" if cells_axis else "cell count"
-        title = ax_label + " " + ("per cell" if cells_axis else "per gene")
-        ax.set_title(f"{agg_y} vs {agg_x} of {title}")
-        ax.set_xlabel(f"{agg_x} of {ax_label}")
-        ax.set_ylabel(f"{agg_y} of {ax_label}")
+        x_label, _ = self._get_axis_labels(agg_x, axis)
+        y_label, _ = self._get_axis_labels(agg_y, axis)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
         ax.legend()
 
         return ax
@@ -235,7 +231,7 @@ class Counts(csr_matrix):
     def _get_numeric_axis(self, axis) -> int:
         """Get binary value for axis or check if it's out of range"""
         if axis in self._SUPPORTED_AGG_AXES:
-            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
+            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert cells -> 0 and genes -> 1
         else:
             raise ValueError(f"axis cannot be {axis}, must be in {self._SUPPORTED_AGG_AXES}")
 
@@ -280,20 +276,36 @@ class Counts(csr_matrix):
         return rna_agg
 
     @staticmethod
-    def _get_agg_label(agg) -> str:
+    def _get_axis_labels(agg, axis) -> str:
         """Human language names of axis labels"""
-        # TODO: use this function to have prettier plot labeling
-        mapping = {
-            "sum": "",
-            "mean": "mean",
-            "std": "standard deviation of",
-            "var": "variance of",
-            "min": "minimum of",
-            "max": "maximum of",
-        }
+        if axis == 0:  # aggregate by cells
+            mapping = {
+                "sum": "total UMI in a cell",
+                "mean": "mean UMI per gene",
+                "std": "std of UMI per gene",
+                "nonzero": "gene count",
+                "var": "var of UMI per gene",
+                "min": "min UMI per gene",
+                "max": "max UMI per gene",
+                "other_axis": "cells",
+            }
+        elif axis == 1:  # aggregate by genes
+            mapping = {
+                "sum": "total UMI of a gene",
+                "mean": "mean UMI per cell",  # mean UMI of this gene in all cells
+                "std": "std of UMI per cell",  # standard deviation of UMI of this gene in all cells
+                "nonzero": "cells expressing",
+                "var": "var of UMI per cell",  # variance of UMI of this gene in all cells
+                "min": "min UMI per cell",  # minimum UMI of this gene across all cells
+                "max": "max UMI per cell",  # maximum UMI of this gene across all cells
+                "other_axis": "genes",
+            }
+        else:
+            raise ValueError(f"axis cannot be {axis}, must be 0 or 1.")
         agg_name = mapping[agg]
+        other_axis = mapping["other_axis"]
 
-        return agg_name
+        return agg_name, other_axis
 
     def drop(self, indices, axis=0):
         """
