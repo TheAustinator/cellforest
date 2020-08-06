@@ -8,7 +8,7 @@ example_spec_r <- type.convert(list(
     "process" = "normalize",
     "params" = list(
       "min_genes" = 4,
-      "max_genes" = 5002,
+      "max_genes" = 5000,
       "min_cells" = 5,
       "nfeatures" = 30,
       "perc_mito_cutoff" = 20,

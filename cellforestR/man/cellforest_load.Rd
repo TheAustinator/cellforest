@@ -24,7 +24,7 @@ Seurat object from a CellForest process run
 
 \enumerate{
 \item \code{setwd(PATH_TO_CELLFOREST)}
-\item \code{install(cellforestR)}
+\item \code{install("cellforestR")}
 }
 }
 

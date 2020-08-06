@@ -8,6 +8,8 @@ get_seurat_object(cf_branch)
 }
 \arguments{
 \item{cf_branch}{CellForest branch at selected process}
+
+\item{dim_reduc_funs}{List of dimensionality reduction embeddings to append}
 }
 \value{
 Seurat object with cached dimensionality reduction embeddings
