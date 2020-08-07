@@ -12,7 +12,7 @@ R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize
 
 
 @dataprocess(matrix_layer=True, output="rds")
-def normalize(branch: "CellBranch", run_name: str):
+def normalize(branch: "CellBranch", run_name: str, **kwargs):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
@@ -65,4 +65,7 @@ def normalize(branch: "CellBranch", run_name: str):
         raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
     run_process_r_script(branch, r_normalize_script, arg_list, run_name)
 
-    qc_normalize(branch)
+    process = params["process"]
+    if "alias" in params:  # take alias instead if available
+        process = params["alias"]
+    qc_normalize(branch, process, **kwargs)
