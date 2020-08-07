@@ -9,27 +9,28 @@ matplotlib.use("Agg")  # plotting in the backend
 
 
 @qc_plot_py
-def plot_genes_per_cell_hist(branch: "CellBranch", save_path: str):
-    branch.rna.hist("nonzero", axis=0)
+def plot_genes_per_cell_hist(branch: "CellBranch", **kwargs):
+    branch.rna.hist("nonzero", axis=0, **kwargs)
 
 
 @qc_plot_py
-def plot_umis_per_cell_hist(branch: "CellBranch", save_path: str):
-    branch.rna.hist("sum", axis=0)
+def plot_umis_per_cell_hist(branch: "CellBranch", **kwargs):
+    branch.rna.hist("sum", axis=0, **kwargs)
 
 
 @qc_plot_py
-def plot_umis_vs_genes_hist(branch: "CellBranch", save_path: str):
-    branch.rna.scatter(agg_x="nonzero", agg_y="sum", axis=0)
-
-
-@qc_plot_py
-def plot_perc_mito_per_cell_hist(branch: "CellBranch", save_path: str):
-    branch.rna.hist()
+def plot_umis_vs_genes_hist(branch: "CellBranch", **kwargs):
+    branch.rna.scatter(agg_x="nonzero", agg_y="sum", axis=0, **kwargs)
 
 
 @qc_plot_r
-def plot_highest_expression_genes_dens_plt(branch: "CellBranch", save_path: str):
+def plot_perc_mito_per_cell_hist(branch: "CellBranch", **kwargs):
+    pass
+    # R script
+
+
+@qc_plot_r
+def plot_highest_expression_genes_dens_plt(branch: "CellBranch", **kwargs):
     pass
     # R script
 

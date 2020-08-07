@@ -24,7 +24,6 @@ plot_methods:
   test_process:
     - plot_test
   root:
-    - plot_test
     - plot_umis_per_cell_hist
   normalize:
     - plot_genes_per_cell_hist
@@ -33,18 +32,15 @@ plot_methods:
     - plot_perc_mito_per_cell_hist
     - plot_highest_expression_genes_dens_plt
 
-# plot_map:
-#   test_process:
-#     plot_test: test_plot.png
-#   root:
-#     plot_test: test_plot.png
-#     umis_per_cell_hist: genes_per_cell_hist.png
-#   normalize:
-#     genes_per_cell_hist: genes_per_cell_hist.png
-#     umis_per_cell_hist: genes_per_cell_hist.png
-#     umis_vs_genes_hist: umi_vs_genes_hist.png
-#     perc_mito_per_cell_hist: perc_mito_per_cell_hist.png
-#     highest_expression_genes_dens_plt: highest_expression_genes_dens_plt.png
+plot_map:
+  test_process:
+    plot_test: test_plot.png
+  root:
+    plot_test: test_plot.png
+    umis_per_cell_hist: umis_per_cell_hist.png
+  normalize:
+    genes_per_cell_hist: plot_genes_per_cell_hist.png
+    umis_per_cell_hist: umis_per_cell_hist.png
 
 
 # # plots across runs parameters (e.g. elbow)
@@ -105,6 +101,7 @@ clean_hooks:
 dataprocess_default_attrs:
   temp_meta: true
   matrix_layer: false
+  plots: true
 
 process_sources:
   - cellforest.processes

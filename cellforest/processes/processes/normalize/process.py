@@ -10,7 +10,7 @@ R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
 R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
 
 
-@dataprocess(matrix_layer=True, output="rds")
+@dataprocess(matrix_layer=True, output="rds", plots=True)
 def normalize(branch: "CellBranch", run_name: str):
     """
     Performs:
