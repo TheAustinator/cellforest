@@ -5,14 +5,13 @@ from dataforest.hooks import dataprocess
 # TODO: what to do about core/utility methods? core module? move to utils?
 from cellforest.utils.r.run_r_script import run_process_r_script
 from cellforest.processes import R_FUNCTIONS_FILEPATH
-from cellforest.processes.processes.normalize.qc import qc_normalize
 
 R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
 R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
 
 
 @dataprocess(matrix_layer=True, output="rds")
-def normalize(branch: "CellBranch", run_name: str, **kwargs):
+def normalize(branch: "CellBranch", run_name: str):
     """
     Performs:
         - cell filtering by `min_genes`, `max_genes`, and `perc_mito_cutoff`
@@ -65,7 +64,3 @@ def normalize(branch: "CellBranch", run_name: str, **kwargs):
         raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
     run_process_r_script(branch, r_normalize_script, arg_list, run_name)
 
-    process = params["process"]
-    if "alias" in params:  # take alias instead if available
-        process = params["alias"]
-    qc_normalize(branch, process, **kwargs)

@@ -2,25 +2,10 @@
 # FILE STRUCTURE
 #
 file_map:
-  root:
-    # metrics
-    qc_metrics: qc_metrics.tsv
-
-    # plots
-    umis_per_cell_hist: genes_per_cell_hist.png
-
   normalize:
     corrected_umi: corrected_umi.mtx    # from sctransform
     pearson_residual: pearson_residuals.tsv    # from sctransform
     qc_metrics: qc_metrics.tsv
-
-    # plots, naming them without QC- prefix since they'll be in plot_map
-    genes_per_cell_hist: genes_per_cell_hist.png
-    umis_per_cell_hist: genes_per_cell_hist.png
-    umis_vs_genes_hist: umi_vs_genes_hist.png
-    perc_mito_per_cell_hist: perc_mito_per_cell_hist.png
-    highest_expression_genes_dens_plt: highest_expression_genes_dens_plt.png
-
   reduce:
     pca_embeddings: pca_embeddings.tsv
     pca_loadings: pca_loadings.tsv
@@ -36,27 +21,41 @@ file_map:
 
 # plot method names from plot_sources (no need to include plots output by processes)
 plot_methods:
-  root:
-    - plot_test
   test_process:
     - plot_test
-# files for plotting
-plot_map:
   root:
-    plot_test: test_plot.png
-  test_process:
-    plot_test: test_plot.png
+    - plot_test
+    - plot_umis_per_cell_hist
+  normalize:
+    - plot_genes_per_cell_hist
+    - plot_umis_per_cell_hist
+    - plot_umis_vs_genes_hist
+    - plot_perc_mito_per_cell_hist
+    - plot_highest_expression_genes_dens_plt
+
+# plot_map:
+#   test_process:
+#     plot_test: test_plot.png
+#   root:
+#     plot_test: test_plot.png
+#     umis_per_cell_hist: genes_per_cell_hist.png
+#   normalize:
+#     genes_per_cell_hist: genes_per_cell_hist.png
+#     umis_per_cell_hist: genes_per_cell_hist.png
+#     umis_vs_genes_hist: umi_vs_genes_hist.png
+#     perc_mito_per_cell_hist: perc_mito_per_cell_hist.png
+#     highest_expression_genes_dens_plt: highest_expression_genes_dens_plt.png
 
 
-# plots across runs parameters (e.g. elbow)
-#meta_plot_path:
-#  root:
-#  normalize:
-#  reduce:
-#  cluster:
-#  diffexp_bulk:
-#  diffexp:
-#  markers:
+# # plots across runs parameters (e.g. elbow)
+# meta_plot_path:
+#   root:
+#   normalize:
+#   reduce:
+#   cluster:
+#   diffexp_bulk:
+#   diffexp:
+#   markers:
 
 layers:
   matrix:
