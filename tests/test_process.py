@@ -16,6 +16,13 @@ def test_norm_fix(root_path, build_root_fix, norm_spec):
     return cf
 
 
+# TO-DO: Uncomment when sctransform is implemented
+# def test_norm_sctransform(root_path, build_root_fix, norm_sctransform_spec):
+#     cf = CellBranch(root_dir=root_path, spec=norm_sctransform_spec)
+#     cf.process.normalize()
+#     return cf
+
+
 def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
     cf = CellBranch(root=root_path, spec=norm_reduce_spec)
     cf.process.reduce()
