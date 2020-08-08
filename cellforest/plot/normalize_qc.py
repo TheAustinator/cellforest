@@ -24,13 +24,12 @@ def plot_umis_vs_genes_hist(branch: "CellBranch", **kwargs):
 
 
 @qc_plot_r
-def plot_perc_mito_per_cell_hist(branch: "CellBranch", **kwargs):
-    pass
-    # R script
+def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_process_r_script(branch, r_script, args, branch.current_process)
 
 
 @qc_plot_r
-def plot_highest_expression_genes_dens_plt(branch: "CellBranch", **kwargs):
+def plot_highest_expression_genes_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
     pass
     # R script
 

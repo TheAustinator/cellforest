@@ -1,10 +1,17 @@
+from os import remove
+import pickle
 from functools import wraps
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 
 from cellforest import CellBranch
 
 DEFAULT_PLOT_RESOLUTION = (500, 500)  # width, height in pixels
 PLOT_FILE_EXT = ".png"
+
+R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
+R_FUNCTIONS_FILEPATH = Path(__file__).parent.parent / "processes/scripts/functions.R"
 
 
 def _get_plot_file_path(branch: "CellBranch", plot_func):
@@ -29,9 +36,27 @@ def _get_plot_file_path(branch: "CellBranch", plot_func):
         print(f"Using provided plot file path in config: {plot_file_path}")
     else:
         # TODO: properly log this information
-        print(f"No viable plot file name was provided for {plot_name}, using default file path: {plot_file_path}")
+        print(f"No valid plot file path provided for {plot_name}, using default file path: {plot_file_path}")
 
     return plot_file_path
+
+
+def _create_temp_spec(branch: "CellBranch"):
+    """
+    Create a temporary text file with spec as a string to pass to R
+    """
+    run_name = branch.current_process
+    plots_path = branch[run_name].plots_path
+    temp_spec_path = plots_path / "temp_spec"
+
+    with open(str(temp_spec_path), "wb") as f:
+        pickle.dump(branch.spec, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    return temp_spec_path
+
+
+def _remove_temp_spec(temp_spec_path: str):
+    remove(temp_spec_path)
 
 
 def qc_plot_py(plot_func):
@@ -53,6 +78,21 @@ def qc_plot_py(plot_func):
 def qc_plot_r(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
-        plot_func(branch, **kwargs)
+        # TODO: move temp spec to a hook
+        temp_spec_path = _create_temp_spec(branch)
+        r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
+        save_path = _get_plot_file_path(branch, plot_func)
+
+        args = [  # corresponding arguments in r/plot_entry_point.R
+            branch.paths["root"],  # root_dir
+            temp_spec_path,  # path_to_temp_spec
+            branch.current_process,  # current_process
+            save_path,  # plot_file_path
+            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+            R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+        ]
+
+        plot_func(branch, r_script, args, **kwargs)
+        _remove_temp_spec(temp_spec_path)
 
     return wrapper
