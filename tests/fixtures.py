@@ -57,6 +57,11 @@ def root_path_3(data_dir):
 
 
 @pytest.fixture
+def root_path_example(data_dir):
+    return data_dir / "example_usage" / "root"
+
+
+@pytest.fixture
 def metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 
@@ -83,6 +88,23 @@ def norm_spec():
                 "nfeatures": 30,
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
+            },
+        }
+    ]
+    return spec
+
+
+@pytest.fixture
+def norm_sctransform_spec():
+    spec = [
+        {
+            "process": "normalize",
+            "params": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "perc_mito_cutoff": 20,
+                "method": "sctransform",
             },
         }
     ]
@@ -117,3 +139,12 @@ def process_chain_spec(norm_spec):
 def alias_spec():
     spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
     return spec
+
+
+@pytest.fixture
+def processes_of_norm_reduce_spec(norm_reduce_spec):
+    avail_processes = []
+    for process_spec in norm_reduce_spec:
+        avail_processes.append(process_spec["process"])
+
+    return avail_processes
