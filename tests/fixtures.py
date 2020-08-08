@@ -76,6 +76,10 @@ def merge_root_2(data_dir):
     return data_dir / "merge/root_2"
 
 
+def root_path_example(data_dir):
+    return data_dir / "example_usage" / "root"
+
+
 @pytest.fixture
 def sample_metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
@@ -112,6 +116,28 @@ def branch_spec_norm():
 @pytest.fixture
 def branch_spec_norm_reduce(branch_spec_norm):
     spec = deepcopy(branch_spec_norm)
+
+
+@pytest.fixture
+def norm_sctransform_spec():
+    spec = [
+        {
+            "process": "normalize",
+            "params": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "perc_mito_cutoff": 20,
+                "method": "sctransform",
+            },
+        }
+    ]
+    return spec
+
+
+@pytest.fixture
+def norm_reduce_spec(norm_spec):
+    spec = deepcopy(norm_spec)
     reduce_run_spec = {
         "_PROCESS_": "reduce",
         "_PARAMS_": {
@@ -148,3 +174,12 @@ def alias_spec():
         {"_PROCESS_": "test_process", "_ALIAS_": "process_2",},
     ]
     return spec
+
+
+@pytest.fixture
+def processes_of_norm_reduce_spec(norm_reduce_spec):
+    avail_processes = []
+    for process_spec in norm_reduce_spec:
+        avail_processes.append(process_spec["process"])
+
+    return avail_processes
