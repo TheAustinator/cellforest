@@ -17,6 +17,7 @@ def test_norm_fix(root_path, build_root_fix, branch_spec_norm):
     return branch
 
 
+@pytest.fixture
 def test_norm_reduce(root_path, build_root_fix, branch_spec_norm_reduce, test_norm_fix):
     branch = CellBranch(root=root_path, branch_spec=branch_spec_norm_reduce)
     branch.process.reduce()
@@ -54,6 +55,12 @@ def test_normalize_branch_goto(test_subset_fix):
     assert len(branch.rna) == 59
     assert branch.rna.shape == rna.shape
     assert len(branch.rna.features) == len(rna.features)
+
+
+def test_cluster(root_path, branch_spec_norm_reduce_cluster):
+    branch_spec = branch_spec_norm_reduce_cluster
+    branch = cf.load(root_path, branch_spec)
+    branch.process.cluster()
 
 
 def test_reduce_on_existing_normalize():

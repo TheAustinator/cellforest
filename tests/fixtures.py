@@ -127,6 +127,14 @@ def branch_spec_norm_reduce(branch_spec_norm):
 
 
 @pytest.fixture
+def branch_spec_norm_reduce_cluster(branch_spec_norm_reduce):
+    spec = deepcopy(branch_spec_norm_reduce)
+    spec_run_cluster = {"_PROCESS_": "cluster", "_PARAMS_": {"num_pcs": 3, "res": 0.5, "eps": 0.1,}}
+    spec.append(spec_run_cluster)
+    return spec
+
+
+@pytest.fixture
 def process_chain_spec(branch_spec_norm):
     spec = deepcopy(branch_spec_norm)
     spec.append({"_PROCESS_": "test_process"})

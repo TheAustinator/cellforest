@@ -14,8 +14,7 @@ print("functions"); print(r_functions_filepath)
 source(r_functions_filepath)
 
 print("metadata filter")
-filter_outputs <- metadata_filter(input_metadata_path, input_rds_path)
-seurat_object <- filter_outputs$seurat_object
-seurat_object <- find_clusters(seurat_object, output_clusters_path, num_pcs, resolution, eps)
-print("Saving RDS"); print(date())
-saveRDS(seurat_object, file = output_rds_path)
+srat <- metadata_filter_paths(input_metadata_path, input_rds_path)
+print("clustering"); print(date())
+srat <- find_clusters(srat, output_clusters_path, num_pcs, resolution, eps)
+print("clustering DONE"); print(date())
