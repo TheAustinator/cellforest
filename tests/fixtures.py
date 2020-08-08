@@ -1,7 +1,6 @@
 from copy import deepcopy
 
 import pandas as pd
-from random import choice
 from pathlib import Path
 import pytest
 
@@ -143,6 +142,9 @@ def alias_spec():
 
 
 @pytest.fixture
-def random_process():
-    AVAILABLE_PROCESSES = ["root", "normalize", "reduce"]
-    return choice(AVAILABLE_PROCESSES)
+def processes_of_norm_reduce_spec(norm_reduce_spec):
+    avail_processes = []
+    for process_spec in norm_reduce_spec:
+        avail_processes.append(process_spec["process"])
+
+    return avail_processes
