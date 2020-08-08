@@ -157,3 +157,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# RStudio
+*.Rhistory
+.Rproj.user
