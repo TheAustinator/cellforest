@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 import pytest
 
+import cellforest as cf
 from tests.utils.get_test_data import get_test_data
 
 
@@ -92,6 +93,23 @@ def counts_path(root_path):
 
 
 @pytest.fixture
+def test_from_input_dirs_fix(root_path, sample_paths):
+    branch = cf.from_input_dirs(root_path, sample_paths, mode="rna")
+    _ = branch.meta
+    _ = branch.rna
+    return sample_paths
+
+
+@pytest.fixture
+def build_root_fix(root_path, sample_metadata):
+    branch = cf.from_sample_metadata(root_path, sample_metadata)
+    _ = branch.meta
+    _ = branch.rna
+    assert len(branch.meta.columns) > 0
+    return branch
+
+
+@pytest.fixture
 def branch_spec_norm():
     spec = [
         {
@@ -127,6 +145,48 @@ def branch_spec_norm_reduce(branch_spec_norm):
 
 
 @pytest.fixture
+def norm_sctransform_spec():
+    spec = [
+        {
+            "_PROCESS_": "normalize",
+            "_PARAMS_": {
+                "min_genes": 5,
+                "max_genes": 5000,
+                "min_cells": 5,
+                "perc_mito_cutoff": 20,
+                "method": "sctransform",
+            },
+        }
+    ]
+    return spec
+
+
+@pytest.fixture
+def norm_reduce_spec(branch_spec_norm):
+    spec = deepcopy(branch_spec_norm)
+    reduce_run_spec = {
+        "_PROCESS_": "reduce",
+        "_PARAMS_": {
+            "pca_npcs": 3,
+            "umap_n_neighbors": 3,
+            "umap_min_dist": 0.1,
+            "umap_n_components": 2,
+            "umap_metric": "euclidean",
+        },
+    }
+    spec.append(reduce_run_spec)
+    return spec
+
+
+@pytest.fixture
+def branch_spec_norm_reduce_cluster(branch_spec_norm_reduce):
+    spec = deepcopy(branch_spec_norm_reduce)
+    spec_run_cluster = {"_PROCESS_": "cluster", "_PARAMS_": {"num_pcs": 3, "res": 0.5, "eps": 0.1,}}
+    spec.append(spec_run_cluster)
+    return spec
+
+
+@pytest.fixture
 def process_chain_spec(branch_spec_norm):
     spec = deepcopy(branch_spec_norm)
     spec.append({"_PROCESS_": "test_process"})
@@ -140,3 +200,26 @@ def alias_spec():
         {"_PROCESS_": "test_process", "_ALIAS_": "process_2",},
     ]
     return spec
+
+
+@pytest.fixture
+def processes_of_norm_reduce_spec(norm_reduce_spec):
+    avail_processes = []
+    for process_spec in norm_reduce_spec:
+        avail_processes.append(process_spec["_PROCESS_"])
+
+    return avail_processes
+
+
+@pytest.fixture
+def test_norm_fix(root_path, build_root_fix, branch_spec_norm):
+    branch = cf.CellBranch(root=root_path, branch_spec=branch_spec_norm)
+    branch.process.normalize()
+    return branch
+
+
+@pytest.fixture
+def test_norm_reduce(root_path, build_root_fix, branch_spec_norm_reduce, test_norm_fix):
+    branch = cf.CellBranch(root=root_path, branch_spec=branch_spec_norm_reduce)
+    branch.process.reduce()
+    return branch
