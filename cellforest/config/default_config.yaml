@@ -30,7 +30,9 @@ plot_methods:
     - plot_umis_per_cell_hist
     - plot_umis_vs_genes_hist
     - plot_perc_mito_per_cell_hist
-    - plot_highest_expression_genes_dens_plt
+    - plot_highest_exprs_genes_dens_plt
+
+# allow enter of resolution for small and big, resolution
 
 plot_map:
   test_process:
@@ -91,8 +93,8 @@ setup_hooks:
   - hook_comparative
   - hook_store_temp_meta
 clean_hooks:
-  - hook_generate_plots
   - hook_unify_matrix_node
+  - hook_generate_plots
   - hook_clear_metadata_cache
   - hook_clean_temp_meta
   - hook_clean_unversioned

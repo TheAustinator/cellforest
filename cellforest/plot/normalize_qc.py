@@ -23,13 +23,12 @@ def plot_umis_vs_genes_hist(branch: "CellBranch", **kwargs):
     branch.rna.scatter(agg_x="nonzero", agg_y="sum", axis=0, **kwargs)
 
 
-@qc_plot_r
+@qc_plot_r()
 def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r
-def plot_highest_expression_genes_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    pass
-    # R script
+@qc_plot_r(plot_format="big")
+def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_process_r_script(branch, r_script, args, branch.current_process)
 

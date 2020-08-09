@@ -11,6 +11,7 @@ from cellforest import CellBranch
 matplotlib.use("Agg")
 
 DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
+DEFAULT_BIG_PLOT_RESOLUTION_PX = (900, 900)  # width, height in pixels
 PLOT_FILE_EXT = ".png"
 
 R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
@@ -78,26 +79,39 @@ def qc_plot_py(plot_func):
     return wrapper
 
 
-def qc_plot_r(plot_func):
-    @wraps(plot_func)
-    def wrapper(branch: "CellBranch", **kwargs):
-        # TODO: move temp spec to a hook
-        temp_spec_path = _create_temp_spec(branch)
-        r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
-        save_path = _get_plot_file_path(branch, plot_func)
+def qc_plot_r(plot_format="default"):
+    """
+    Wrapper for plotting and saving R plots
+    """
+    if plot_format == "default":
+        resolution_px = DEFAULT_PLOT_RESOLUTION_PX
+    elif plot_format == "big":
+        resolution_px = DEFAULT_BIG_PLOT_RESOLUTION_PX
+    else:
+        raise ValueError(f"plot_format cannot be {plot_format}, has to be 'default' or 'big'")
 
-        args = [  # corresponding arguments in r/plot_entry_point.R
-            branch.paths["root"],  # root_dir
-            temp_spec_path,  # path_to_temp_spec
-            branch.current_process,  # current_process
-            save_path,  # plot_file_path
-            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
-            DEFAULT_PLOT_RESOLUTION_PX[0],  # plot_width_px
-            DEFAULT_PLOT_RESOLUTION_PX[1],  # plot_height_px
-            R_FUNCTIONS_FILEPATH,  # r_functions_filepath
-        ]
+    def _qc_plot_r(plot_func):
+        @wraps(plot_func)
+        def wrapper(branch: "CellBranch", **kwargs):
+            # TODO: move temp spec to a hook
+            temp_spec_path = _create_temp_spec(branch)
+            r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
+            save_path = _get_plot_file_path(branch, plot_func)
 
-        plot_func(branch, r_script, args, **kwargs)
-        _remove_temp_spec(temp_spec_path)
+            args = [  # corresponding arguments in r/plot_entry_point.R
+                branch.paths["root"],  # root_dir
+                temp_spec_path,  # path_to_temp_spec
+                branch.current_process,  # current_process
+                save_path,  # plot_file_path
+                R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+                resolution_px[0],  # plot_width_px
+                resolution_px[1],  # plot_height_px
+                R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+            ]
 
-    return wrapper
+            plot_func(branch, r_script, args, **kwargs)
+            _remove_temp_spec(temp_spec_path)
+
+        return wrapper
+
+    return _qc_plot_r

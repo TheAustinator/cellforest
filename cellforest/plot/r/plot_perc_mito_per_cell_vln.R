@@ -1,4 +1,5 @@
 source('cellforest/plot/r/plot_entry_point.R')
 
-VlnPlot(seurat_obj, features = "percent.mito")
+VlnPlot(seurat_obj, features = "percent.mito") + NoLegend()
+
 dev.off()

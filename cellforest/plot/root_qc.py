@@ -8,7 +8,7 @@ ALL_QC_PLOTS_ROOT = [  # reference of all supported QC plots
     "umis_per_cell_hist",
     "umis_vs_genes_hist",
     "perc_mito_per_cell_hist",
-    "highest_expression_genes_dens_plt",
+    "highest_exprs_genes_dens_plt",
 ]
 
 DEFAULT_QC_PLOTS_ROOT = [  # default QC plots
@@ -16,7 +16,7 @@ DEFAULT_QC_PLOTS_ROOT = [  # default QC plots
     "umis_per_cell_hist",
     "umis_vs_genes_hist",
     "perc_mito_per_cell_hist",
-    "highest_expression_genes_dens_plt",
+    "highest_exprs_genes_dens_plt",
 ]
 
 
