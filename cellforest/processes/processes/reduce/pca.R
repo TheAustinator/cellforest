@@ -16,7 +16,7 @@ meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1
 print("metadata filter"); print(date())
 srat <- metadata_filter_objs(meta, srat)
 print("running pca"); print(date())
-srat <- run_pca(srat, output_embeddings_path, output_loadings_path, npcs = npcs)
+srat <- run_pca(srat, output_embeddings_path, output_loadings_path)
 #print("Saving seurat object object"); print(date())
 #saveRDS(srat, file = output_rds_path)
 print("PCA DONE"); print(date())
