@@ -20,7 +20,6 @@ def build_root_fix(root_path, metadata):
     assert len(cf.meta.columns) > 0
     return cf
 
-
 def test_from_input_dirs_single(root_path, sample_1):
     cf = CellBranch.from_input_dirs(root_path, sample_1, mode="rna")
     _ = cf.meta
