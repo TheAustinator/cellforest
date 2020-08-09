@@ -31,3 +31,4 @@ print("Saving RDS")
 write.table(colnames(seurat_object), filtered_barcodes_path, sep = "\t", row.names = FALSE, quote = FALSE, col.names = FALSE)
 print("Writing embeddings")
 save_embeddings(seurat_object, rdata_output_dir)
+
