@@ -57,13 +57,33 @@ def root_path_3(data_dir):
 
 
 @pytest.fixture
-def metadata_path(data_dir):
+def root_path_4(data_dir):
+    return data_dir / "root_4"
+
+
+@pytest.fixture
+def root_path_5(data_dir):
+    return data_dir / "root_5"
+
+
+@pytest.fixture
+def merge_root_1(data_dir):
+    return data_dir / "merge/root_1"
+
+
+@pytest.fixture
+def merge_root_2(data_dir):
+    return data_dir / "merge/root_2"
+
+
+@pytest.fixture
+def sample_metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 
 
 @pytest.fixture
-def metadata(metadata_path):
-    return pd.read_csv(metadata_path, sep="\t")
+def sample_metadata(sample_metadata_path):
+    return pd.read_csv(sample_metadata_path, sep="\t")
 
 
 @pytest.fixture
@@ -72,11 +92,11 @@ def counts_path(root_path):
 
 
 @pytest.fixture
-def norm_spec():
+def branch_spec_norm():
     spec = [
         {
-            "process": "normalize",
-            "params": {
+            "_PROCESS_": "normalize",
+            "_PARAMS_": {
                 "min_genes": 5,
                 "max_genes": 5000,
                 "min_cells": 5,
@@ -84,17 +104,17 @@ def norm_spec():
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-        }
+        },
     ]
     return spec
 
 
 @pytest.fixture
-def norm_reduce_spec(norm_spec):
-    spec = deepcopy(norm_spec)
+def branch_spec_norm_reduce(branch_spec_norm):
+    spec = deepcopy(branch_spec_norm)
     reduce_run_spec = {
-        "process": "reduce",
-        "params": {
+        "_PROCESS_": "reduce",
+        "_PARAMS_": {
             "pca_npcs": 3,
             "umap_n_neighbors": 3,
             "umap_min_dist": 0.1,
@@ -107,13 +127,16 @@ def norm_reduce_spec(norm_spec):
 
 
 @pytest.fixture
-def process_chain_spec(norm_spec):
-    spec = deepcopy(norm_spec)
-    spec.append({"process": "test_process"})
+def process_chain_spec(branch_spec_norm):
+    spec = deepcopy(branch_spec_norm)
+    spec.append({"_PROCESS_": "test_process"})
     return spec
 
 
 @pytest.fixture
 def alias_spec():
-    spec = [{"process": "test_process", "alias": "process_1",}, {"process": "test_process", "alias": "process_2",}]
+    spec = [
+        {"_PROCESS_": "test_process", "_ALIAS_": "process_1",},
+        {"_PROCESS_": "test_process", "_ALIAS_": "process_2",},
+    ]
     return spec
