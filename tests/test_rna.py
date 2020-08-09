@@ -1,12 +1,12 @@
 from matplotlib import pyplot as plt
 
-import cellforest as cf
+from cellforest import Counts
 from tests.fixtures import *
 
 
 @pytest.fixture
 def test_from_cellranger_fix(sample_1):
-    rna = cf.Counts.from_cellranger(sample_1)
+    rna = Counts.from_cellranger(sample_1)
     return rna
 
 
@@ -17,17 +17,17 @@ def test_save_fix(test_from_cellranger_fix, counts_path):
 
 
 def test_from_cellranger_v2(sample_1_v2):
-    rna = cf.Counts.from_cellranger(sample_1_v2)
+    rna = Counts.from_cellranger(sample_1_v2)
     return rna
 
 
 def test_from_cellranger_gz(sample_1_gz):
-    rna = cf.Counts.from_cellranger(sample_1_gz)
+    rna = Counts.from_cellranger(sample_1_gz)
     return rna
 
 
 def test_load(test_save_fix):
-    rna = cf.Counts.load(test_save_fix)
+    rna = Counts.load(test_save_fix)
     return rna
 
 

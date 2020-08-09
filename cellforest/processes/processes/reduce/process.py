@@ -10,11 +10,11 @@ R_PCA_SCRIPT = Path(__file__).parent / "pca.R"
 
 
 @dataprocess(requires="normalize")
-def reduce(branch: "CellBranch", run_name: str):
-    input_metadata_path = branch.get_temp_meta_path(run_name)
-    run_spec = branch.spec[run_name]
+def reduce(forest: "CellBranch", run_name: str):
+    input_metadata_path = forest.get_temp_meta_path(run_name)
+    run_spec = forest.spec[run_name]
     params = run_spec.params
-    process_run = branch[run_name]
+    process_run = forest[run_name]
     input_rds_path = process_run.path_map_prior["rna_r"]
     output_embeddings_path = process_run.path_map["pca_embeddings"]
     output_loadings_path = process_run.path_map["pca_loadings"]
@@ -28,7 +28,7 @@ def reduce(branch: "CellBranch", run_name: str):
         npcs,
         r_functions_filepath,
     ]
-    run_process_r_script(branch, R_PCA_SCRIPT, arg_list, run_name)
+    run_process_r_script(forest, R_PCA_SCRIPT, arg_list, run_name)
     meta = run_umap(
         output_embeddings_path,
         n_neighbors=params["umap_n_neighbors"],
@@ -36,7 +36,7 @@ def reduce(branch: "CellBranch", run_name: str):
         n_components=params["umap_n_components"],
         metric=params["umap_metric"],
     )
-    meta.index = branch.meta.index
+    meta.index = forest.meta.index
     output_meta_path = process_run.path_map["meta"]
     meta.to_csv(output_meta_path, sep="\t")
     # branch.w["umap_embeddings"](meta, index=True, header=True)
