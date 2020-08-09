@@ -8,11 +8,18 @@ from tests.test_data_ops import test_subset_fix
 
 # TODO: add output file checks
 
-# TO-DO: Uncomment when sctransform is implemented
-# def test_norm_sctransform(root_path, build_root_fix, norm_sctransform_spec):
-#     cf = CellBranch(root_dir=root_path, spec=norm_sctransform_spec)
-#     cf.process.normalize()
-#     return cf
+
+@pytest.fixture
+def test_norm_fix(root_path, build_root_fix, norm_spec):
+    cf = CellBranch(root_dir=root_path, spec=norm_spec)
+    cf.process.normalize()
+    return cf
+
+
+def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
+    cf = CellBranch(root_dir=root_path, spec=norm_reduce_spec)
+    cf.process.reduce()
+    return cf
 
 
 def test_process_chain(root_path, build_root_fix, process_chain_spec):
@@ -45,12 +52,6 @@ def test_normalize_cf_goto(test_subset_fix):
     assert len(cf.rna) == 59
     assert cf.rna.shape == rna.shape
     assert len(cf.rna.features) == len(rna.features)
-
-
-def test_cluster(root_path, branch_spec_norm_reduce_cluster):
-    branch_spec = branch_spec_norm_reduce_cluster
-    branch = cf.load(root_path, branch_spec)
-    branch.process.cluster()
 
 
 def test_reduce_on_existing_normalize():
