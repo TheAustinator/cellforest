@@ -26,7 +26,7 @@ library(cellforestR)
 cellforest <- import("cellforest")
 
 root_dir <- "tests/data/example_usage/root"
-cf_branch <- cellforest$load(root_dir, spec = example_spec_py)
+cf_branch <- cellforest$load(root_dir, branch_spec = example_spec_py)
 cf_branch$goto_process("reduce")  # put process or alias (if exists)
 seurat_obj <- get_seurat_object(cf_branch)
 }

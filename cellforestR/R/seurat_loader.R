@@ -32,7 +32,7 @@ UMAP_EMBED_KEY = "umap"
 #' DimPlot(seurat_obj, reduction = "umap")
 cellforest_load <- function(root_dir, spec, process) {
   cellforest <- import("cellforest")
-  cf_branch <- cellforest$load(root_dir, spec = spec)
+  cf_branch <- cellforest$load(root_dir, branch_spec = spec)
   cf_branch$goto_process(process)
   seurat_obj <- get_seurat_object(cf_branch)
 
@@ -62,7 +62,7 @@ cellforest_load <- function(root_dir, spec, process) {
 #' cellforest <- import("cellforest")
 #'
 #' root_dir <- "tests/data/example_usage/root"
-#' cf_branch <- cellforest$load(root_dir, spec = example_spec_py)
+#' cf_branch <- cellforest$load(root_dir, branch_spec = example_spec_py)
 #' cf_branch$goto_process("reduce")  # put process or alias (if exists)
 #' seurat_obj <- get_seurat_object(cf_branch)
 get_seurat_object <- function(cf_branch) {
