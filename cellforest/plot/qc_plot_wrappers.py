@@ -3,11 +3,14 @@ import pickle
 from functools import wraps
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 
 from cellforest import CellBranch
 
-DEFAULT_PLOT_RESOLUTION = (500, 500)  # width, height in pixels
+matplotlib.use("Agg")
+
+DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
 PLOT_FILE_EXT = ".png"
 
 R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
@@ -65,7 +68,7 @@ def qc_plot_py(plot_func):
         fig, ax = plt.subplots(1, 1)
         dpi = fig.get_dpi()
         fig.set_size_inches(
-            DEFAULT_PLOT_RESOLUTION[0] / float(dpi), DEFAULT_PLOT_RESOLUTION[1] / float(dpi)
+            DEFAULT_PLOT_RESOLUTION_PX[0] / float(dpi), DEFAULT_PLOT_RESOLUTION_PX[1] / float(dpi)
         )  # scale to pixel resolution, irrespective of screen resolution
 
         plot_func(branch, ax=ax, **kwargs)
@@ -89,6 +92,8 @@ def qc_plot_r(plot_func):
             branch.current_process,  # current_process
             save_path,  # plot_file_path
             R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+            DEFAULT_PLOT_RESOLUTION_PX[0],  # plot_width_px
+            DEFAULT_PLOT_RESOLUTION_PX[1],  # plot_height_px
             R_FUNCTIONS_FILEPATH,  # r_functions_filepath
         ]
 
