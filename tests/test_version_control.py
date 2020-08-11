@@ -7,13 +7,13 @@ def test_fork():
 
 
 @pytest.fixture
-def cb_1(branch_spec_norm_reduce, merge_root_1, sample_metadata):
+def cb_1(branch_spec_reduce, merge_root_1, sample_metadata):
     # add two test processes, which won't be run
     test_process_specs = [
         {"_PROCESS_": "test_process", "_ALIAS_": "test_process_1",},
         {"_PROCESS_": "test_process", "_ALIAS_": "test_process_2",},
     ]
-    spec = branch_spec_norm_reduce + test_process_specs
+    spec = branch_spec_reduce + test_process_specs
     cb = cf.from_sample_metadata(merge_root_1, sample_metadata, branch_spec=spec)
     cb.process.normalize()
     cb.process.reduce()

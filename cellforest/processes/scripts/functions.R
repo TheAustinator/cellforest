@@ -37,7 +37,7 @@ find_clusters <- function(srat, output_clusters_path, num_pcs, resolution, nn_ep
   print("Finding Clusters"); print(date())
   srat <- FindClusters(object = srat, resolution = resolution, verbose = TRUE, n.start = 10, graph.name = "pca_snn")
   print("Writing Clusters"); print(date())
-  write.table(Idents(srat), sep = "\t", quote = FALSE, file = output_clusters_path, col.names = FALSE)
+  write.table(Idents(srat), sep = "\t", quote = FALSE, file = output_clusters_path, col.names = "cluster_id")
   return(srat)
 }
 

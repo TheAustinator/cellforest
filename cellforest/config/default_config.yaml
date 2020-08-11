@@ -58,6 +58,8 @@ process_layers:
     - meta
   reduce:
     - meta
+  cluster:
+    - meta
 
 # HOOKS
 #   Hook will be collected recursively from directories or processes specified
