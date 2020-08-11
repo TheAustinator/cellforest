@@ -28,14 +28,15 @@ plot_methods:
   normalize:
     - plot_genes_per_cell_hist
     - plot_umis_per_cell_hist
+    - plot_fake_test
     - plot_umis_vs_genes_scat
     - plot_perc_mito_per_cell_vln
     - plot_umis_vs_perc_mito_scat
-    # - plot_perc_ribo_per_cell_vln
-    # - plot_umis_vs_perc_ribo_scat
-    # - plot_perc_hsp_per_cell_vln
+    - plot_perc_ribo_per_cell_vln
+    - plot_umis_vs_perc_ribo_scat
+    - plot_perc_hsp_per_cell_vln
     - plot_highest_exprs_dens
-    - plot_fake_test
+    
 
 # allow enter of resolution for small and big, resolution
 
