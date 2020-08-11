@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 
 from cellforest import CellBranch
 
-matplotlib.use("Agg")
-
 DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
 DEFAULT_BIG_PLOT_RESOLUTION_PX = (900, 900)  # width, height in pixels
 PLOT_FILE_EXT = ".png"
@@ -67,6 +65,7 @@ def _remove_temp_spec(temp_spec_path: str):
 def qc_plot_py(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
+        matplotlib.use("Agg")
         fig, ax = plt.subplots(1, 1)
         dpi = fig.get_dpi()
         fig.set_size_inches(

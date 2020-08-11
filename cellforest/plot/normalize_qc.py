@@ -5,8 +5,6 @@ from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_process_r_script
 from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r
 
-matplotlib.use("Agg")  # plotting in the backend
-
 
 @qc_plot_py
 def plot_genes_per_cell_hist(branch: "CellBranch", **kwargs):

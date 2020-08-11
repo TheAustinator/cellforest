@@ -36,9 +36,12 @@ plot_methods:
     - plot_umis_vs_perc_ribo_scat
     - plot_perc_hsp_per_cell_vln
     - plot_highest_exprs_dens
-    
+  reduce:
+    - plot_elbow_line
+    - plot_pc_loadings_scat
+    - 
 
-# allow enter of resolution for small and big, resolution
+# allow entry of resolution for small and big, resolution
 
 plot_map:
   test_process:

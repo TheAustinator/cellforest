@@ -5,23 +5,23 @@
 #' @export
 example_spec_r <- type.convert(list(
   list(
-    "process" = "normalize",
-    "params" = list(
-      "min_genes" = 4,
+    "_PROCESS_" = "normalize",
+    "_PARAMS_" = list(
+      "min_genes" = 5,
       "max_genes" = 5000,
       "min_cells" = 5,
       "nfeatures" = 30,
       "perc_mito_cutoff" = 20,
       "method" = "seurat_default"
     ),
-    "subset" = list(
+    "_SUBSET_" = list(
       "sample" = "sample_1"
     )
   ),
 
   list(
-    "process" = "reduce",
-    "params" = list(
+    "_PROCESS_" = "reduce",
+    "_PARAMS_" = list(
       "pca_npcs" = 3,
       "umap_n_neighbors" = 3,
       "umap_min_dist" = 0.1,
@@ -34,8 +34,8 @@ example_spec_r <- type.convert(list(
 #' @importFrom reticulate py_run_string py
 py_run_string('example_spec_py = [
   {
-      "process": "normalize",
-      "params": {
+      "_PROCESS_": "normalize",
+      "_PARAMS_": {
           "min_genes": 5,
           "max_genes": 5000,
           "min_cells": 5,
@@ -43,12 +43,12 @@ py_run_string('example_spec_py = [
           "perc_mito_cutoff": 20,
           "method": "seurat_default",
       },
-      "subset": {"sample": "sample_1"},
+      "_SUBSET_": {"sample": "sample_1"},
   },
   {
-      "process": "reduce",
+      "_PROCESS_": "reduce",
       "alias": "pca+umap",
-      "params": {
+      "_PARAMS_": {
           "pca_npcs": 3,
           "umap_n_neighbors": 3,
           "umap_min_dist": 0.1,

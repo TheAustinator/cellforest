@@ -32,7 +32,7 @@ Seurat object from a CellForest process run
 library(cellforestR)
 
 root_dir <- "tests/data/example_usage/root"
-seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")
+seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")  # given that processes have been run
 
 DimPlot(seurat_obj, reduction = "umap")
 }

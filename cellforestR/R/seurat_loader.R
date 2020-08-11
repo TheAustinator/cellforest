@@ -27,7 +27,7 @@ UMAP_EMBED_KEY = "umap"
 #' library(cellforestR)
 #'
 #' root_dir <- "tests/data/example_usage/root"
-#' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")
+#' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")  # given that processes have been run
 #'
 #' DimPlot(seurat_obj, reduction = "umap")
 cellforest_load <- function(root_dir, branch_spec, process) {
