@@ -168,6 +168,15 @@ run_pca <- function(seurat_object, output_embeddings_path, output_loadings_path,
   return(seurat_object)
 }
 
+add_genes_perc_meta <- function(seurat_object, patterns = list("percent.mito" = "^MT-", "percent.ribo" = "^RP[LS]", "percent.hsp" = "^HSP")) {
+  # add columns of percentage feature set to metadata from named list of patterns
+  for (key in names(patterns)) {
+    seurat_object[[key]] <- PercentageFeatureSet(seurat_object, pattern = patterns[[key]])
+  }
+
+  return(seurat_object)
+}
+
 filter_cells <- function(seurat_object, min_detected_genes, max_detected_genes, percent_mito_cutoff) {
 
   print("Filter cells")

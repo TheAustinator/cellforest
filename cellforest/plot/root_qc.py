@@ -6,7 +6,7 @@ from cellforest.utils.r.run_r_script import run_process_r_script
 ALL_QC_PLOTS_ROOT = [  # reference of all supported QC plots
     "genes_per_cell_hist",
     "umis_per_cell_hist",
-    "umis_vs_genes_hist",
+    "umis_vs_genes_scat",
     "perc_mito_per_cell_hist",
     "highest_exprs_genes_dens_plt",
 ]
@@ -14,7 +14,7 @@ ALL_QC_PLOTS_ROOT = [  # reference of all supported QC plots
 DEFAULT_QC_PLOTS_ROOT = [  # default QC plots
     "genes_per_cell_hist",
     "umis_per_cell_hist",
-    "umis_vs_genes_hist",
+    "umis_vs_genes_scat",
     "perc_mito_per_cell_hist",
     "highest_exprs_genes_dens_plt",
 ]

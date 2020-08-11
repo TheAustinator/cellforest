@@ -22,6 +22,7 @@ meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1
 print("metadata filter"); print(date())
 srat <- metadata_filter_objs(meta, srat)
 print("filtering cells"); print(date())
+srat <- add_genes_perc_meta(srat, patterns = list("percent.mito" = "^MT-", "percent.ribo" = "^RP[LS]", "percent.hsp" = "^HSP"))
 srat <- filter_cells(srat, min_genes, max_genes, perc_mito_cutoff)
 print("normalizing"); print(date())
 srat <- NormalizeData(srat, verbose = verbose)

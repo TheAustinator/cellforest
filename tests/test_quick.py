@@ -4,3 +4,4 @@ from tests.test_process import *
 from tests.test_data_ops import *
 from tests.test_historical import *
 from tests.test_version_control import *
+from tests.test_cellforestR import test_cellforest_load_last_process

@@ -21,6 +21,7 @@ print("metadata filter"); print(date())
 filter_outputs <- metadata_filter_objs(metadata, seurat_object)
 seurat_object <- filter_outputs$seurat_object
 print("filtering cells"); print(date())
+seurat_object <- add_genes_perc_meta(seurat_object, patterns = list("percent.mito" = "^MT-", "percent.ribo" = "^RP[LS]", "percent.hsp" = "^HSP"))
 seurat_object <- filter_cells(seurat_object, min_genes, max_genes, perc_mito_cutoff)
 print("running sctransform"); print(date())
 seurat_object <- run_sctransform(seurat_object, output_corrected_umi_path, output_pearson_residual_path)

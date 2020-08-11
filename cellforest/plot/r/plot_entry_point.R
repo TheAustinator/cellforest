@@ -1,3 +1,6 @@
+# source this file to the plotting code to pass parameters
+# and write plots
+
 args <- commandArgs(trailingOnly = TRUE)
 
 root_dir <- args[1]
@@ -22,5 +25,3 @@ if (plot_width_px > 750 & plot_height_px > 750) {  # big plot
 } else {  # default plot
     png(filename = plot_filepath, width = plot_width_px, height = plot_height_px)
 }
-
-# plotting code goes after this

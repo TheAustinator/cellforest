@@ -2,6 +2,7 @@ from os import remove
 import pickle
 from functools import wraps
 from pathlib import Path
+import logging
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -36,11 +37,11 @@ def _get_plot_file_path(branch: "CellBranch", plot_func):
             file_name_overridden = True
 
     if file_name_overridden:
-        # TODO: properly log this information
-        print(f"Using provided plot file path in config: {plot_file_path}")
+        # TODO: properly store this information in a log
+        logging.warning(f"Using provided plot file path in config: {plot_file_path}")
     else:
-        # TODO: properly log this information
-        print(f"No valid plot file path provided for {plot_name}, using default file path: {plot_file_path}")
+        # TODO: properly store this information in a log
+        logging.warning(f"No valid plot file path provided for {plot_name}, using default file path: {plot_file_path}")
 
     return plot_file_path
 
