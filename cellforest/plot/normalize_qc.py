@@ -1,6 +1,3 @@
-import matplotlib
-import matplotlib.pyplot as plt
-
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_process_r_script
 from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r

@@ -1,7 +1,6 @@
-import matplotlib.pyplot as plt
-
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_process_r_script
+from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r
 
 ALL_QC_PLOTS_ROOT = [  # reference of all supported QC plots
     "genes_per_cell_hist",
@@ -25,6 +24,11 @@ def plot_test(branch: CellBranch, **kwargs):
     plot_path = branch[run_name].plot_map["plot_test"]
     plt.plot([0, 1, 2, 3, 4], [0, 3, 5, 9, 11], **kwargs)
     plt.savefig(plot_path)
+
+
+@qc_plot_r()
+def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_process_r_script(branch, r_script, args, branch.current_process)
 
 
 def qc_normalize(branch: "CellBranch", process: str, **kwargs):
