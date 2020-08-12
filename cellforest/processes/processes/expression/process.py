@@ -38,34 +38,34 @@ def markers(branch: "CellBranch", run_name: str):
 
 
 @dataprocess(requires="cluster", comparative=True)
-def diffexp(branch: "CellBranch"):
+def diffexp(branch: "CellBranch", run_name: str):
     # TODO: refactor both diffexp versions into `_get_diffexp_args`
-    process_name = "diffexp"
-    input_metadata_path = branch.get_temp_meta_path(branch, process_name)
-    input_rds_path = branch["cluster"].path_map["cluster_r"]
-    output_diffexp_path = branch[process_name].path_map["diffexp_result"]
-    groups = branch[process_name].branch.meta["partition_code"].unique().astype("O")
+    input_metadata_path = branch.get_temp_meta_path(run_name)
+    run_spec = branch.spec[run_name]
+    params = run_spec.params
+    process_run = branch[run_name]
+    output_diffexp_path = process_run.path_map["diffexp"]
+    root_dir = str(branch.root)
+    spec_str = branch.spec.shell_str
+    groups = branch[run_name].branch.meta["partition_code"].unique().astype("O")
     if len(groups) != 2:
         raise ValueError(f"Exactly two groups required for diffexp. Got: {groups}")
-    test = branch.spec[process_name]["test"]
     ident1 = groups.min()
     ident2 = groups.max()
     groupby = "partition_code"
-    logfc_thresh = branch.spec[process_name]["logfc_thresh"]
-    r_functions_filepath = branch.schema.R_FILEPATHS["FUNCTIONS_FILE_PATH"]
     arg_list = [
         input_metadata_path,
-        input_rds_path,
         output_diffexp_path,
-        test,
+        root_dir,
+        spec_str,
+        params["test"],
+        params["logfc_thresh"],
         ident1,
         ident2,
         groupby,
-        logfc_thresh,
-        r_functions_filepath,
+        R_FUNCTIONS_FILEPATH,
     ]
-    r_diff_exp_filepath = branch.schema.R_FILEPATHS["DIFF_EXP_CLUSTER_SCRIPT"]
-    ProcessMethodsSC._run_r_script(branch, r_diff_exp_filepath, arg_list, process_name)
+    run_process_r_script(branch, R_DIFFEXP_SCRIPT, arg_list, run_name)
 
 
 @dataprocess(requires="normalize", comparative=True)

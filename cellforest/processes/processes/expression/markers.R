@@ -15,7 +15,7 @@ logfc_thresh <- as.numeric(args[6])
 
 r_functions_filepath <- args[7]
 source(r_functions_filepath)
-library(cellforestR)
+library("cellforestR")
 
 print("loading metadata"); print(date())
 meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1)

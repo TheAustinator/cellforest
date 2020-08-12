@@ -65,5 +65,9 @@ def test_fresh_normalize_reduce():
     pass
 
 
-def test_processes(test_markers):
+def test_marker_process(test_markers):
+    pass
+
+
+def test_diffexp_process(test_diffexp):
     pass

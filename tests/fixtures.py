@@ -178,6 +178,18 @@ def branch_spec_markers(branch_spec_cluster):
 
 
 @pytest.fixture
+def branch_spec_diffexp(branch_spec_cluster):
+    spec = deepcopy(branch_spec_cluster)
+    spec_run_markers = {
+        "_PROCESS_": "diffexp",
+        "_PARAMS_": {"logfc_thresh": 0.0001, "test": "wilcox"},
+        "_PARTITION_": ["sample"],
+    }
+    spec.append(spec_run_markers)
+    return spec
+
+
+@pytest.fixture
 def process_chain_spec(branch_spec_norm):
     spec = deepcopy(branch_spec_norm)
     spec.append({"_PROCESS_": "test_process"})
@@ -224,7 +236,14 @@ def test_cluster(root_path, branch_spec_cluster, test_reduce):
 
 
 @pytest.fixture
-def test_markers(root_path, branch_spec_markers, test_norm):
+def test_markers(root_path, branch_spec_markers, test_cluster):
     branch = cf.load(root_path, branch_spec_markers)
     branch.process.markers()
+    return branch
+
+
+@pytest.fixture
+def test_diffexp(root_path, branch_spec_diffexp, test_cluster):
+    branch = cf.load(root_path, branch_spec_diffexp)
+    branch.process.diffexp()
     return branch
