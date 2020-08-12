@@ -23,11 +23,11 @@ def test_subset_multiple(root_path_3, sample_metadata, branch_spec_norm):
     pass
 
 
-def test_filter(build_root_fix):
+def test_filter(build_root):
     pass
 
 
-def test_partition(build_root_fix):
+def test_partition(build_root):
     pass
 
 

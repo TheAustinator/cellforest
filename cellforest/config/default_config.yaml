@@ -14,9 +14,10 @@ file_map:
   diffexp_bulk:
     diffexp_bulk_result: diffexp.tsv
   diffexp:
-    diffexp_result: diffexp.tsv
+    diffexp: diffexp.tsv
   markers:
     markers: markers.tsv
+
 
 # plot method names from plot_sources (no need to include plots output by processes)
 plot_methods:
@@ -57,6 +58,8 @@ process_layers:
     - matrix
     - meta
   reduce:
+    - meta
+  cluster:
     - meta
 
 # HOOKS

@@ -15,5 +15,5 @@ def test_from_input_dirs(test_from_input_dirs_fix):
     pass
 
 
-def test_from_meta(build_root_fix):
+def test_from_meta(build_root):
     pass

@@ -15,21 +15,18 @@ def cluster(branch: "CellBranch", run_name: str):
     run_spec = branch.spec[run_name]
     params = run_spec.params
     process_run = branch[run_name]
-    output_clusters_path = process_run.path_map["clusters"]
+    output_clusters_path = process_run.path_map["meta"]
     # TODO: may actually need way to pass spec through
     root_dir = str(branch.root)
     spec_str = branch.spec.shell_str
-    num_pcs = params["num_pcs"]
-    res = params["res"]
-    eps = params["eps"]
     arg_list = [
         input_metadata_path,
         output_clusters_path,
         root_dir,
         spec_str,
-        num_pcs,
-        res,
-        eps,
+        params["num_pcs"],
+        params["res"],
+        params["eps"],
         R_FUNCTIONS_FILEPATH,
     ]
     run_process_r_script(branch, R_CLUSTER_SCRIPT, arg_list, run_name)
