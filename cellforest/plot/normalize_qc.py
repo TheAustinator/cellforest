@@ -18,32 +18,32 @@ def plot_umis_vs_genes_scat(branch: "CellBranch", **kwargs):
     branch.rna.scatter(agg_x="nonzero", agg_y="sum", axis=0, **kwargs)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_umis_vs_perc_mito_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_perc_ribo_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_perc_hsp_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 
 
-@qc_plot_r(plot_format="big")
+@qc_plot_r
 def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 

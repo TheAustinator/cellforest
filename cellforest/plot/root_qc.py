@@ -26,7 +26,7 @@ def plot_test(branch: CellBranch, **kwargs):
     plt.savefig(plot_path)
 
 
-@qc_plot_r()
+@qc_plot_r
 def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
 

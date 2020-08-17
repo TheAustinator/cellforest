@@ -1,6 +1,7 @@
 from os import remove
 import pickle
 from functools import wraps
+from functools import update_wrapper
 from pathlib import Path
 import logging
 
@@ -10,20 +11,20 @@ import matplotlib.pyplot as plt
 from cellforest import CellBranch
 
 DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
-DEFAULT_BIG_PLOT_RESOLUTION_PX = (900, 900)  # width, height in pixels
+DEFAULT_BIG_PLOT_RESOLUTION_PX = (1000, 1000)  # width, height in pixels
 PLOT_FILE_EXT = ".png"
 
 R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
 R_FUNCTIONS_FILEPATH = Path(__file__).parent.parent / "processes/scripts/functions.R"
 
 
-def _get_plot_file_path(branch: "CellBranch", plot_func):
+def _get_plot_file_path(branch: "CellBranch", plot_func, filename_suffix):
     plot_func_name = plot_func.__name__  # e.g., "plot_genes_per_cell_hist"
     plot_name = plot_func_name.replace("plot_", "", 1)  # e.g., "genes_per_cell_hist"
 
     run_name = branch.current_process
     plot_file_path = branch[run_name].plots_path / (
-        plot_name + PLOT_FILE_EXT
+        plot_name + filename_suffix + PLOT_FILE_EXT
     )  # default file path, e.g., "tests/data/example_usage/root/_plots/genes_per_cell_hist.png"
 
     # check if config requests overriding plot file name
@@ -66,52 +67,149 @@ def qc_plot_py(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
         matplotlib.use("Agg")
+        plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
+        stratify = kwargs.pop("stratify", None)
+        filename_suffix = kwargs.pop("filename_suffix", "")
+
         fig, ax = plt.subplots(1, 1)
         dpi = fig.get_dpi()
         fig.set_size_inches(
-            DEFAULT_PLOT_RESOLUTION_PX[0] / float(dpi), DEFAULT_PLOT_RESOLUTION_PX[1] / float(dpi)
+            plot_size[0] / float(dpi), plot_size[1] / float(dpi)
         )  # scale to pixel resolution, irrespective of screen resolution
 
         plot_func(branch, ax=ax, **kwargs)
-        save_path = _get_plot_file_path(branch, plot_func)
+        save_path = _get_plot_file_path(branch, plot_func, filename_suffix)
         fig.savefig(save_path)
 
     return wrapper
 
 
-def qc_plot_r(plot_format="default"):
-    """
-    Wrapper for plotting and saving R plots
-    """
-    if plot_format == "default":
-        resolution_px = DEFAULT_PLOT_RESOLUTION_PX
-    elif plot_format == "big":
-        resolution_px = DEFAULT_BIG_PLOT_RESOLUTION_PX
-    else:
-        raise ValueError(f"plot_format cannot be {plot_format}, has to be 'default' or 'big'")
+def qc_plot_r(plot_func):
+    @wraps(plot_func)
+    def wrapper(branch: "CellBranch", **kwargs):
+        # TODO: move temp spec to a hook
+        temp_spec_path = _create_temp_spec(branch)
+        r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
+        filename_suffix = kwargs.pop("filename_suffix", "")
+        plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)  # check plot size correct format
+        stratify = kwargs.pop("stratify", None)
+        save_path = _get_plot_file_path(branch, plot_func, filename_suffix)
 
-    def _qc_plot_r(plot_func):
-        @wraps(plot_func)
-        def wrapper(branch: "CellBranch", **kwargs):
-            # TODO: move temp spec to a hook
-            temp_spec_path = _create_temp_spec(branch)
-            r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
-            save_path = _get_plot_file_path(branch, plot_func)
+        args = [  # corresponding arguments in r/plot_entry_point.R
+            branch.paths["root"],  # root_dir
+            temp_spec_path,  # path_to_temp_spec
+            branch.current_process,  # current_process
+            save_path,  # plot_file_path
+            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+            plot_size[0],  # plot_width_px
+            plot_size[1],  # plot_height_px
+            R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+        ]
 
-            args = [  # corresponding arguments in r/plot_entry_point.R
-                branch.paths["root"],  # root_dir
-                temp_spec_path,  # path_to_temp_spec
-                branch.current_process,  # current_process
-                save_path,  # plot_file_path
-                R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
-                resolution_px[0],  # plot_width_px
-                resolution_px[1],  # plot_height_px
-                R_FUNCTIONS_FILEPATH,  # r_functions_filepath
-            ]
+        plot_func(branch, r_script, args, **kwargs)
+        _remove_temp_spec(temp_spec_path)
 
-            plot_func(branch, r_script, args, **kwargs)
-            _remove_temp_spec(temp_spec_path)
+    return wrapper
 
-        return wrapper
 
-    return _qc_plot_r
+# def qc_plot_r(plot_format="default"):
+#     """
+#     Wrapper for plotting and saving R plots
+#     """
+#     if plot_format == "default":
+#         resolution_px = DEFAULT_PLOT_RESOLUTION_PX
+#     elif plot_format == "big":
+#         resolution_px = DEFAULT_BIG_PLOT_RESOLUTION_PX
+#     else:
+#         raise ValueError(f"plot_format cannot be {plot_format}, has to be 'default' or 'big'")
+
+#     def _qc_plot_r(plot_func):
+#         @wraps(plot_func)
+#         def wrapper(branch: "CellBranch", **kwargs):
+#             # TODO: move temp spec to a hook
+#             temp_spec_path = _create_temp_spec(branch)
+#             r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
+#             save_path = _get_plot_file_path(branch, plot_func)
+
+#             args = [  # corresponding arguments in r/plot_entry_point.R
+#                 branch.paths["root"],  # root_dir
+#                 temp_spec_path,  # path_to_temp_spec
+#                 branch.current_process,  # current_process
+#                 save_path,  # plot_file_path
+#                 R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+#                 resolution_px[0],  # plot_width_px
+#                 resolution_px[1],  # plot_height_px
+#                 R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+#             ]
+
+#             plot_func(branch, r_script, args, **kwargs)
+#             _remove_temp_spec(temp_spec_path)
+
+#         return wrapper
+
+#     return _qc_plot_r
+
+
+# class qc_plot_r:
+#     def __init__(self, plot_func):
+#         update_wrapper(self, plot_func)
+#         self.plot_func = plot_func
+#         self.set_plot_size()
+
+#     def set_plot_size(self, plot_size="default"):
+#         self.plot_size = plot_size
+
+#     def set_stratify(self, stratify="none"):
+#         self.stratify = stratify
+
+#     def __call__(self, branch: "CellBranch", **kwargs):
+#         if self.plot_size == "default":
+#             self.resolution_px = DEFAULT_PLOT_RESOLUTION_PX
+#         elif self.plot_size == "big":
+#             self.resolution_px = DEFAULT_BIG_PLOT_RESOLUTION_PX
+#         else:
+#             raise ValueError(f"plot_format cannot be {plot_format}, has to be 'default' or 'big'")
+
+#         temp_spec_path = _create_temp_spec(branch)
+#         r_script = R_PLOT_SCRIPTS_PATH / (self.plot_func.__name__ + ".R")
+#         save_path = _get_plot_file_path(branch, self.plot_func)
+
+#         args = [  # corresponding arguments in r/plot_entry_point.R
+#             branch.paths["root"],  # root_dir
+#             temp_spec_path,  # path_to_temp_spec
+#             branch.current_process,  # current_process
+#             save_path,  # plot_file_path
+#             R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+#             self.resolution_px[0],  # plot_width_px
+#             self.resolution_px[1],  # plot_height_px
+#             R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+#         ]
+
+#         self.plot_func(branch, r_script, args, **kwargs)
+#         _remove_temp_spec(temp_spec_path)
+
+#     @property
+#     def __code__(self):
+#         return self.plot_func.__code__
+
+#     @property
+#     def __globals__(self):
+#         return self.plot_func.__globals__
+
+#     @property
+#     def __name__(self):
+#         return self.plot_func.__name__
+
+#     @property
+#     def __defaults__(self):
+#         return self.plot_func.__defaults__
+
+#     @property
+#     def __closure__(self):
+#         return self.plot_func.__closure__
+
+#     @property
+#     def __kwdefaults__(self):
+#         return self.plot_func.__kwdefaults__
+
+#     # f.__code__, f.__globals__, name=f.__name__, argdefs=f.__defaults__, closure=f.__closure__
