@@ -62,7 +62,7 @@
             - lane
           plot_size:
             - large
-            - default
+            - large
     reduce:
       _PCA_ELBOW_CURV_: ~
       _PCA_LOADINGS_SCAT_: ~
