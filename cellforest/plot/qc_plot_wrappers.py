@@ -42,7 +42,6 @@ def qc_plot_py(plot_func):
         matplotlib.use("Agg")
         plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
-        filename_suffix = kwargs.pop("filename_suffix", "")
         plot_path = kwargs.pop("plot_path", None)
 
         fig, ax = plt.subplots(1, 1)
@@ -63,8 +62,7 @@ def qc_plot_r(plot_func):
         # TODO: move temp spec to a hook
         temp_spec_path = _create_temp_spec(branch)
         r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
-        filename_suffix = kwargs.pop("filename_suffix", "")
-        plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)  # check plot size correct format
+        plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
 
@@ -77,6 +75,7 @@ def qc_plot_r(plot_func):
             plot_size[0],  # plot_width_px
             plot_size[1],  # plot_height_px
             R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+            kwargs,  # kwargs
         ]
 
         plot_func(branch, r_script, args, **kwargs)
