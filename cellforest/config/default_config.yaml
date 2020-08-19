@@ -22,11 +22,14 @@
   
       
   plot_kwargs_defaults:
+    # named
     stratify:
       default: None
     plot_size:  # resolution in px
       default: [500, 500]
       large: [1000, 1000]
+
+    # unnamed
     # filename_ext: png
     
   # supported kwargs for plot_kwargs
@@ -46,7 +49,7 @@
         plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
         filename:  # optional, will overwrite inferred name
           - umis_per_cell_hist-plot_size:500+500-stratify:sample
-          - umis_per_cell_hist-plot_size:500+500-stratify:lane
+          - umis_per_cell_hist-plot_size:500+500-stratify:none
           - umis_per_cell_hist-plot_size:500+500-stratify:cell
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
           stratify:
@@ -58,7 +61,9 @@
       _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
       _PERC_MITO_PER_CELL_VLN_:
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
-          stratify: sample
+          stratify: 
+            - sample
+          plot_size: default
       _UMIS_VS_PERC_MITO_SCAT_: ~
       _PERC_RIBO_PER_CELL_VLN: ~
       _UMIS_VS_PERC_RIBO_SCAT:
@@ -74,18 +79,25 @@
           plot_size: large
     reduce:
       _PCA_ELBOW_CURV_: ~
-      _PCA_LOADINGS_SCAT_: ~
+      _PCA_LOADINGS_SCAT_:
+        plot_kwargs:
+          stratify: 
+            - default
+            - sample
+          plot_size: large
       _PCA_EMBEDDINGS_SCAT_:
-        stratify:
-          - sample
-          - nFeature_RNA
-        plot_size: large
-        npcs: 6
+        plot_kwargs:
+          stratify:
+            - sample
+            - nFeature_RNA
+          plot_size: large
+          npcs: 7
       _UMAP_EMBEDDINGS_SCAT_:
-        stratify:
-          - sample
-          - nFeature_RNA
-        plot_size: large
+        plot_kwargs:
+          stratify:
+            - sample
+            - nFeature_RNA
+          plot_size: large
   
   
   layers:
