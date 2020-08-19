@@ -1,6 +1,7 @@
 from os import remove
 import pickle
 from functools import wraps
+import json
 from functools import update_wrapper
 from pathlib import Path
 import logging
@@ -66,6 +67,9 @@ def qc_plot_r(plot_func):
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
 
+        if stratify not in (None, "none", "None", "NULL", "NA"):
+            kwargs["group.by"] = stratify
+
         args = [  # corresponding arguments in r/plot_entry_point.R
             branch.paths["root"],  # root_dir
             temp_spec_path,  # path_to_temp_spec
@@ -75,7 +79,7 @@ def qc_plot_r(plot_func):
             plot_size[0],  # plot_width_px
             plot_size[1],  # plot_height_px
             R_FUNCTIONS_FILEPATH,  # r_functions_filepath
-            kwargs,  # kwargs
+            json.dumps("kwargs = " + str(kwargs if kwargs else {})),  # TODO-QC: is there a better way to handle this?
         ]
 
         plot_func(branch, r_script, args, **kwargs)

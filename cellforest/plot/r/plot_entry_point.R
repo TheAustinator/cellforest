@@ -11,11 +11,13 @@ r_plot_scripts_path <- args[5]
 plot_width_px <- as.integer(args[6])
 plot_height_px <- as.integer(args[7])
 r_functions_filepath <- args[8]
-kwargs <- args[9]  # stratify, alpha
 
 library(Seurat)
 library(reticulate)
 library(cellforestR)
+
+py_run_string(args[9])  # stratify, alpha
+kwargs <- py$kwargs
 
 source(r_functions_filepath)
 spec <- py_load_object(path_to_temp_spec)

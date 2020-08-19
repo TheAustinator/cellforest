@@ -28,7 +28,11 @@
       large: [1000, 1000]
     # filename_ext: png
     
-  # plot methods inferred or described within plot_map
+  # supported kwargs for plot_kwargs
+  #   stratify: color plots based on column in metadata along which to stratify the data
+  #   plot_size: pixel resolution of produced plots
+  #   alpha: transparency of produced points, lines, and fills - does not work on Seurat plots (yet)
+  #   size: point size in scatter plots
   plot_map:
     root:
       _UMIS_PER_CELL_HIST_: ~
@@ -50,22 +54,30 @@
           plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
       _FAKE_TEST_PLOT_: ~
       _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
-      _PERC_MITO_PER_CELL_VLN_: ~
+      _PERC_MITO_PER_CELL_VLN_:
+        plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+          stratify: sample
       _UMIS_VS_PERC_MITO_SCAT_: ~
       _PERC_RIBO_PER_CELL_VLN: ~
-      _UMIS_VS_PERC_RIBO_SCAT: ~
+      _UMIS_VS_PERC_RIBO_SCAT:
+        plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+          stratify: sample
+          plot_size: default
       _PERC_HSP_PER_CELL_VLN: ~
       _HIGHEST_EXPRS_DENS_:
         plot_kwargs:  # will map 1-to-1 (not all possible combinations)
           stratify:
             - sample
             - lane
-          plot_size:
-            - large
-            - large
+          plot_size: large
     reduce:
       _PCA_ELBOW_CURV_: ~
       _PCA_LOADINGS_SCAT_: ~
+      _PCA_EMBEDDINGS_SCAT_:
+        stratify:
+          - sample
+          - nFeature_RNA
+        plot_size: large
   
   
   layers:
