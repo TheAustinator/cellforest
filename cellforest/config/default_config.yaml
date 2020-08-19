@@ -76,9 +76,6 @@
       _PCA_ELBOW_CURV_: ~
       _PCA_LOADINGS_SCAT_:
         plot_kwargs:
-          stratify: 
-            - default
-            - sample
           plot_size: large
       _PCA_EMBEDDINGS_SCAT_:
         plot_kwargs:
