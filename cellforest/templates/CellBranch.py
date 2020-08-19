@@ -39,7 +39,7 @@ class CellBranch(CellBase, DataBranch):
         },
         "combine": {"cell_metadata": {"header": 0}},
         "cluster": {"clusters": {"index_col": 0}},
-        "diffexp": {"diffexp_result": {"header": 0}},
+        "diffexp": {"diffexp": {"header": 0}},
     }
     _METADATA_NAME = "meta"
     _COPY_KWARGS = {**DataBranch._COPY_KWARGS, "unversioned": "unversioned"}
@@ -167,7 +167,7 @@ class CellBranch(CellBase, DataBranch):
 
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from branch_spec"""
-        columns = self.spec[process_name]["partition"]
+        columns = self.spec[process_name]["_PARTITION_"]
         self._meta = label_df_partitions(self.meta, columns, encodings)
 
     def _get_meta(self, process_name: str) -> pd.DataFrame:
@@ -199,9 +199,4 @@ class CellBranch(CellBase, DataBranch):
                     intersect_cols = set(df.columns).intersection(set(process_meta.columns))
                     process_meta.drop(intersect_cols, axis=1, inplace=True)
                     df = df.merge(process_meta, left_index=True, right_index=True)
-        df.replace(" ", "_", regex=True, inplace=True)
-        partitions_list = self.spec.get_partition_list(process_name)
-        partitions = set().union(*partitions_list)
-        if partitions:
-            df = label_df_partitions(df, partitions, encodings=True)
         return df

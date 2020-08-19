@@ -47,7 +47,7 @@ py_run_string('example_spec_py = [
   },
   {
       "_PROCESS_": "reduce",
-      "alias": "pca+umap",
+      "_ALIAS_": "pca+umap",
       "_PARAMS_": {
           "pca_npcs": 3,
           "umap_n_neighbors": 3,

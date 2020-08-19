@@ -4,7 +4,7 @@ import cellforest as cf
 from cellforest import CellBranch, Counts
 from tests.fixtures import *
 import tests
-from tests.test_init import build_root_fix
+from tests.test_init import build_root
 from tests.test_data_ops import test_subset_fix
 
 # TODO: add output file checks
@@ -43,7 +43,7 @@ def test_process_chain(root_path, build_root_fix, process_chain_spec):
     return branch
 
 
-def test_logging(test_norm_fix):
+def test_logging(test_norm):
     # TODO: QUEUE
     pass
 
@@ -81,4 +81,12 @@ def test_fresh_normalize_reduce():
     """
     Test that normalize and reduce work sequentially from scratch
     """
+    pass
+
+
+def test_marker_process(test_markers):
+    pass
+
+
+def test_diffexp_process(test_diffexp):
     pass
