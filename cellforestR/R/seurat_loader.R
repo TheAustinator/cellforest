@@ -123,12 +123,16 @@ add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pc
 add_pca_embed <- function(seurat_object, path_map) {
   input_embeddings_path <- toString(path_map$pca_embeddings)  # TO-DO: In the future, fetch from meta
   input_loadings_path <- toString(path_map$pca_loadings)
+  input_stdev_path <- toString(path_map$pca_stdev)
+
   input_embeddings <- data.matrix(read.table(input_embeddings_path, sep = "\t", header = TRUE, row.names = 1))
   input_loadings <- data.matrix(read.table(input_loadings_path, sep = "\t", header = TRUE, row.names = 1))
+  input_stdev <- as.list(read.table(input_stdev_path, sep = "\t", header = TRUE, row.names = 1))$x  # TODO-QC: is there a better way to get a list?
 
   seurat_object[[PCA_EMBED_KEY]] <- CreateDimReducObject(
     embeddings = input_embeddings,
     loadings = input_loadings,
+    stdev = input_stdev,
     key = "PC_",
     assay = DefaultAssay(seurat_object)
   )

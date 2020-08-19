@@ -9,6 +9,7 @@
     reduce:
       pca_embeddings: pca_embeddings.tsv
       pca_loadings: pca_loadings.tsv
+      pca_stdev: pca_stdev.tsv
       umap_embeddings: umap_embeddings.tsv
     cluster:
       clusters: clusters.tsv
@@ -33,6 +34,7 @@
   #   plot_size: pixel resolution of produced plots
   #   alpha: transparency of produced points, lines, and fills - does not work on Seurat plots (yet)
   #   size: point size in scatter plots
+  #   npcs: number of principal components to show PCA embeddings and loadings
   plot_map:
     root:
       _UMIS_PER_CELL_HIST_: ~
@@ -74,6 +76,12 @@
       _PCA_ELBOW_CURV_: ~
       _PCA_LOADINGS_SCAT_: ~
       _PCA_EMBEDDINGS_SCAT_:
+        stratify:
+          - sample
+          - nFeature_RNA
+        plot_size: large
+        npcs: 6
+      _UMAP_EMBEDDINGS_SCAT_:
         stratify:
           - sample
           - nFeature_RNA

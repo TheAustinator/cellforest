@@ -156,7 +156,7 @@ run_integration <- function(seurat_object, normalize = "sct") {
 
 }
 
-run_pca <- function(seurat_object, output_embeddings_path, output_loadings_path, npcs = 30) {
+run_pca <- function(seurat_object, output_embeddings_path, output_loadings_path, output_stdev_path, npcs = 30) {
   print("Running PCA"); print(date())
   seurat_object <- RunPCA(object = seurat_object, verbose = TRUE, npcs = npcs)
 
@@ -165,6 +165,7 @@ run_pca <- function(seurat_object, output_embeddings_path, output_loadings_path,
   print("Writing PCA results"); print(date())
   write.table(seurat_object$pca@cell.embeddings, sep = "\t", col.names = TRUE, quote = FALSE, file = output_embeddings_path, row.names = TRUE)
   write.table(seurat_object$pca@feature.loadings, sep = "\t", col.names = TRUE, quote = FALSE, file = output_loadings_path, row.names = TRUE)
+  write.table(seurat_object$pca@stdev, sep = "\t", col.names = TRUE, quote = FALSE, file = output_stdev_path, row.names = TRUE)
   return(seurat_object)
 }
 

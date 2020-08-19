@@ -18,6 +18,7 @@ def reduce(branch: "CellBranch", run_name: str):
     input_rds_path = process_run.path_map_prior["rna_r"]
     output_embeddings_path = process_run.path_map["pca_embeddings"]
     output_loadings_path = process_run.path_map["pca_loadings"]
+    output_stdev_path = process_run.path_map["pca_stdev"]
     npcs = params["pca_npcs"]
     r_functions_filepath = R_FUNCTIONS_FILEPATH
     arg_list = [
@@ -25,6 +26,7 @@ def reduce(branch: "CellBranch", run_name: str):
         input_rds_path,
         output_embeddings_path,
         output_loadings_path,
+        output_stdev_path,
         npcs,
         r_functions_filepath,
     ]

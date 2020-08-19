@@ -13,10 +13,11 @@ plot_height_px <- as.integer(args[7])
 r_functions_filepath <- args[8]
 
 library(Seurat)
+library(ggplot2)
 library(reticulate)
 library(cellforestR)
 
-py_run_string(args[9])  # stratify, alpha
+py_run_string(args[9])  # kwargs = {...}
 kwargs <- py$kwargs
 
 source(r_functions_filepath)
@@ -27,4 +28,15 @@ if (plot_width_px > 750 & plot_height_px > 750) {  # big plot
     png(filename = plot_filepath, width = plot_width_px, height = plot_height_px, res = 150)
 } else {  # default plot
     png(filename = plot_filepath, width = plot_width_px, height = plot_height_px)
+}
+
+# TODO-QC: nicer way to batch-handle kwargs
+if (!is.null(kwargs$npcs)) {
+    kwargs$npcs <- as.integer(as.numeric(kwargs$npcs))
+}
+if (!is.null(kwargs$size)) {
+    kwargs$size <- as.numeric(kwargs$size)
+}
+if (!is.null(kwargs$alpha)) {
+    kwargs$alpha <- as.numeric(kwargs$alpha)
 }
