@@ -22,15 +22,12 @@
   
       
   plot_kwargs_defaults:
-    # named
     stratify:
       default: None
     plot_size:  # resolution in px
       default: [500, 500]
       large: [1000, 1000]
-
-    # unnamed
-    # filename_ext: png
+    filename_ext: png
     
   # supported kwargs for plot_kwargs
   #   stratify: color plots based on column in metadata along which to stratify the data
@@ -63,13 +60,11 @@
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
           stratify: 
             - sample
-          plot_size: default
       _UMIS_VS_PERC_MITO_SCAT_: ~
       _PERC_RIBO_PER_CELL_VLN: ~
       _UMIS_VS_PERC_RIBO_SCAT:
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
           stratify: sample
-          plot_size: default
       _PERC_HSP_PER_CELL_VLN: ~
       _HIGHEST_EXPRS_DENS_:
         plot_kwargs:  # will map 1-to-1 (not all possible combinations)
