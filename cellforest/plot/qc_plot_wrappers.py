@@ -18,6 +18,9 @@ PLOT_FILE_EXT = ".png"
 R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
 R_FUNCTIONS_FILEPATH = Path(__file__).parent.parent / "processes/scripts/functions.R"
 
+DEFAULT_ASSAY = "rna"
+NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
+
 
 def _create_temp_spec(branch: "CellBranch"):
     """
@@ -40,7 +43,7 @@ def _remove_temp_spec(temp_spec_path: str):
 def qc_plot_py(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
-        matplotlib.use("Agg")
+        matplotlib.use("Agg")  # don't plot on screen
         plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
@@ -50,6 +53,15 @@ def qc_plot_py(plot_func):
         fig.set_size_inches(
             plot_size[0] / float(dpi), plot_size[1] / float(dpi)
         )  # scale to pixel resolution, irrespective of screen resolution
+
+        if stratify not in NONE_VARIATIONS:
+            try:
+                kwargs["labels"] = branch.meta[stratify]
+            except KeyError:
+                logging.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
+                return
+        else:
+            kwargs["labels"] = [DEFAULT_ASSAY] * len(branch.meta)
 
         plot_func(branch, ax=ax, **kwargs)
         fig.savefig(plot_path)
@@ -67,8 +79,12 @@ def qc_plot_r(plot_func):
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
 
-        if stratify not in (None, "none", "None", "NULL", "NA"):
-            kwargs["group.by"] = stratify
+        if stratify not in NONE_VARIATIONS:
+            if stratify in branch.meta:  # column exists in metadata
+                kwargs["group.by"] = stratify
+            else:
+                logging.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
+                return
 
         args = [  # corresponding arguments in r/plot_entry_point.R
             branch.paths["root"],  # root_dir

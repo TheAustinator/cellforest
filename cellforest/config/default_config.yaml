@@ -36,7 +36,11 @@
       _UMIS_PER_CELL_HIST_: ~
       _UMIS_PER_BARCODE_RANK_CURV_: ~
     normalize:
-      _GENES_PER_CELL_HIST_: ~
+      _GENES_PER_CELL_HIST_:
+        plot_kwargs:
+          stratify: 
+            - sample
+            - default
       _UMIS_PER_CELL_HIST_:
         # plot_method and filename(s) can be inferred from key if not provided explicitly
         plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
@@ -56,6 +60,7 @@
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
           stratify: 
             - sample
+            - default
       _UMIS_VS_PERC_MITO_SCAT_: ~
       _PERC_RIBO_PER_CELL_VLN:
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`

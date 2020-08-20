@@ -240,9 +240,13 @@ class Counts(csr_matrix):
     def _get_agg_labels(self, labels, axis) -> [Union[pd.Series, list]]:
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
-        if labels == None:
+
+        if type(labels) == pd.Series:
+            labels = list(labels)
+        elif labels == None:
             labels = ["sample"] * matrix_agg_len
-        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+
+        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
                 f"labels list of length {len(labels)} cannot be broadcasted with matrix aggregation axis length {matrix_agg_len}"
             )
