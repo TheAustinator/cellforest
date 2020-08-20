@@ -1,5 +1,7 @@
 source('cellforest/plot/r/plot_entry_point.R')
 
-VlnPlot(seurat_obj, features = "percent.mito", group.by = kwargs$group.by) + NoLegend()
+# TODO-QC: can we add an explicit xlab here (for cluster)?
+VlnPlot(seurat_obj, features = "percent.mito", group.by = group.by) +
+    NoLegend()
 
 dev.off()

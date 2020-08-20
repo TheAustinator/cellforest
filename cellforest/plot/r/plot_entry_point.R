@@ -30,13 +30,8 @@ if (plot_width_px > 750 & plot_height_px > 750) {  # big plot
     png(filename = plot_filepath, width = plot_width_px, height = plot_height_px)
 }
 
-# TODO-QC: nicer way to batch-handle kwargs
-if (!is.null(kwargs$npcs)) {
-    kwargs$npcs <- as.integer(as.numeric(kwargs$npcs))
-}
-if (!is.null(kwargs$size)) {
-    kwargs$size <- as.numeric(kwargs$size)
-}
-if (!is.null(kwargs$alpha)) {
-    kwargs$alpha <- as.numeric(kwargs$alpha)
-}
+# Following keyword arguments are avalable for usage in plotting functions
+group.by <- if (is.null(kwargs$group.by)) {NULL} else {kwargs$group.by}  # stratify
+alpha <- ifelse(is.null(kwargs$alpha), 0.2, as.numeric(kwargs$alpha))  # point transparency
+size <- ifelse(is.null(kwargs$size), 0.2, as.numeric(kwargs$size))  # point size
+npcs <- ifelse(is.null(kwargs$npcs), 5, as.integer(as.numeric(kwargs$npcs)))  # number of principal components (usable for PCA and UMAP)

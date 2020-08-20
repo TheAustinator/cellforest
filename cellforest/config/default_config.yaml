@@ -24,17 +24,13 @@
   plot_kwargs_defaults:
     stratify:
       default: None
-    plot_size:  # resolution in px
+      cluster: cluster_id
+    plot_size:  # width x height in px
       default: [500, 500]
       large: [1000, 1000]
+      wide: [1000, 500]
     filename_ext: png
-    
-  # supported kwargs for plot_kwargs
-  #   stratify: color plots based on column in metadata along which to stratify the data
-  #   plot_size: pixel resolution of produced plots
-  #   alpha: transparency of produced points, lines, and fills - does not work on Seurat plots (yet)
-  #   size: point size in scatter plots
-  #   npcs: number of principal components to show PCA embeddings and loadings
+  
   plot_map:
     root:
       _UMIS_PER_CELL_HIST_: ~
@@ -61,7 +57,11 @@
           stratify: 
             - sample
       _UMIS_VS_PERC_MITO_SCAT_: ~
-      _PERC_RIBO_PER_CELL_VLN: ~
+      _PERC_RIBO_PER_CELL_VLN:
+        plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+          stratify: 
+            - sample
+            - default
       _UMIS_VS_PERC_RIBO_SCAT:
         plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
           stratify: sample
@@ -70,7 +70,7 @@
         plot_kwargs:  # will map 1-to-1 (not all possible combinations)
           stratify:
             - sample
-            - lane
+            - nFeature_RNA
           plot_size: large
     reduce:
       _PCA_ELBOW_CURV_: ~
@@ -84,11 +84,44 @@
             - nFeature_RNA
           plot_size: large
           npcs: 7
+          alpha: 0.4
       _UMAP_EMBEDDINGS_SCAT_:
         plot_kwargs:
           stratify:
             - sample
             - nFeature_RNA
+          plot_size: large
+    cluster:
+      _GENES_PER_CELL_HIST_: 
+        plot_kwargs:
+          stratify: cluster
+      _UMIS_PER_CELL_HIST_:
+        plot_kwargs:
+          stratify: cluster
+      _UMIS_VS_GENES_SCAT_:
+        plot_kwargs:
+          stratify: cluster
+      _PERC_MITO_PER_CELL_VLN_:
+        plot_kwargs:
+          stratify: cluster 
+          plot_size: wide
+      _UMIS_VS_PERC_MITO_SCAT_:
+        plot_kwargs:
+          stratify: cluster 
+      _PERC_RIBO_PER_CELL_VLN:
+        plot_kwargs:
+          stratify: cluster 
+          plot_size: wide
+      _UMIS_VS_PERC_RIBO_SCAT:
+        plot_kwargs:
+          stratify: cluster 
+      _PERC_HSP_PER_CELL_VLN:
+        plot_kwargs:
+          stratify: cluster 
+          plot_size: wide
+      _HIGHEST_EXPRS_DENS_:
+        plot_kwargs:
+          stratify: cluster
           plot_size: large
   
   
@@ -107,6 +140,8 @@
       - matrix
       - meta
     reduce:
+      - meta
+    cluster:
       - meta
   
   # HOOKS

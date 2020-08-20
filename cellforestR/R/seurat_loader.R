@@ -70,11 +70,13 @@ get_seurat_object <- function(cf_branch) {
   current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
   seurat_object <- readRDS(file = rds_path)
+
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
   spec <- cf_branch$spec
   rds_process <- basename(dirname(dirname(rds_path)))
   precursors <- spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
   processes_to_load <- precursors[-(1:match(rds_process, precursors))]
+
   # check if rds is located in the same folder as metadata (if not -> needs update)
   if (!is.null(processes_to_load)) {
     for (process_name in processes_to_load) {
@@ -84,6 +86,7 @@ get_seurat_object <- function(cf_branch) {
       if (length(cols) > 0) {
         seurat_object <- AddMetaData(seurat_object, meta[cols])
       }
+
       process <- cf_branch[process_name]$process
       if (process == "reduce") {
         seurat_object <- add_dim_reduc_embed(

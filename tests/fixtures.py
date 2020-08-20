@@ -81,12 +81,15 @@ def merge_root_2(data_dir):
 def sample_metadata_path(data_dir):
     return data_dir / "sample_metadata.tsv"
 
+
 @pytest.fixture
 def root_path_example(data_dir):
     return data_dir / "example_usage" / "root"
 
+
 @pytest.fixture
 def metadata_path(data_dir):
+    pass
 
 
 @pytest.fixture

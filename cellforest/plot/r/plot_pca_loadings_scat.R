@@ -2,8 +2,9 @@ source('cellforest/plot/r/plot_entry_point.R')
 
 library(ggforce)
 
+pca_npcs <- min(ncol(seurat_obj$pca), npcs)
 loadings <- data.frame(
-    seurat_obj$pca@feature.loadings[, c(1:ifelse(is.null(kwargs$npcs), 5, kwargs$npcs))]
+    seurat_obj$pca@feature.loadings[, c(1:pca_npcs)]
 )
 
 ggplot(loadings, aes(x = .panel_x, y = .panel_y)) + 
@@ -13,6 +14,7 @@ ggplot(loadings, aes(x = .panel_x, y = .panel_y)) +
     ) + 
     geom_autodensity() +
     geom_density2d() +
-    facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3, grid.y.diag = FALSE)
+    facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3, grid.y.diag = FALSE) +
+    theme(legend.position = "bottom")
 
 dev.off()
