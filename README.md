@@ -105,11 +105,11 @@ from cellforest import CellBranch
         - sample
         - default
       plot_size:
-      	- large
-      	- default
+        - large
+        - default
       ```
 
-      Note: it will not work if you try to match keyword arguments of different lengths (e.g., 2 and 3) because there will not be a 1-to-1 mapping of arguments
+      **Note**: it will not work if you try to match keyword arguments of different lengths (e.g., 2 and 3) because there will not be a 1-to-1 mapping of arguments
 
    5. If we want both of them default size, we can just omit `plot_size`, and default value from `plot_kwargs_defaults` will be used
 
@@ -175,7 +175,7 @@ from cellforest import CellBranch
            plot_size: default
    ```
 
-   1. Did you catch it? There are multiple things that happened here! First, plot method and part of the filename is, of course, inferred from the plot name (`_GENES_PER_CELL_HIST`)
+   1. Did you catch it? There are multiple things that happened here! First, plot method and part of the filename is, of course, inferred from the plot name (`_GENES_PER_CELL_HIST_`)
    2. Secondly, each filename has a unique suffix attached to it. There are two steps here:
       1. Keyword arguments are sorted alphabetically and stitched together with a `-`
       2. Values of these arguments are taken from `plot_kwargs_defaults` if available
@@ -184,9 +184,16 @@ from cellforest import CellBranch
 
 5. You can also add your own keyword arguments that the plotting function can use:
 
-   1. HAVEN”T FINISHED HERE
+   1. There are a few predefined keyword arguments:
+      - `stratify`: color the plot based on values in a metadata column
+      - `plot_size`: size of plots in pixels (currently DPI is fixed at 150)
+      - `filename_ext`: extension of the plot filename (e.g., `png`, `svg`, `pdf`)
+      - `alpha`: transparency of the main overlaying plot elements like histograms or scatterplots (must be in range 0-1)
+   2. If a plotting function is implemented with Pyplot, you can pass on any valid keyword argument that the underlying plotting functions support (e.g. `marker_size`, `linewidth`). You can find the plotting functions in `cellforest/plot/*_qc.py` files, depending on which process the plot is defined for
+   3. If a plotting function is implemented with ggplot2 (including Seurat plots), you can check the presense of `kwargs$*` in the R plotting functions located in `cellforest/plot/r/plot_*.R`. These will determine what arguments are customizable like `size` or `npcs` in `cellforest/plot/r/plot_pca_embeddings_scat.R`
+      **Suggestions** are welcome on how to make this more user-friendly!
 
-6. (Optional) You can think about how this works in that `plot_map` under the hoods is parsed into three pieces:
+6. (Optional) You can think about how this works in that `plot_map` under the hood is parsed into three pieces:
 
    1. `plot_methods` that shows the mapping of plots to plotting functions
 
@@ -249,11 +256,153 @@ from cellforest import CellBranch
       }
       ```
 
-   4. Notice the overlap of keyword arguments “keys” in `plot_map` and `plot_kwargs`
+   4. Notice the overlap of keyword arguments “keys” in `plot_map` and `plot_kwargs`. At each set of parameters, there is a 1-to-1 correspondence of what dictionary of keyword arguments to use and what the output would be
 
-### III. Adding new/customizing QC plots
+   5. On the level above, between `plot_methods` and `plot_kwargs`, there is a 1-to-1 correspondence of what plotting method is used for each plot and what keyword arguments that plot has
+
+### III. Adding new or modifying existing QC plots
 
 1. Let’s talk a bit about how the defined parameters in `plot_map` are fed into the plotting functions:
+
    1. `hook_generate_plots` in DataForest checks the files in `cellforest/plot` folder and collects the plotting functions
+
    2. Defined plot method per plot then triggers the call of the respective plotting function
-   3. Each function is decorated by either `qc_plot_py` or `qc_plot_r`. These decorators add the functionality of setting up the plot size as well as setting up the plotting functions for stratification. The rest of the keyword arguments
+
+   3. Each function is decorated by either `qc_plot_py` or `qc_plot_r`. These decorators add the functionality of setting up the plot size as well as setting up the plotting functions for stratification and strips those from the kwargs dictionary 
+
+   4. The rest of the keyword arguments are passed down to the plotting functions
+
+      1. For Pyplot functions, a simple `**kwargs` is passed on to the underlying function (`cellforest/plot/normalize_qc.py`)
+
+         ```python
+         @qc_plot_py
+         def plot_genes_per_cell_hist(branch: "CellBranch", **kwargs):
+             branch.rna.hist("nonzero", axis=0, **kwargs)
+         ```
+
+         
+
+      2. For ggplot2 plots, a list of arguments is created, and `kwargs` are parsed into a python executable string which is run by reticulate inside the plotting function to parse out the keyword arguments (`cellforest/plot/r/plot_entry_point.R`)
+
+         ```R
+         # ...
+         py_run_string(args[9])  # kwargs = {...}
+         kwargs <- py$kwargs
+         # ...
+         ```
+
+2. Adding Pyplot plotting functions:
+
+   1. Determine what processes will need this plotting function (by convention, you can add this function to all the relevant `cellforest/plot/<process>_qc.py`)
+
+   2. Utilize the available decorator `qc_plot_py` from `cellforest/plot/qc_plot_wrappers.py` to allow for parsing of parameters like `plot_size` or `stratify`
+      By the way, `stratify` in `qc_plot_py` is parsed into a list of labels for each data point that is then fed to the plotting functions
+
+   3. Your plotting function should be in the format of `plot_<name_of_plot>_<plot_type>`. Some plot type abbreviations are `hist`, `scat`, `bar`, `vln`, `dens`
+
+   4. Your resulting function should look something like this:
+
+      ```python
+      @qc_plot_py
+      def plot_umis_per_cell_hist(branch: "CellBranch", **kwargs):
+          pass  # plotting operations go here
+      ```
+
+   5. The plotting function shall use Pyplot’s Axes object (`ax` in this case) to plot on so that the wrapper can save it
+
+      1. You can see this functionality implemented in `qc_plot_py` where first the figure and axis is initialized
+
+         ```python
+         @wraps(plot_func)
+         def wrapper(branch: "CellBranch", **kwargs):
+             # ...
+             fig, ax = plt.subplots(1, 1)
+             # ...
+         ```
+
+      2. And then the Axes object on which to plot is passed down to the plotting function
+
+         ```python
+         plot_func(branch, ax=ax, **kwargs)
+         ```
+
+   6. To come full circle, here is an example of a plotting function from the inside of `cellforest/structures/counts/Counts.py` where everything is plotted onto `ax`
+
+      ```python
+      def scatter(
+              self,
+              agg_x: str = "sum",
+              agg_y: str = "var",
+              axis: Union[str, int] = 0,
+              labels: Optional[Union[pd.Series, list]] = None,
+              ax: Optional[Axes] = None,
+              legend_title: str = "label",
+              **kwargs,
+          ) -> plt.axes:
+        
+          # ...
+          ax = ax or plt.gca()  # use defined or get current axes
+          # ...
+          for label in set(labels):
+            	# ...
+              ax.scatter(rna_agg_x, rna_agg_y, label=label, **kwargs)
+          # ...
+          
+          return ax
+      ```
+
+3. Adding ggplot2 plotting functions:
+
+   1. Same as steps 1-3, except we would use `qc_plot_r` decorator
+
+   2. Your resulting function should look something like this:
+
+      ```python
+      @qc_plot_r
+      def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
+          run_process_r_script(branch, r_script, args, branch.current_process)
+      ```
+
+      1. `run_process_r_script` allows us to run an R script and pass the parameters to it
+      2. Since the `hook_generate_plots` interfaces only with Python functions, we need a Python function with the correct name to be a “placeholder”
+      3. All plots in R will follow this same pattern of uring `run_process_r_script`
+
+   3. To create the actual plotting, we create an R script in `cellforest/plot/r` in the same format as the name of the placeholder function in the Python files. For example, this is an R plotting script `cellforest/plot/r/plot_perc_mito_per_cell_vln.R`:
+
+      ```R
+      source('cellforest/plot/r/plot_entry_point.R')
+      
+      # your ggplot2 code goes here
+      VlnPlot(seurat_obj, features = "percent.mito", group.by = group.by) +
+          NoLegend()
+      
+      source('cellforest/plot/r/plot_exit_point.R')
+      ```
+
+      1.  Notice the sourcing of `plot_entry_point.R` before the ggplot2 code and `plot_exit_point.R` after it
+      2. `plot_entry_point.R` acts as a parser of the parameters passed from the command line via `run_process_r_script` like where to save the file, what are the keyword arguments, and initializes a Seurat object for the plot to use
+      3. `plot_exist_point.R` utilizes `ggsave()` and plot-related arguments (like plot resolution) parsed by `plot_entry_point.R` and saves the last ggplot2 plot generated from your script
+
+   4. If you need to pass additional parameters from the branch, outside of the parameters already passed by the `qc_plot_r` wrapper, you can do so directly in the Python placeholder function before `run_process_r_script` is called:
+
+      ```python
+      @qc_plot_r
+      def plot_something_hist(branch: "CellBranch", r_script: str, args: list, **kwargs):
+          args.append(branch.current_path)  # append any additional arguments you need
+          run_process_r_script(branch, r_script, args, branch.current_process)
+      ```
+
+      1. Since `args` is just a list that will be parsed into command line arguments, you can just append a new parameter that you want
+      2. Now, inside the R plotting script, you want to catch that argument by slicing args at the correct index (for example, by default there are `9` arguments, so the new index would be `10` or `-1`)
+
+      ```R
+      source('cellforest/plot/r/plot_entry_point.R')
+      
+      that_new_arg <- args[10]
+      
+      # ggplot 2 code here
+      
+      source('cellforest/plot/r/plot_exit_point.R')
+      ```
+
+      3. That’s it, you can now pass additional information from the branch if original parameters and Seurat object’s fields are insufficient
