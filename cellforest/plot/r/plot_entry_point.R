@@ -5,7 +5,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 r_plot_scripts_path <- args[1]
 root_dir <- args[2]
-path_to_temp_spec <- args[3]
+spec_str <- args[3]
 current_process <- args[4]
 plot_filepath <- args[5]
 plot_width_px <- as.integer(args[6])
@@ -21,8 +21,7 @@ py_run_string(args[9])  # kwargs = {...}
 kwargs <- py$kwargs
 
 source(r_functions_filepath)
-spec <- py_load_object(path_to_temp_spec)
-seurat_obj <- cellforest_load(root_dir, spec, current_process)
+seurat_obj <- cellforest_load(root_dir, spec_str, current_process)
 
 # Following keyword arguments are avalable for usage in plotting functions
 group.by <- if (is.null(kwargs$group.by)) {NULL} else {kwargs$group.by}  # stratify

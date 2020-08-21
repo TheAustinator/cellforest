@@ -22,24 +22,6 @@ DEFAULT_ASSAY = "rna"
 NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
 
 
-def _create_temp_spec(branch: "CellBranch"):
-    """
-    Create a temporary text file with spec as a string to pass to R
-    """
-    run_name = branch.current_process
-    plots_path = branch[run_name].plots_path
-    temp_spec_path = plots_path / "temp_spec"
-
-    with open(str(temp_spec_path), "wb") as f:
-        pickle.dump(branch.spec, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-    return temp_spec_path
-
-
-def _remove_temp_spec(temp_spec_path: str):
-    remove(temp_spec_path)
-
-
 def qc_plot_py(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
@@ -74,7 +56,6 @@ def qc_plot_r(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
         # TODO: move temp spec to a hook
-        temp_spec_path = _create_temp_spec(branch)
         r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
         plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
@@ -90,7 +71,7 @@ def qc_plot_r(plot_func):
         args = [  # corresponding arguments in r/plot_entry_point.R
             R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
             branch.paths["root"],  # root_dir
-            temp_spec_path,  # path_to_temp_spec
+            branch.spec.shell_str,  # spec_str
             branch.current_process,  # current_process
             plot_path,  # plot_file_path
             plot_size[0],  # plot_width_px
@@ -100,6 +81,5 @@ def qc_plot_r(plot_func):
         ]
 
         plot_func(branch, r_script, args)  # kwargs already included in args
-        _remove_temp_spec(temp_spec_path)
 
     return wrapper
