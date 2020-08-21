@@ -371,18 +371,19 @@ from cellforest import CellBranch
 
       ```R
       r_plot_scripts_path <- commandArgs(trailingOnly = TRUE)[1]
-source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
+      source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
       
-      # your ggplot2 code goes here
+      # your ggplot2 code
       VlnPlot(seurat_obj, features = "percent.mito", group.by = group.by) +
           NoLegend()
       
       source(paste0(r_plot_scripts_path, "/plot_exit_point.R"))
       ```
 
-      1.  Notice the sourcing of `plot_entry_point.R` before the ggplot2 code and `plot_exit_point.R` after it
-      2. `plot_entry_point.R` acts as a parser of the parameters passed from the command line via `run_process_r_script` like where to save the file, what are the keyword arguments, and initializes a Seurat object for the plot to use
-      3. `plot_exist_point.R` utilizes `ggsave()` and plot-related arguments (like plot resolution) parsed by `plot_entry_point.R` and saves the last ggplot2 plot generated from your script
+      1. To allow these plotting functions to source other R files, we need to pass the path to `cellforest/plot/r` in the first line
+      2. Notice the sourcing of `plot_entry_point.R` before the ggplot2 code and `plot_exit_point.R` after it
+      3. `plot_entry_point.R` acts as a parser of the parameters passed from the command line via `run_process_r_script` like where to save the file, what are the keyword arguments, and initializes a Seurat object for the plot to use
+      4. `plot_exist_point.R` utilizes `ggsave()` and plot-related arguments (like plot resolution) parsed by `plot_entry_point.R` and saves the last ggplot2 plot generated from your script
 
    4. If you need to pass additional parameters from the branch, outside of the parameters already passed by the `qc_plot_r` wrapper, you can do so directly in the Python placeholder function before `run_process_r_script` is called:
 
@@ -398,7 +399,7 @@ source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
 
       ```R
       r_plot_scripts_path <- commandArgs(trailingOnly = TRUE)[1]
-source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
+      source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
       
       that_new_arg <- args[10]
       
