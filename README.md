@@ -15,7 +15,8 @@
   <a href="#overview">Overview</a> •
   <a href="#features">Features</a> •
   <a href="#usage">Usage</a> •
-  <a href="#upcoming-features">Upcoming Features</a>
+  <a href="#upcoming-features">Upcoming Features</a> •
+  <a href="#qc-plotting">Automated quality control (QC) plotting </a>
 </p>
 
 
