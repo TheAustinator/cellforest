@@ -1,5 +1,5 @@
 args <- commandArgs(trailingOnly = TRUE)
-pickle_path <- args[1]
+pickle_path <- commandArgs(trailingOnly = TRUE)[1]
 meta_path <- args[2]
 output_rds_path <- args[3]
 python_executable <- args[4]

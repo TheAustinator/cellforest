@@ -370,13 +370,14 @@ from cellforest import CellBranch
    3. To create the actual plotting, we create an R script in `cellforest/plot/r` in the same format as the name of the placeholder function in the Python files. For example, this is an R plotting script `cellforest/plot/r/plot_perc_mito_per_cell_vln.R`:
 
       ```R
-      source('cellforest/plot/r/plot_entry_point.R')
+      r_plot_scripts_path <- commandArgs(trailingOnly = TRUE)[1]
+source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
       
       # your ggplot2 code goes here
       VlnPlot(seurat_obj, features = "percent.mito", group.by = group.by) +
           NoLegend()
       
-      source('cellforest/plot/r/plot_exit_point.R')
+      source(paste0(r_plot_scripts_path, "/plot_exit_point.R"))
       ```
 
       1.  Notice the sourcing of `plot_entry_point.R` before the ggplot2 code and `plot_exit_point.R` after it
@@ -396,13 +397,14 @@ from cellforest import CellBranch
       2. Now, inside the R plotting script, you want to catch that argument by slicing args at the correct index (for example, by default there are `9` arguments, so the new index would be `10` or `-1`)
 
       ```R
-      source('cellforest/plot/r/plot_entry_point.R')
+      r_plot_scripts_path <- commandArgs(trailingOnly = TRUE)[1]
+source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
       
       that_new_arg <- args[10]
       
       # ggplot 2 code here
       
-      source('cellforest/plot/r/plot_exit_point.R')
+      source(paste0(r_plot_scripts_path, "/plot_exit_point.R"))
       ```
 
       3. That’s it, you can now pass additional information from the branch if original parameters and Seurat object’s fields are insufficient

@@ -6,6 +6,7 @@ from tests.test_historical import *
 from tests.test_version_control import *
 from tests.test_datatree import *
 from tests.test_cellforestR import *
+from tests.test_qc_plots import *
 
 from path import Path  # pathlib doesn't have rmtree
 

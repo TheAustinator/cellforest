@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 input_rds_path <- args[2]
 output_embeddings_path <- args[3]
 output_loadings_path <- args[4]

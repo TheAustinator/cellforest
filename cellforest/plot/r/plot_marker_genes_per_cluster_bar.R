@@ -1,4 +1,5 @@
-source('cellforest/plot/r/plot_entry_point.R')
+r_plot_scripts_path <- commandArgs(trailingOnly = TRUE)[1]
+source(paste0(r_plot_scripts_path, "/plot_entry_point.R"))
 
 library(data.table)
 
@@ -22,4 +23,4 @@ ggplot(data = plot_data, aes(x = cluster, y = n, fill = cluster)) +
   NoLegend() +
   theme_minimal()
 
-source('cellforest/plot/r/plot_exit_point.R')
+source(paste0(r_plot_scripts_path, "/plot_exit_point.R"))

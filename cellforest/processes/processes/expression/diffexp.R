@@ -5,7 +5,7 @@ plan("multiprocess", workers = 6)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 output_diffexp_path <- args[2]
 root_dir <- args[3]
 spec_str <- args[4]

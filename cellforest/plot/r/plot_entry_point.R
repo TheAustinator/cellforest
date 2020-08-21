@@ -3,11 +3,11 @@
 
 args <- commandArgs(trailingOnly = TRUE)
 
-root_dir <- args[1]
-path_to_temp_spec <- args[2]
-current_process <- args[3]
-plot_filepath <- args[4]
-r_plot_scripts_path <- args[5]
+r_plot_scripts_path <- args[1]
+root_dir <- args[2]
+path_to_temp_spec <- args[3]
+current_process <- args[4]
+plot_filepath <- args[5]
 plot_width_px <- as.integer(args[6])
 plot_height_px <- as.integer(args[7])
 r_functions_filepath <- args[8]

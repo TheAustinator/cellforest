@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly <- TRUE)
 print(args)
-tenx_directory_path <- args[1]
+tenx_directory_path <- commandArgs(trailingOnly = TRUE)[1]
 output_rds_path <- args[2]
 seurat_metadata_path <- args[3]
 min_cells <- args[4]

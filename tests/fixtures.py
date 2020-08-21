@@ -1,3 +1,5 @@
+import os
+from shutil import rmtree
 from copy import deepcopy
 
 import pandas as pd
@@ -257,3 +259,17 @@ def test_diffexp(root_path, branch_spec_diffexp, test_cluster):
     branch = cf.load(root_path, branch_spec_diffexp)
     branch.process.diffexp()
     return branch
+
+
+@pytest.fixture
+def load_test_config():
+    cf.update_config(Path(__file__).parent / "config" / "test_config.yaml")
+    return
+
+
+@pytest.fixture
+def remove_plots(root_path):  # removes all plot folders in the test tree at root_1
+    for parent, dirnames, _ in os.walk(root_path):
+        for dirname in dirnames:
+            if dirname == "_plots":
+                rmtree(os.path.join(parent, dirname))

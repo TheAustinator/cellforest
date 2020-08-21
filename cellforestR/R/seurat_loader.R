@@ -73,6 +73,10 @@ get_seurat_object <- function(cf_branch) {
   DefaultAssay(seurat_object) <- "RNA"
 
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
+  if (current_process == "root") {
+    return(seurat_object)
+  }
+
   spec <- cf_branch$spec
   rds_process <- basename(dirname(dirname(rds_path)))
   precursors <- spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]

@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly = TRUE)
 
-input_rds_path <- args[1]
+input_rds_path <- commandArgs(trailingOnly = TRUE)[1]
 output_meta_path <- args[2]
 output_pickle_path <- args[3]
 counts_store_module <- args[4]

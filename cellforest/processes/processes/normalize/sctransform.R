@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 input_tenx_directory_path <- args[2]
 output_rds_path <- args[3]
 min_genes <- as.numeric(args[4])

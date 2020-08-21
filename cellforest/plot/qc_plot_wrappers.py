@@ -88,11 +88,11 @@ def qc_plot_r(plot_func):
                 return
 
         args = [  # corresponding arguments in r/plot_entry_point.R
+            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
             branch.paths["root"],  # root_dir
             temp_spec_path,  # path_to_temp_spec
             branch.current_process,  # current_process
             plot_path,  # plot_file_path
-            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
             plot_size[0],  # plot_width_px
             plot_size[1],  # plot_height_px
             R_FUNCTIONS_FILEPATH,  # r_functions_filepath

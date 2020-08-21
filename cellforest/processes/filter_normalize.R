@@ -5,7 +5,7 @@ options(future.globals.maxSize = 16000 * 1024^2)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-input_rds_path <- args[1]
+input_rds_path <- commandArgs(trailingOnly = TRUE)[1]
 rdata_output_dir <- args[2]
 
 min_detected_genes <- as.numeric(args[3])

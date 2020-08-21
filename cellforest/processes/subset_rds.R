@@ -3,7 +3,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 library(Seurat)
 
-input_rds_path <- args[1]
+input_rds_path <- commandArgs(trailingOnly = TRUE)[1]
 output_rds_path <- args[2]
 seurat_metadata_path <- args[3]
 
