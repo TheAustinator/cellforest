@@ -24,3 +24,8 @@ def plot_pca_embeddings_scat(branch: "CellBranch", r_script: str, args: list, **
 @qc_plot_r
 def plot_umap_embeddings_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_process_r_script(branch, r_script, args, branch.current_process)
+
+@qc_plot_r
+def plot_cell_cycle_scoring_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_process_r_script(branch, r_script, args, branch.current_process)
+

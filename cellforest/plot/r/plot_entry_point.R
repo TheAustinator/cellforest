@@ -24,12 +24,6 @@ source(r_functions_filepath)
 spec <- py_load_object(path_to_temp_spec)
 seurat_obj <- cellforest_load(root_dir, spec, current_process)
 
-if (plot_width_px > 750 & plot_height_px > 750) {  # big plot
-    png(filename = plot_filepath, width = plot_width_px, height = plot_height_px, res = 150)
-} else {  # default plot
-    png(filename = plot_filepath, width = plot_width_px, height = plot_height_px)
-}
-
 # Following keyword arguments are avalable for usage in plotting functions
 group.by <- if (is.null(kwargs$group.by)) {NULL} else {kwargs$group.by}  # stratify
 alpha <- ifelse(is.null(kwargs$alpha), 0.2, as.numeric(kwargs$alpha))  # point transparency

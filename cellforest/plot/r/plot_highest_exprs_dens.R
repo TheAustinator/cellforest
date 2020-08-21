@@ -5,4 +5,4 @@ library(scater)
 pbmc.sce <- as.SingleCellExperiment(seurat_obj)
 plotHighestExprs(pbmc.sce, exprs_values = "counts", colour_cells_by = group.by)
 
-dev.off()
+source('cellforest/plot/r/plot_exit_point.R')

@@ -57,6 +57,7 @@ def qc_plot_py(plot_func):
         if stratify not in NONE_VARIATIONS:
             try:
                 kwargs["labels"] = branch.meta[stratify]
+                kwargs["legend_title"] = stratify
             except KeyError:
                 logging.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
                 return
@@ -98,7 +99,7 @@ def qc_plot_r(plot_func):
             json.dumps("kwargs = " + str(kwargs if kwargs else {})),  # TODO-QC: is there a better way to handle this?
         ]
 
-        plot_func(branch, r_script, args, **kwargs)
+        plot_func(branch, r_script, args)  # kwargs already included in args
         _remove_temp_spec(temp_spec_path)
 
     return wrapper

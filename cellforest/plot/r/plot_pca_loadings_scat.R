@@ -17,4 +17,4 @@ ggplot(loadings, aes(x = .panel_x, y = .panel_y)) +
     facet_matrix(vars(everything()), layer.diag = 2, layer.upper = 3, grid.y.diag = FALSE) +
     theme(legend.position = "bottom")
 
-dev.off()
+source('cellforest/plot/r/plot_exit_point.R')

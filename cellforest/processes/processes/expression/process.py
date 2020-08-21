@@ -44,7 +44,7 @@ def diffexp(branch: "CellBranch", run_name: str):
     run_spec = branch.spec[run_name]
     params = run_spec.params
     process_run = branch[run_name]
-    output_diffexp_path = process_run.path_map["diffexp"]
+    output_diffexp_path = process_run.path_map["diffexp_result"]
     root_dir = str(branch.root)
     spec_str = branch.spec.shell_str
     groups = branch[run_name].branch.meta["partition_code"].unique().astype("O")

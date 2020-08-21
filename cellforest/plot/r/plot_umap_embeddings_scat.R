@@ -21,4 +21,4 @@ ggplot(embeddings, aes_string(x = ".panel_x", y = ".panel_y", fill = group.by, c
     ) +
     theme(legend.position = "bottom")
 
-dev.off()
+source('cellforest/plot/r/plot_exit_point.R')

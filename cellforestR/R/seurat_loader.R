@@ -66,11 +66,11 @@ cellforest_load <- function(root_dir, branch_spec, process) {
 #' cf_branch$goto_process("reduce")  # put process or alias (if exists)
 #' seurat_obj <- get_seurat_object(cf_branch)
 get_seurat_object <- function(cf_branch) {
-  current_process <- cf_branch$current_processget
+  current_process <- cf_branch$current_process
   current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
   seurat_object <- readRDS(file = rds_path)
-  DefaultAssay(seuratObject) <- "RNA"
+  DefaultAssay(seurat_object) <- "RNA"
 
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
   spec <- cf_branch$spec

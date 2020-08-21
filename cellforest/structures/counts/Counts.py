@@ -117,6 +117,7 @@ class Counts(csr_matrix):
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
+        legend_title: str = "label",
         **kwargs,
     ) -> Axes:
         """
@@ -164,7 +165,7 @@ class Counts(csr_matrix):
         x_label, y_label = self._get_axis_labels(agg, axis)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.legend()
+        ax.legend(title=legend_title)
 
         return ax
 
@@ -175,6 +176,7 @@ class Counts(csr_matrix):
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
         ax: Optional[Axes] = None,
+        legend_title: str = "label",
         **kwargs,
     ) -> plt.axes:
         """
@@ -224,7 +226,7 @@ class Counts(csr_matrix):
         y_label, _ = self._get_axis_labels(agg_y, axis)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.legend()
+        ax.legend(title=legend_title)
 
         return ax
 

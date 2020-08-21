@@ -4,4 +4,4 @@ source('cellforest/plot/r/plot_entry_point.R')
 VlnPlot(seurat_obj, features = "percent.hsp", group.by = group.by) +
     NoLegend()
 
-dev.off()
+source('cellforest/plot/r/plot_exit_point.R')
