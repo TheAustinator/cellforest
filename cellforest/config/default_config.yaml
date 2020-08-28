@@ -76,6 +76,7 @@ process_layers:
 setup_hooks:
   - hook_goto_process
   - hook_mkdirs
+  - hook_clear_logs
   - hook_mark_incomplete
   - hook_input_exists
   - hook_store_run_spec

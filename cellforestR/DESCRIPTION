@@ -21,7 +21,9 @@ Collate:
 Depends:
 	R (>= 3.4.0)
 Imports:
-	Seurat,
-	reticulate,
+	gitr2,
 	glue,
+	reticulate,
+	readr,
+	Seurat,
 	stringr
