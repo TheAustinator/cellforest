@@ -21,7 +21,7 @@ Collate:
 Depends:
 	R (>= 3.4.0)
 Imports:
-	gitr2,
+	git2r,
 	glue,
 	reticulate,
 	readr,
