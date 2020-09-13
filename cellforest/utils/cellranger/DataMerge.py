@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+
 from cellforest import Counts
 
 
@@ -10,16 +12,20 @@ class DataMerge:
         return method(paths, metadata, save_dir)
 
     @staticmethod
-    def _merge_rna(paths, metadata, save_dir):
+    def _merge_rna(paths, metadata, save_dir, id_col="sample_id"):
         """"""
         rna_list = [Counts.from_cellranger(dir_) for dir_ in paths]
+        rna = Counts.concatenate(rna_list)
         meta = None
         if metadata is not None:
             metadata_cols = [col for col in metadata.columns if not col.startswith("path_")]
             metadata = metadata[metadata_cols]
             cells_per_matrix = [counts.shape[0] for counts in rna_list]
             meta = metadata.loc[metadata.index.repeat(cells_per_matrix)].reset_index(drop=True)
-        rna = Counts.concatenate(rna_list)
+            if id_col in metadata:
+                rna.index = rna.index.str.slice(0, -1) + meta[id_col]
+        if rna.index.duplicated().any():
+            raise ValueError("cell identifiers must be unique. Consider using metadata with `entity_id` column")
         if meta is not None:
             meta.index = rna.cell_ids
         else:

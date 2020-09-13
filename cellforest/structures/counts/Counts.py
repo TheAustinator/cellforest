@@ -44,8 +44,8 @@ class Counts(csr_matrix):
     _SUPER_METHODS = const.SUPER_METHODS
     _SUPPORTED_AGG_FUNCS = {
         "built-in": ["sum", "mean", "min", "max"],
-        "derived": ["std", "var", "nonzero"],
-        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero"],
+        "derived": ["std", "var", "nonzero", "nonzero_frac"],
+        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero", "nonzero_frac"],
     }
     _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
@@ -76,6 +76,16 @@ class Counts(csr_matrix):
     @property
     def index(self):
         return self._idx
+
+    @index.setter
+    def index(self, val):
+        if not isinstance(val, pd.Series):
+            raise TypeError(f"Expected pd.Series, got {type(val)}")
+        if not len(val) == len(self.index):
+            raise ValueError(f"New index must be same length as existing: {len(val)} and {len(self.index)}")
+        if not hasattr(val.index, "stop") or val.index.stop != len(self):
+            raise ValueError("Must be series with a numerical index from 0 to len")
+        self._idx = val
 
     @property
     def columns(self):
@@ -116,6 +126,7 @@ class Counts(csr_matrix):
         agg: str = "sum",
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
+        group_labels: Optional[Union[str, pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         **kwargs,
     ) -> Axes:
@@ -125,6 +136,7 @@ class Counts(csr_matrix):
             agg: name of aggregation function for opposite axis (e.g., "std"); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create histogram, with `agg` applied to other axis
             labels: list or pd.Series of cell or gene category labels by which to stratify plot
+            group_labels: labels when labeling axis is opposite of aggregation axis, so matrix must be "groupby"ed
             ax: matplotlib pyplot or axes object which defines the plot
             kwargs: keyword arguments for plt.hist()
 
@@ -144,8 +156,17 @@ class Counts(csr_matrix):
             >>> rna.hist("sum", axis="genes", color="#7eaa53", bins=30)  # plot on currect (or newly created) axes object
             >>> plt.show()  # display current figure with axes
         """
-
+        if labels is not None and group_labels is not None:
+            raise ValueError("Specify either `labels` or `group_labels`, not both")
+        if group_labels is not None:
+            for label in sorted(list(set(group_labels))):
+                selector = group_labels == label
+                counts_group = self[:, selector] if axis == 0 else self[selector]
+                counts_group.hist(agg, axis, labels, None, ax, label=label, **kwargs)
+            return plt.gca()
         axis = self._get_numeric_axis(axis)
+        if "label" in kwargs:
+            labels = kwargs.pop("label")
         labels = self._get_agg_labels(labels, axis)
 
         cells_axis = axis == 0  # bool for aggregated axis' name
@@ -154,15 +175,19 @@ class Counts(csr_matrix):
         )  # convert to compressed sparse column/row for fast arithmetics
 
         ax = ax or plt.gca()  # use defined or get current axes
-        for label in set(labels):
+        for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg = self._agg_apply(matrix_slice, agg=agg, axis=axis)
             # TODO: kwargs customization for individual strata
             ax.hist(rna_agg, label=label, **kwargs)
 
-        x_label = "transcript count" if cells_axis else "cell count"
-        y_label = "# of cells" if cells_axis else "# of genes"
+        x_obj = "transcript" if cells_axis else "cell"
+        x_metric = "fraction" if kwargs.get("density", None) else "count"
+        x_label = f"{x_obj} {x_metric}"
+        y_obj = "cell" if cells_axis else "genes"
+        y_metric = "fraction" if "frac" in agg else "count"
+        y_label = f"{y_obj} {y_metric}"
         title = f'{x_label} {"per cell" if cells_axis else "per gene"}'
         ax.set_title(f"{agg} of {title}")
         ax.set_xlabel(x_label)
@@ -207,6 +232,8 @@ class Counts(csr_matrix):
         """
 
         axis = self._get_numeric_axis(axis)
+        if "label" in kwargs:
+            labels = kwargs.pop("label")
         labels = self._get_agg_labels(labels, axis)
 
         cells_axis = axis == 0  # bool for aggregated axis' name
@@ -244,11 +271,13 @@ class Counts(csr_matrix):
     def _get_agg_labels(self, labels, axis) -> [Union[pd.Series, list]]:
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
-        if labels == None:
-            labels = ["sample"] * matrix_agg_len
+        if labels is None:
+            labels = ["sample_id"] * matrix_agg_len
+        elif isinstance(labels, str):
+            labels = [labels] * matrix_agg_len
         elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
-                f"labels list of length {len(labels)} cannot be broadcasted with matrix aggregation axis length {matrix_agg_len}"
+                f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )
 
         return labels
@@ -266,8 +295,10 @@ class Counts(csr_matrix):
             agg_func = getattr(matrix, agg)
             rna_agg_out = agg_func(axis=agg_axis)
         elif agg in self._SUPPORTED_AGG_FUNCS["derived"]:
-            if agg == "nonzero":
+            if "nonzero" in agg:
                 rna_agg_out = (matrix > 0).sum(agg_axis)
+                if agg == "nonzero_frac":
+                    rna_agg_out = rna_agg_out / matrix.shape[agg_axis]
             else:
                 # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
                 rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
@@ -502,7 +533,7 @@ class Counts(csr_matrix):
         create_rds: bool = False,
     ):
         filepath = Path(filepath)
-        build_counts_store(matrix, cell_ids, features, save_path=filepath)
+        build_counts_store(matrix.tocoo(), cell_ids, features, save_path=filepath)
         if create_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
 

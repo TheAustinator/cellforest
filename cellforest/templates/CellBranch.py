@@ -12,7 +12,6 @@ from cellforest.structures.counts.Counts import Counts
 from cellforest.templates.CellBase import CellBase
 from cellforest.templates.ReaderMethodsSC import ReaderMethodsSC
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
-from cellforest.utils.cellranger.DataMerge import DataMerge
 
 
 class CellBranch(CellBase, DataBranch):
@@ -74,7 +73,7 @@ class CellBranch(CellBase, DataBranch):
     def rna(self) -> Counts:
         """
         Interface for normalized counts data. It uses the `Counts` wrapper
-        around `scipy.sparse.csr_matrix`, which allows for slicing with
+        around `scipy.sparse.coo_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
         if self._rna is None or not self._rna.index.equals(self.meta.index):
@@ -124,40 +123,28 @@ class CellBranch(CellBase, DataBranch):
 
     def groupby(self, by: Union[str, list, set, tuple], **kwargs) -> Tuple[str, "CellBranch"]:
         """
-        Operates like a pandas groupby, but does not return a GroupBy object,
+        Operates like a pandas group_labels, but does not return a GroupBy object,
         and yields (name, DataBranch), where each DataBranch is subset according to `by`,
         which corresponds to columns of `self.meta`.
         This is useful for batching analysis across various conditions, where
         each run requires an DataBranch.
         Args:
             by: variables over which to group (like pandas)
-            **kwargs: for pandas groupby on `self.meta`
+            **kwargs: for pandas group_labels on `self.meta`
 
         Yields:
             name: values for DataBranch `subset` according to keys specified in `by`
             branch: new DataBranch which inherits `self.spec` with additional `subset`s
                 from `by`
         """
-        raise NotImplementedError("currently not functioning")
         if isinstance(by, (tuple, set)):
             by = list(by)
         for (name, df) in self.meta.groupby(by, **kwargs):
-            if isinstance(by, list):
-                if isinstance(name, (list, tuple)):
-                    subset_dict = dict(zip(by, name))
-                else:
-                    subset_dict = {by[0]: name}
-            else:
-                subset_dict = {by: name}
-            forest = self.get_subset(subset_dict)
-            # branch._meta = df
-            yield name, forest
+            branch = self.copy()
+            branch._meta = df
+            yield name, branch
 
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
-        if kwargs.get("meta", None) is not None:
-            kwargs["unversioned"] = True
-        if not kwargs:
-            kwargs["meta"] = self._meta  # save compute if no modifications
         base_kwargs = self._get_copy_base_kwargs()
         kwargs = {**base_kwargs, **kwargs}
         kwargs = {k: deepcopy(v) for k, v in kwargs.items()}

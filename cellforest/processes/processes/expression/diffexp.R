@@ -21,7 +21,7 @@ library("cellforestR")
 
 
 print("loading metadata"); print(date())
-meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1)
+meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1, quote="")
 print("cellforestR loading seurat object"); print(date())
 srat <- cellforest_load(root_dir, spec_str, "cluster")
 print("metadata filter"); print(date())
