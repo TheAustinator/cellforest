@@ -4,12 +4,12 @@
 \alias{cellforest_load}
 \title{Interface for load RDS matrix and embeddings at process run}
 \usage{
-cellforest_load(root_dir, spec, process)
+cellforest_load(root_dir, branch_spec, process)
 }
 \arguments{
 \item{root_dir}{CellForest root directory}
 
-\item{spec}{Specification for CellBranch in Python or R (see \code{example_spec.R})}
+\item{branch_spec}{Specification for CellBranch in Python or R (see \code{example_spec.R})}
 
 \item{process}{Process name (alias, if exists) at which Seurat object should be loaded}
 }

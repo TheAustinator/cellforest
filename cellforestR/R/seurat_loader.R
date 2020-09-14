@@ -16,7 +16,7 @@ UMAP_EMBED_KEY = "umap"
 #' 2. `install("cellforestR")`
 #'
 #' @param root_dir CellForest root directory
-#' @param spec Specification for CellBranch in Python or R (see `example_spec.R`)
+#' @param branch_spec Specification for CellBranch in Python or R (see `example_spec.R`)
 #' @param process Process name (alias, if exists) at which Seurat object should be loaded
 #'
 #' @return Seurat object with cached dimensionality reduction embeddings
@@ -30,9 +30,9 @@ UMAP_EMBED_KEY = "umap"
 #' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")
 #'
 #' DimPlot(seurat_obj, reduction = "umap")
-cellforest_load <- function(root_dir, spec, process) {
+cellforest_load <- function(root_dir, branch_spec, process) {
   cellforest <- import("cellforest")
-  cf_branch <- cellforest$load(root_dir, branch_spec = spec)
+  cf_branch <- cellforest$load(root_dir, branch_spec = branch_spec)
   cf_branch$goto_process(process)
   seurat_obj <- get_seurat_object(cf_branch)
 
