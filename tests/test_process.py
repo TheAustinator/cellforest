@@ -1,19 +1,13 @@
 import pytest
 
+import cellforest as cf
 from cellforest import CellBranch, Counts
 from tests.fixtures import *
 import tests
-from tests.test_init import build_root_fix
+from tests.test_init import build_root
 from tests.test_data_ops import test_subset_fix
 
 # TODO: add output file checks
-
-
-@pytest.fixture
-def test_norm_fix(root_path, build_root_fix, norm_spec):
-    cf = CellBranch(root_dir=root_path, spec=norm_spec)
-    cf.process.normalize()
-    return cf
 
 
 # TO-DO: Uncomment when sctransform is implemented
@@ -23,42 +17,37 @@ def test_norm_fix(root_path, build_root_fix, norm_spec):
 #     return cf
 
 
-def test_norm_reduce(root_path, build_root_fix, norm_reduce_spec, test_norm_fix):
-    cf = CellBranch(root_dir=root_path, spec=norm_reduce_spec)
-    cf.process.reduce()
-    return cf
+def test_process_chain(root_path, build_root, process_chain_spec):
+    branch = CellBranch(root=root_path, branch_spec=process_chain_spec)
+    branch.process.normalize()
+    branch.process.test_process()
+    return branch
 
 
-def test_process_chain(root_path, build_root_fix, process_chain_spec):
-    cf = CellBranch(root_dir=root_path, spec=process_chain_spec)
-    cf.process.normalize()
-    cf.process.test_process()
-    return cf
-
-
-def test_logging(test_norm_fix):
+def test_logging(test_norm):
     # TODO: QUEUE
     pass
 
 
-def test_process_aliasing(root_path_2, sample_paths, alias_spec):
-    cf = CellBranch.from_input_dirs(root_path_2, sample_paths, spec=alias_spec, mode="rna")
-    cf.process.process_1()
-    cf.process.process_2()
-    return cf
+def test_process_aliasing_and_plotting(root_path_2, sample_paths, alias_spec):
+    branch = cf.from_input_dirs(root_path_2, sample_paths, branch_spec=alias_spec, mode="rna")
+    branch.process.process_1()
+    branch.process.process_2()
+    assert branch["process_2"].plot_map["plot_test"].exists()
+    return branch
 
 
-def test_normalize_cf_goto(test_subset_fix):
-    cf = test_subset_fix
-    rna = Counts.load(cf["normalize"].path_map["rna"])
-    cf.goto_process("root")
-    assert len(cf.meta) == 600
-    assert len(cf.rna) == 600
-    cf = cf.goto_process("normalize")
-    assert len(cf.meta) == 59
-    assert len(cf.rna) == 59
-    assert cf.rna.shape == rna.shape
-    assert len(cf.rna.features) == len(rna.features)
+def test_normalize_branch_goto(test_subset_fix):
+    branch = test_subset_fix
+    rna = Counts.load(branch["normalize"].path_map["rna"])
+    branch.goto_process("root")
+    assert len(branch.meta) == 600
+    assert len(branch.rna) == 600
+    branch = branch.goto_process("normalize")
+    assert len(branch.meta) == 59
+    assert len(branch.rna) == 59
+    assert branch.rna.shape == rna.shape
+    assert len(branch.rna.features) == len(rna.features)
 
 
 def test_reduce_on_existing_normalize():
@@ -73,4 +62,12 @@ def test_fresh_normalize_reduce():
     """
     Test that normalize and reduce work sequentially from scratch
     """
+    pass
+
+
+def test_marker_process(test_markers):
+    pass
+
+
+def test_diffexp_process(test_diffexp):
     pass

@@ -30,19 +30,15 @@ metadata_filter_objs <- function(meta, srat) {
 }
 
 
-find_clusters <- function(seurat_object, output_clusters_path, num_pcs, resolution, nn_eps) {
-  num_pcs = 1:num_pcs
-  print("Finding Neighbors")
-  print(date())
-  seurat_object <- FindNeighbors(object = seurat_object, dims = num_pcs, verbose = TRUE, nn.eps = nn_eps, assay = "pca", graph.name = "pca_snn")
-  print("Finding Clusters")
-  print(date())
-  seurat_object <- FindClusters(object = seurat_object, resolution = resolution, verbose = TRUE, n.start = 10, graph.name = "pca_snn")
-  print("Writing Clusters")
-  print(date())
-  write.table(Idents(seurat_object), sep = "\t", quote = FALSE, file = output_clusters_path, col.names = FALSE)
-
-  return(seurat_object)
+find_clusters <- function(srat, output_clusters_path, num_pcs, resolution, nn_eps) {
+  num_pcs <- 1:num_pcs
+  print("Finding Neighbors"); print(date())
+  srat <- FindNeighbors(object = srat, dims = num_pcs, verbose = TRUE, nn.eps = nn_eps, assay = "pca", graph.name = "pca_snn")
+  print("Finding Clusters"); print(date())
+  srat <- FindClusters(object = srat, resolution = resolution, verbose = TRUE, n.start = 10, graph.name = "pca_snn")
+  print("Writing Clusters"); print(date())
+  write.table(Idents(srat), sep = "\t", quote = FALSE, file = output_clusters_path, col.names = "cluster_id")
+  return(srat)
 }
 
 

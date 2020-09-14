@@ -71,22 +71,28 @@ get_seurat_object <- function(cf_branch) {
   rds_path <- toString(current_path_map$rna_r)
   seurat_object <- readRDS(file = rds_path)
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
-
-  meta_path <- toString(current_path_map$meta)
-  processes_to_load <- processes_between_paths(rds_path, meta_path)
-
+  spec <- cf_branch$spec
+  rds_process <- basename(dirname(dirname(rds_path)))
+  precursors <- spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
+  processes_to_load <- precursors[-(1:match(rds_process, precursors))]
   # check if rds is located in the same folder as metadata (if not -> needs update)
   if (!is.null(processes_to_load)) {
     for (process_name in processes_to_load) {
-      meta <- read.table(meta_path)
-      seurat_object <- AddMetaData(seurat_object, meta)
-
+      process_path_map <- cf_branch[process_name]$path_map
+      meta <- cf_branch$meta
+      cols <- setdiff(names(meta), names(seurat_object[[]]))
+      if (length(cols) > 0) {
+        seurat_object <- AddMetaData(seurat_object, meta[cols])
+      }
       process <- cf_branch[process_name]$process
       if (process == "reduce") {
         seurat_object <- add_dim_reduc_embed(
           seurat_object,
-          current_path_map,
+          process_path_map,
         )
+      }
+      if (process == "cluster") {
+        Idents(seurat_object) <- seurat_object[["cluster_id"]]
       }
       # TO-DO: Add loading for new processes
     }
