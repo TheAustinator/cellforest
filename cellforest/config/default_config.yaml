@@ -104,3 +104,8 @@ plot_sources:
   - cellforest.plot
 
 temp_meta_filename: temp_meta.tsv
+
+# Options:
+#   os (compatible with goofys stderr b/c fuse ioctl restrictions)
+#   subprocess (safer from injection if hosted)
+shell_mode: os
