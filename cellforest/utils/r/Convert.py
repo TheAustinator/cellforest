@@ -41,7 +41,7 @@ class Convert:
     @staticmethod
     def _run_r_script(script_path: str, working_dir: Union[str, Path], arg_list: list, process_name: str):
         command_string = f"Rscript {str(script_path)} {' '.join(map(str, arg_list))}"
-        process_shell_command(command_string=command_string, working_dir=working_dir, process_name=process_name)
+        process_shell_command(command_string=command_string, logs_dir=working_dir, logfile_prefix=process_name)
 
     @staticmethod
     def _get_std_paths(file_dir):

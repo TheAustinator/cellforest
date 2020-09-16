@@ -1,12 +1,14 @@
 from pathlib import Path
 
 from dataforest.hooks import dataprocess
+import multiprocessing
 
 from cellforest.processes import R_FUNCTIONS_FILEPATH
 from cellforest.utils.r.run_r_script import run_process_r_script
 
 R_MARKERS_SCRIPT = Path(__file__).parent / "markers.R"
 R_DIFFEXP_SCRIPT = Path(__file__).parent / "diffexp.R"
+N_CPUS = multiprocessing.cpu_count() - 1
 
 
 @dataprocess(requires="cluster")
@@ -32,6 +34,7 @@ def markers(branch: "CellBranch", run_name: str):
         spec_str,
         params["logfc_thresh"],
         params["test"],
+        N_CPUS,
         R_FUNCTIONS_FILEPATH,
     ]
     run_process_r_script(branch, R_MARKERS_SCRIPT, arg_list, run_name)
@@ -63,6 +66,7 @@ def diffexp(branch: "CellBranch", run_name: str):
         ident1,
         ident2,
         groupby,
+        N_CPUS,
         R_FUNCTIONS_FILEPATH,
     ]
     run_process_r_script(branch, R_DIFFEXP_SCRIPT, arg_list, run_name)
