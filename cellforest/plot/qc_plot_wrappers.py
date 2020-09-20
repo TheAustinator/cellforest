@@ -25,10 +25,11 @@ NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
 def qc_plot_py(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
-        matplotlib.use("Agg")  # don't plot on screen
         plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
+        if plot_path is not None:
+            matplotlib.use("Agg")  # don't plot on screen
 
         fig, ax = plt.subplots(1, 1)
         dpi = fig.get_dpi()
@@ -47,7 +48,9 @@ def qc_plot_py(plot_func):
             kwargs["labels"] = [DEFAULT_ASSAY] * len(branch.meta)
 
         plot_func(branch, ax=ax, **kwargs)
-        fig.savefig(plot_path)
+        if plot_path is not None:
+            fig.savefig(plot_path)
+        return fig, ax
 
     return wrapper
 
