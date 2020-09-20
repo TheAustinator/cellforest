@@ -18,7 +18,7 @@ print("REQUIREMENTS: ", requirements)
 
 setup(
     name="cellforest",
-    version="0.0.1",
+    version="0.0.2",
     author="Austin McKay",
     author_email="austinmckay303@gmail.com",
     description="An interactive single-cell bioinformatics workflow manager",
@@ -29,13 +29,12 @@ setup(
     # TODO: this works in "all", but not in `install_reqs` -- fix
     install_requires=requirements,
     extras_require={"all": requirements, "test": test_requirements, "dev": dev_requirements,},
-    # data_files=[("cellforest/config/", ["cellforest/config/default_config.yaml"])],
     package_data={"cellforest": ["config/default_config.yaml"]},
     include_package_data=True,
     manifest="MANIFEST.in",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: AGPL 3.0 License",
+        "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
         "Operating System :: OS Independent",
     ],
     python_requires=">=3.6",

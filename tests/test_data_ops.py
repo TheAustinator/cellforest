@@ -5,12 +5,12 @@ from tests.test_init import *
 @pytest.fixture
 def test_subset_fix(root_path_3, sample_metadata, branch_spec_norm):
     branch_spec = deepcopy(branch_spec_norm)
-    branch_spec[0]["_SUBSET_"] = {"sample": "sample_1"}
+    branch_spec[0]["_SUBSET_"] = {"sample_id": "sample_1"}
     branch = cf.from_sample_metadata(root_path_3, sample_metadata, branch_spec=branch_spec)
     branch.process.normalize()
     output_meta_path = branch["normalize"].path_map["meta"]
     output_meta = pd.read_csv(output_meta_path, sep="\t")
-    assert (output_meta["sample"] == "sample_1").all()
+    assert (output_meta["sample_id"] == "sample_1").all()
     assert len(branch.meta) == len(branch.rna)
     return branch
 

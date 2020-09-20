@@ -29,7 +29,7 @@ def _get_test_data_slice(n_cells, n_genes):
     os.makedirs(data_dir, exist_ok=True)
     subdirs = ["v3_gz/sample_1", "v3_gz/sample_2"]
     sample_metadata = pd.DataFrame(
-        {"sample": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
+        {"sample_id": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
     )
     sample_metadata.to_csv(data_dir / "sample_metadata.tsv", sep="\t", index=False)
 

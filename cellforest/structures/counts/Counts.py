@@ -1,9 +1,9 @@
 import pickle
-from collections import Counter
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable, Optional, Callable, List, get_type_hints
+from typing import Union, Iterable, Optional, Callable, List, get_type_hints, Tuple
 
+from anndata import AnnData
 from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
@@ -44,8 +44,8 @@ class Counts(csr_matrix):
     _SUPER_METHODS = const.SUPER_METHODS
     _SUPPORTED_AGG_FUNCS = {
         "built-in": ["sum", "mean", "min", "max"],
-        "derived": ["std", "var", "nonzero"],
-        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero"],
+        "derived": ["std", "var", "nonzero", "nonzero_frac"],
+        "all": ["sum", "mean", "min", "max", "std", "var", "nonzero", "nonzero_frac"],
     }
     _SUPPORTED_AGG_AXES = ["cells", "genes", 0, 1, "0", "1"]
 
@@ -76,6 +76,16 @@ class Counts(csr_matrix):
     @property
     def index(self):
         return self._idx
+
+    @index.setter
+    def index(self, val):
+        if not isinstance(val, pd.Series):
+            raise TypeError(f"Expected pd.Series, got {type(val)}")
+        if not len(val) == len(self.index):
+            raise ValueError(f"New index must be same length as existing: {len(val)} and {len(self.index)}")
+        if not hasattr(val.index, "stop") or val.index.stop != len(self):
+            raise ValueError("Must be series with a numerical index from 0 to len")
+        self._idx = val
 
     @property
     def columns(self):
@@ -116,6 +126,7 @@ class Counts(csr_matrix):
         agg: str = "sum",
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
+        group_labels: Optional[Union[str, pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         legend_title: str = "label",
         **kwargs,
@@ -126,6 +137,7 @@ class Counts(csr_matrix):
             agg: name of aggregation function for opposite axis (e.g., "std"); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create histogram, with `agg` applied to other axis
             labels: list or pd.Series of cell or gene category labels by which to stratify plot
+            group_labels: labels when labeling axis is opposite of aggregation axis, so matrix must be "groupby"ed
             ax: matplotlib pyplot or axes object which defines the plot
             kwargs: keyword arguments for plt.hist()
 
@@ -145,8 +157,17 @@ class Counts(csr_matrix):
             >>> rna.hist("sum", axis="genes", color="#7eaa53", bins=30)  # plot on currect (or newly created) axes object
             >>> plt.show()  # display current figure with axes
         """
-
+        if labels is not None and group_labels is not None:
+            raise ValueError("Specify either `labels` or `group_labels`, not both")
+        if group_labels is not None:
+            for label in sorted(list(set(group_labels))):
+                selector = group_labels == label
+                counts_group = self[:, selector] if axis == 0 else self[selector]
+                counts_group.hist(agg, axis, labels, None, ax, label=label, **kwargs)
+            return plt.gca()
         axis = self._get_numeric_axis(axis)
+        if "label" in kwargs:
+            labels = kwargs.pop("label")
         labels = self._get_agg_labels(labels, axis)
 
         cells_axis = axis == 0  # bool for aggregated axis' name
@@ -155,7 +176,7 @@ class Counts(csr_matrix):
         )  # convert to compressed sparse column/row for fast arithmetics
 
         ax = ax or plt.gca()  # use defined or get current axes
-        for label in set(labels):
+        for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg = self._agg_apply(matrix_slice, agg=agg, axis=axis)
@@ -206,6 +227,8 @@ class Counts(csr_matrix):
         """
 
         axis = self._get_numeric_axis(axis)
+        if "label" in kwargs:
+            labels = kwargs.pop("label")
         labels = self._get_agg_labels(labels, axis)
 
         cells_axis = axis == 0  # bool for aggregated axis' name
@@ -242,15 +265,13 @@ class Counts(csr_matrix):
     def _get_agg_labels(self, labels, axis) -> [Union[pd.Series, list]]:
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
-
-        if type(labels) == pd.Series:
-            labels = list(labels)
-        elif labels == None:
-            labels = ["sample"] * matrix_agg_len
-
-        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+        if labels is None:
+            labels = ["sample_id"] * matrix_agg_len
+        elif isinstance(labels, str):
+            labels = [labels] * matrix_agg_len
+        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
-                f"labels list of length {len(labels)} cannot be broadcasted with matrix aggregation axis length {matrix_agg_len}"
+                f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )
 
         return labels
@@ -268,8 +289,10 @@ class Counts(csr_matrix):
             agg_func = getattr(matrix, agg)
             rna_agg_out = agg_func(axis=agg_axis)
         elif agg in self._SUPPORTED_AGG_FUNCS["derived"]:
-            if agg == "nonzero":
+            if "nonzero" in agg:
                 rna_agg_out = (matrix > 0).sum(agg_axis)
+                if agg == "nonzero_frac":
+                    rna_agg_out = rna_agg_out / matrix.shape[agg_axis]
             else:
                 # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
                 rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
@@ -282,14 +305,15 @@ class Counts(csr_matrix):
         return rna_agg
 
     @staticmethod
-    def _get_axis_labels(agg, axis) -> str:
+    def _get_axis_labels(agg: str, axis: int) -> Tuple[str, str]:
         """Human language names of axis labels"""
         if axis == 0:  # aggregate by cells
             mapping = {
                 "sum": "total UMI in a cell",
                 "mean": "mean UMI per gene",
                 "std": "std of UMI per gene",
-                "nonzero": "gene count",
+                "nonzero": "genes expressed",
+                "nonzero_frac": "fraction genes expressed",
                 "var": "var of UMI per gene",
                 "min": "min UMI per gene",
                 "max": "max UMI per gene",
@@ -301,6 +325,7 @@ class Counts(csr_matrix):
                 "mean": "mean UMI per cell",  # mean UMI of this gene in all cells
                 "std": "std of UMI per cell",  # standard deviation of UMI of this gene in all cells
                 "nonzero": "cells expressing",
+                "nonzero_frac": "fraction cell expressing",
                 "var": "var of UMI per cell",  # variance of UMI of this gene in all cells
                 "min": "min UMI per cell",  # minimum UMI of this gene across all cells
                 "max": "max UMI per cell",  # maximum UMI of this gene across all cells
@@ -308,6 +333,8 @@ class Counts(csr_matrix):
             }
         else:
             raise ValueError(f"axis cannot be {axis}, must be 0 or 1.")
+        # TODO: account for this:
+        # x_metric = "fraction" if kwargs.get("density", None) else "count"
         agg_name = mapping[agg]
         other_axis = mapping["other_axis"]
 
@@ -384,12 +411,19 @@ class Counts(csr_matrix):
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath: Union[str, Path], create_rds: bool = False):
+    def save(
+        self,
+        filepath: Union[str, Path],
+        save_pickle: bool = True,
+        save_rds: bool = False,
+        save_h5ad: bool = False,
+        save_loom: bool = False,
+    ):
         """
         Save as pickle.
         Intermediate data store object used to maintain future compatibility
         """
-        self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
+        self._save(filepath, self._matrix, self.cell_ids, self.features, save_pickle, save_rds, save_h5ad, save_loom)
 
     def copy(self) -> "Counts":
         return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
@@ -517,12 +551,26 @@ class Counts(csr_matrix):
         matrix: csr_matrix,
         cell_ids: pd.DataFrame,
         features: pd.DataFrame,
-        create_rds: bool = False,
+        save_pickle: bool = False,
+        save_rds: bool = False,
+        save_h5ad: bool = False,
+        save_loom: bool = False,
+        meta: Optional[pd.DataFrame] = None,
     ):
         filepath = Path(filepath)
-        build_counts_store(matrix, cell_ids, features, save_path=filepath)
-        if create_rds:
+        if save_pickle:
+            build_counts_store(matrix.tocoo(), cell_ids, features, save_path=filepath)
+        if save_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
+        if save_h5ad or save_loom:
+            cell_ids = meta if meta is not None else pd.DataFrame(cell_ids).set_index(0)
+            cell_ids.index.name = "index"
+            features = features.rename(columns={"ensgs": "gene_ids", "genes": "index"}).set_index("index")
+            adata = AnnData(matrix.tocsr(), cell_ids, features)
+            if save_h5ad:
+                adata.write_h5ad(filepath.parent / "rna.h5ad")
+            if save_loom:
+                adata.write_loom(filepath.parent / "rna.loom")
 
     @staticmethod
     def _convert_to_series(df: pd.DataFrame) -> pd.DataFrame:

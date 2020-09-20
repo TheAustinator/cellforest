@@ -18,3 +18,13 @@ Collate:
     'example_spec.R'
     'helper_functions.R'
     'seurat_loader.R'
+Depends:
+	R (>= 3.4.0)
+Imports:
+	git2r,
+	glue,
+	reticulate,
+	readr,
+	scater,
+	Seurat,
+	stringr

@@ -1,1 +1,1 @@
-include cellforest/config/default_config.yaml
+include cellforest/*.yaml

@@ -1,0 +1,11 @@
+NS ?= cellforest
+VERSION ?= latest
+
+IMAGE_NAME ?= core
+CONTAINER_NAME ?= cf
+CONTAINER_INSTANCE ?= default
+
+PORTS ?=
+VOLUMES ?=
+BUILD_ARGS ?=
+RUN_ARGS ?=

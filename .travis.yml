@@ -1,15 +1,15 @@
-dist: xenial
+dist: focal
 language: python
 python:
-- '3.6'
+  - '3.6'
 install:
-- pip3 install -r requirements-test.txt
+  - pip3 install -r requirements.txt
+  - sudo apt install -y r-base
+  - R -e 'install.packages("devtools")'; R -e 'library("devtools"); devtools::install("cellforestR", dependencies = TRUE)'
 script:
-- pytest
+  - pytest
 deploy:
   provider: pypi
   user: theaustinator
-  on:
-    tags: true
   password:
-    secure:
+    secure: P5b36T+ulGokWYCGqt/JRN9l4p3HwTlQBazpWxhqz3bHQ8GhmIAYRn5xPno0R4hA0dyO0hKtdp8Vkd+RqTmdvv0HJSHvLp4HC5A9JSugChnA5CRnfbBQ8VWMxNrGGJDADaaRFyT7GCzE317c4LOpcLsCqRUnAIytNqm7VvLCL00nQmeQu2b0sYsjXHbHbQQVcWEdMlMptr+hUqGiDXRjG8/1luMvP7ZUe0IBcVcHKp2hwIjTzwqPCyNF0J92l7DEmTHVyfmPYp5ioqdQDvJ5DjN6bBNELD/uEbmq3A8zagm47m46aGc0uBiT7qpKLW4w+fYlVkph2Uvj3qRvnAzWCcRLtItkJyIj7V2ovKSs7btheUmJHM93JnQc6hRqYfdggKLBDgosvLLOab4xBzJW5K7JwD4Wa9NCs3pidJWcF3WSTm6xpTFj19uEd8m9xQ/KPn3UfOAwSTImi+7Ya/LpYMV1xMwuKyQMWqanlOfpi5CFSzBrrBC44lL/ZhXjgEfocxSvCeqm+aK2gObDq2Eymze/OVvvOrBgnilU5D3EMai5ustkj8RjnjSEFJKAJYeXwGE4Yx73Ger0AZDqvLWbn8Pf7rHfcqpSJJx7jIJUeOwhWP6vme1vpqvW8V/VuwJP6ZobkyQ7xmnl5ceNGTYPOtfzhcpw5S7WAukSzpYQKmQ=
