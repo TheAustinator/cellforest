@@ -25,6 +25,5 @@ Imports:
 	glue,
 	reticulate,
 	readr,
-	scater,
 	Seurat,
 	stringr

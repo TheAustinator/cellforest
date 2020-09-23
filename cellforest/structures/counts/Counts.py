@@ -8,7 +8,8 @@ from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.axes._subplots import Axes
+
+# from matplotlib.axes._subplots import Axes
 from scipy.sparse import csr_matrix, hstack, vstack
 from scipy.sparse.base import spmatrix
 
@@ -196,6 +197,7 @@ class Counts(csr_matrix):
         agg_y: str = "var",
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
+        group_labels: Optional[Union[str, pd.Series, list]] = None,
         ax: Optional[Axes] = None,
         legend_title: str = "label",
         **kwargs,
@@ -203,11 +205,18 @@ class Counts(csr_matrix):
         """
         Plots scatterplot along specified axes, optionally, stratified by label
         Args:
-            agg_x: aggregation function for x-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
-            agg_y: aggregation function for y-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
-            axis: axis along which to create scatterplot, with `agg` applied to other axis
-            labels: list or pd.Series of cell or gene category labels by which to stratify plot
+            agg_x: aggregation function for x-axis (e.g. sum, min, mean, var,
+                etc.); all options: `self._SUPPORTED_AGG_FUNCS`
+            agg_y: aggregation function for x-axis (same options)
+            axis: axis along which to create scatterplot, with `agg` applied to
+                other axis
+            labels: list or pd.Series of cell or gene category labels by which
+                to stratify plot
+            group_labels: labels when aggregation and stratification occur
+                along the same axis. Stratification occurs first, then
+                aggregation within each label
             ax: pyplot subplot or axes object which defines the plot
+            legend_title: title in legend box
             kwargs: keyword arguments for plt.scatter()
 
         Returns:
@@ -225,7 +234,14 @@ class Counts(csr_matrix):
             >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
             >>> plt.show()
         """
-
+        if labels is not None and group_labels is not None:
+            raise ValueError("Specify either `labels` or `group_labels`, not both")
+        if group_labels is not None:
+            for label in sorted(list(set(group_labels))):
+                selector = group_labels == label
+                counts_group = self[:, selector] if axis == 0 else self[selector]
+                counts_group.scatter(agg_x, agg_y, axis, None, None, ax, label=label, **kwargs)
+            return plt.gca()
         axis = self._get_numeric_axis(axis)
         if "label" in kwargs:
             labels = kwargs.pop("label")
@@ -237,7 +253,7 @@ class Counts(csr_matrix):
         )  # convert to compressed sparse column/row for fast arithmetics
 
         ax = ax or plt.gca()  # use defined or get current axes
-        for label in set(labels):
+        for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg_x = self._agg_apply(matrix_slice, agg=agg_x, axis=axis)

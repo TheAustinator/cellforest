@@ -195,7 +195,7 @@ def branch_spec_diffexp(branch_spec_cluster):
     spec_run_markers = {
         "_PROCESS_": "diffexp",
         "_PARAMS_": {"logfc_thresh": 0.0001, "test": "wilcox"},
-        "_PARTITION_": ["sample"],
+        "_PARTITION_": ["sample_id"],
     }
     spec.append(spec_run_markers)
     return spec

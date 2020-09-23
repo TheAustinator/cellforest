@@ -19,13 +19,6 @@ DEFAULT_QC_PLOTS_ROOT = [  # default QC plots
 ]
 
 
-def plot_test(branch: CellBranch, **kwargs):
-    run_name = branch.current_process
-    plot_path = branch[run_name].plot_map["plot_test"]
-    plt.plot([0, 1, 2, 3, 4], [0, 3, 5, 9, 11], **kwargs)
-    plt.savefig(plot_path)
-
-
 @qc_plot_r
 def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, branch.current_process)

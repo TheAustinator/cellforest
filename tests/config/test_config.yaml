@@ -1,128 +1,127 @@
 ---
-    # FILE STRUCTURE
-    #
-    file_map:
-      normalize:
-        corrected_umi: corrected_umi.mtx    # from sctransform
-        pearson_residual: pearson_residuals.tsv    # from sctransform
-        qc_metrics: qc_metrics.tsv
-      reduce:
-        pca_embeddings: pca_embeddings.tsv
-        pca_loadings: pca_loadings.tsv
-        pca_stdev: pca_stdev.tsv
-        umap_embeddings: umap_embeddings.tsv
-      cluster:
-        clusters: clusters.tsv
-      diffexp_bulk:
-        diffexp_bulk_result: diffexp.tsv
-      diffexp:
-        diffexp_result: diffexp.tsv
-      markers:
-        markers: markers.tsv
-        
-    plot_kwargs_defaults:
-      stratify:
-        default: None
-        cluster: cluster_id
-      plot_size:  # width x height in px
-        default: [800, 800]
-        large: [1600, 1600]
-        wide: [1600, 800]
-      filename_ext: png
-    
-    plot_map:
-      root:
-        _UMIS_PER_CELL_HIST_: ~
-      normalize:
-        _GENES_PER_CELL_HIST_:
-          plot_method: plot_genes_per_cell_hist
-          filename:
-            - genes_per_cell_hist-plot_size:800+800-stratify:sample
-            - genes_per_cell_hist-plot_size:1600+800-stratify:none
-            - genes_per_cell_hist-non_existent  # this file should not be created
-          plot_kwargs:
-            stratify:
-              - sample
-              - default
-              - nonexistent_column
-            plot_size:
-              - default
-              - wide
-              - large
-      reduce:
-        _PCA_EMBEDDINGS_SCAT_:
-          plot_kwargs:
-            stratify:
-              - sample
-              - nFeature_RNA
-            plot_size: large
-            npcs: 7
-            alpha: 0.4
-      cluster:
-        _PERC_HSP_PER_CELL_VLN:
-          plot_kwargs:
-            stratify: cluster 
-            plot_size: wide
-    
-    layers:
-      matrix:
-        rna: rna.pickle
-        rna_r: rna.rds
-        rna_ann: rna.anndata
-      meta:
-        meta: meta.tsv
-    process_layers:
-      root:
-        - matrix
-        - meta
-      normalize:
-        - matrix
-        - meta
-      reduce:
-        - meta
-      cluster:
-        - meta
-    
-    # HOOKS
-    #   Hook will be collected recursively from directories or processes specified
-    #   in `hook_sources`. Hook containing files must be named `hooks.py`, and hook
-    #   functions names must begin with `hook_`.
-    #   (not tested on Windows)
-    #
-    #   hook_sources:
-    #     Paths to search recursively for hooks. Can be specified in module or
-    #     absolute path syntax.
-    #   setup_hooks: Hooks to run prior to process run. (ordered)
-    #   clean_hooks: Hooks to run after process run. (ordered)
-    setup_hooks:
-      - hook_goto_process
-      - hook_mkdirs
-      - hook_mark_incomplete
-      - hook_input_exists
-      - hook_store_run_spec
-      - hook_catalogue
-      - hook_comparative
-      - hook_store_temp_meta
-    clean_hooks:
-      - hook_unify_matrix_node
-      - hook_generate_plots
-      - hook_clear_metadata_cache
-      - hook_clean_temp_meta
-      - hook_clean_unversioned
-      - hook_garbage_collection
-      - hook_mark_complete
-    dataprocess_default_attrs:
-      temp_meta: true
-      matrix_layer: false
-      plots: true
-    
-    process_sources:
-      - cellforest.processes
-    hook_sources:
-      - dataforest.hooks
-      - cellforest.hooks
-    plot_sources:
-      - cellforest.plot
-    
-    temp_meta_filename: temp_meta.tsv
-  
+# FILE STRUCTURE
+#
+file_map:
+  normalize:
+    corrected_umi: corrected_umi.mtx    # from sctransform
+    pearson_residual: pearson_residuals.tsv    # from sctransform
+    qc_metrics: qc_metrics.tsv
+  reduce:
+    pca_embeddings: pca_embeddings.tsv
+    pca_loadings: pca_loadings.tsv
+    pca_stdev: pca_stdev.tsv
+    umap_embeddings: umap_embeddings.tsv
+  cluster:
+    clusters: clusters.tsv
+  diffexp_bulk:
+    diffexp_bulk_result: diffexp.tsv
+  diffexp:
+    diffexp_result: diffexp.tsv
+  markers:
+    markers: markers.tsv
+
+plot_kwargs_defaults:
+  stratify:
+    default: None
+    cluster: cluster_id
+  plot_size:  # width x height in px
+    default: [800, 800]
+    large: [1600, 1600]
+    wide: [1600, 800]
+  filename_ext: png
+
+plot_map:
+  root:
+    _UMIS_PER_CELL_HIST_: ~
+  normalize:
+    _GENES_PER_CELL_HIST_:
+      plot_method: plot_genes_per_cell_hist
+      filename:
+        - genes_per_cell_hist-plot_size:800+800-stratify:sample
+        - genes_per_cell_hist-plot_size:1600+800-stratify:none
+        - genes_per_cell_hist-non_existent  # this file should not be created
+      plot_kwargs:
+        stratify:
+          - sample
+          - default
+          - nonexistent_column
+        plot_size:
+          - default
+          - wide
+          - large
+  reduce:
+    _PCA_EMBEDDINGS_SCAT_:
+      plot_kwargs:
+        stratify:
+          - sample
+          - nFeature_RNA
+        plot_size: large
+        npcs: 7
+        alpha: 0.4
+  cluster:
+    _PERC_HSP_PER_CELL_VLN:
+      plot_kwargs:
+        stratify: cluster
+        plot_size: wide
+
+layers:
+  matrix:
+    rna: rna.pickle
+    rna_r: rna.rds
+    rna_ann: rna.anndata
+  meta:
+    meta: meta.tsv
+process_layers:
+  root:
+    - matrix
+    - meta
+  normalize:
+    - matrix
+    - meta
+  reduce:
+    - meta
+  cluster:
+    - meta
+
+# HOOKS
+#   Hook will be collected recursively from directories or processes specified
+#   in `hook_sources`. Hook containing files must be named `hooks.py`, and hook
+#   functions names must begin with `hook_`.
+#   (not tested on Windows)
+#
+#   hook_sources:
+#     Paths to search recursively for hooks. Can be specified in module or
+#     absolute path syntax.
+#   setup_hooks: Hooks to run prior to process run. (ordered)
+#   clean_hooks: Hooks to run after process run. (ordered)
+setup_hooks:
+  - hook_goto_process
+  - hook_mkdirs
+  - hook_mark_incomplete
+  - hook_input_exists
+  - hook_store_run_spec
+  - hook_catalogue
+  - hook_comparative
+  - hook_store_temp_meta
+clean_hooks:
+  - hook_unify_matrix_node
+  - hook_generate_plots
+  - hook_clear_metadata_cache
+  - hook_clean_temp_meta
+  - hook_clean_unversioned
+  - hook_garbage_collection
+  - hook_mark_complete
+dataprocess_default_attrs:
+  temp_meta: true
+  matrix_layer: false
+  plots: true
+
+process_sources:
+  - cellforest.processes
+hook_sources:
+  - dataforest.hooks
+  - cellforest.hooks
+plot_sources:
+  - cellforest.plot
+
+temp_meta_filename: temp_meta.tsv

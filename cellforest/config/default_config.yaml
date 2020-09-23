@@ -61,6 +61,7 @@ plot_map:
         stratify:
           - sample
           - default
+    _PERC_MITO_PER_CELL_HIST_: ~
     _UMIS_VS_PERC_MITO_SCAT_: ~
     _PERC_RIBO_PER_CELL_VLN:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`

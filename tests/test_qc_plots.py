@@ -84,9 +84,9 @@ def test_additional_kwargs(load_test_config, remove_plots, test_reduce):
     plot_name = "_PCA_EMBEDDINGS_SCAT_"
 
     assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}' in plot_map[plot_name]
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "sample"}' in plot_map[plot_name]
+    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "sample_id"}' in plot_map[plot_name]
     assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}' in plot_lookup[plot_name]
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "sample"}' in plot_lookup[plot_name]
+    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "sample_id"}' in plot_lookup[plot_name]
 
     assert (
         "pca_embeddings_scat-alpha:0.4-npcs:7-plot_size:1600+1600-stratify:nfeature_rna.png"
