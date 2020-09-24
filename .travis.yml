@@ -8,7 +8,8 @@ install:
   - sudo apt install -y apt-transport-https software-properties-common
   - sudo apt update
   - sudo apt install -y r-base
-  - R -e 'install.packages("devtools")'; R -e 'library("devtools"); devtools::install("cellforestR", dependencies = TRUE)'
+  - R -e 'install.packages("devtools")'
+  - R -e 'library("devtools"); devtools::install("cellforestR", dependencies = TRUE)'
 script:
   - pytest
 deploy:
