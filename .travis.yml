@@ -4,8 +4,13 @@ python:
   - '3.6'
 install:
   - pip3 install -r requirements.txt
+  - sudo apt update
+  - sudo apt install -y apt-transport-https software-properties-common
+  - sudo apt update
   - sudo apt install -y r-base
-  - R -e 'install.packages("devtools")'; R -e 'library("devtools"); devtools::install("cellforestR", dependencies = TRUE)'
+  - sudo chmod -777 /usr/local/lib/R/site-library
+  - R -e 'install.packages("devtools")'
+  - R -e 'library("devtools"); devtools::install("cellforestR", dependencies = TRUE)'
 script:
   - pytest
 deploy:
