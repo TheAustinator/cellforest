@@ -11,14 +11,16 @@ import pandas as pd
 
 from cellforest import CellBranch
 
-DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
-DEFAULT_BIG_PLOT_RESOLUTION_PX = (1000, 1000)  # width, height in pixels
-PLOT_FILE_EXT = ".png"
+_DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
+_DEFAULT_BIG_PLOT_RESOLUTION_PX = (1000, 1000)  # width, height in pixels
+_PLOT_FILE_EXT = ".png"
 
-R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
-R_FUNCTIONS_FILEPATH = Path(__file__).parent.parent / "processes/scripts/functions.R"
+_R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
+_R_FUNCTIONS_FILEPATH = Path(__file__).parent.parent / "processes/scripts/functions.R"
 
-NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
+_NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
+
+_LOG = logging.getLogger("qc_plot_wrappers")
 
 
 def qc_plot_py(plot_func):
@@ -30,7 +32,7 @@ def qc_plot_py(plot_func):
 
         if plot_path is not None:
             matplotlib.use("Agg")  # don't plot on screen
-        if stratify not in NONE_VARIATIONS:
+        if stratify not in _NONE_VARIATIONS:
             try:
                 labels = branch.meta[stratify]
                 if isinstance(labels, pd.DataFrame):
@@ -42,17 +44,18 @@ def qc_plot_py(plot_func):
                 kwargs["labels"] = labels
                 kwargs["legend_title"] = stratify
             except KeyError:
-                logging.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
+                _LOG.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
                 return
         try:
             # "labels" key only works for `Counts` methods
             plot_func(branch, ax=ax, **kwargs)
         except AttributeError as e:
-            if stratify in NONE_VARIATIONS:
+            if stratify in _NONE_VARIATIONS:
                 raise e
             ax.clear()
             _stratified_plot(plot_func, stratify, branch, ax, **kwargs)
         if plot_path is not None:
+            _LOG.info(f"saving py figure to {plot_path}")
             fig.savefig(plot_path)
         return fig, ax
 
@@ -63,30 +66,30 @@ def qc_plot_r(plot_func):
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
         # TODO: move temp spec to a hook
-        r_script = R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
-        plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
+        r_script = _R_PLOT_SCRIPTS_PATH / (plot_func.__name__ + ".R")
+        plot_size = kwargs.pop("plot_size", _DEFAULT_PLOT_RESOLUTION_PX)
         stratify = kwargs.pop("stratify", None)
         plot_path = kwargs.pop("plot_path", None)
 
-        if stratify not in NONE_VARIATIONS:
+        if stratify not in _NONE_VARIATIONS:
             if stratify in branch.meta:  # column exists in metadata
                 kwargs["group.by"] = stratify
             else:
-                logging.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
+                _LOG.warning(f"{plot_func.__name__} with key '{stratify}' is skipped because key is not in metadata")
                 return
 
         args = [  # corresponding arguments in r/plot_entry_point.R
-            R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
+            _R_PLOT_SCRIPTS_PATH,  # r_plot_scripts_path
             branch.paths["root"],  # root_dir
             branch.spec.shell_str,  # spec_str
             branch.current_process,  # current_process
             plot_path,  # plot_file_path
             plot_size[0],  # plot_width_px
             plot_size[1],  # plot_height_px
-            R_FUNCTIONS_FILEPATH,  # r_functions_filepath
+            _R_FUNCTIONS_FILEPATH,  # r_functions_filepath
             json.dumps("kwargs = " + str(kwargs if kwargs else {})),  # TODO-QC: is there a better way to handle this?
         ]
-
+        _LOG.info(f"saved R figure to {plot_path}")
         plot_func(branch, r_script, args)  # kwargs already included in args
         return Image("/tmp/plot.png")
 
@@ -118,7 +121,7 @@ def _prep_plot(kwargs):
     ylim = kwargs.pop("ylim", None)
     xscale = kwargs.pop("xscale", None)
     yscale = kwargs.pop("yscale", None)
-    plot_size = kwargs.pop("plot_size", DEFAULT_PLOT_RESOLUTION_PX)
+    plot_size = kwargs.pop("plot_size", _DEFAULT_PLOT_RESOLUTION_PX)
     figsize = kwargs.pop("figsize", None)
     if "ax" in kwargs:
         ax = kwargs.pop("ax")
