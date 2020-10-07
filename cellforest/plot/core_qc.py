@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_r_script_logged
 from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r
@@ -24,7 +26,7 @@ def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list,
 
 
 @qc_plot_r
-def plot_umis_vs_perc_mito_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
+def plot_umis_vs_perc_mito_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_mito_scat")
 
 
@@ -34,7 +36,7 @@ def plot_perc_ribo_per_cell_vln(branch: "CellBranch", r_script: str, args: list,
 
 
 @qc_plot_r
-def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
+def plot_umis_vs_perc_ribo_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_ribo_scat")
 
 

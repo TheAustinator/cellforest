@@ -1,4 +1,6 @@
+anndata
 dataforest
+IPython
 matplotlib
 numba
 numpy

@@ -21,10 +21,10 @@ Collate:
 Depends:
 	R (>= 3.4.0)
 Imports:
+	ggforce,
 	git2r,
 	glue,
 	reticulate,
 	readr,
-	scater,
 	Seurat,
 	stringr

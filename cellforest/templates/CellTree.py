@@ -5,4 +5,4 @@ from cellforest.templates.CellBase import CellBase
 
 
 class CellTree(CellBase, DataTree):
-    BRANCH_CLASS = CellBranch
+    _BRANCH_CLASS = CellBranch

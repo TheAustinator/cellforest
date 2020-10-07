@@ -15,7 +15,7 @@ example_spec_r <- type.convert(list(
       "method" = "seurat_default"
     ),
     "_SUBSET_" = list(
-      "sample" = "sample_1"
+      "sample_id" = "sample_1"
     )
   ),
 
@@ -43,7 +43,7 @@ py_run_string('example_spec_py = [
           "perc_mito_cutoff": 20,
           "method": "seurat_default",
       },
-      "_SUBSET_": {"sample": "sample_1"},
+      "_SUBSET_": {"sample_id": "sample_1"},
   },
   {
       "_PROCESS_": "reduce",

@@ -1,4 +1,4 @@
-<p align="center"><img width=80% src="https://raw.githubusercontent.com/theaustinator/cellforest/master/static/cellforest.jpg" alt="cellforest"></p>
+ce<p align="center"><img width=80% src="https://raw.githubusercontent.com/theaustinator/cellforest/master/static/cellforest.jpg" alt="cellforest"></p>
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 ![Python](https://img.shields.io/badge/python-v3.6+-blue.svg)
@@ -28,8 +28,13 @@
 
 ## Usage
 **Install**
-```
+```python
 pip install cellforest
+```
+**Install Accompanying R Package**
+```bash
+git clone https://github.com/TheAustinator/cellforest.git
+R -e "install.packages('cellforest/cellforestR', repos=NULL, type='source')"
 ```
 **Import**
 ```python
@@ -226,7 +231,7 @@ from cellforest import CellBranch
           "normalize": {
               "_GENES_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': "genes_per_cell_hist-plot_size:800+800-stratify:none.png",
-                  '{"plot_size": "default", "stratify": "sample"}': "genes_per_cell_hist-plot_size:800+800-stratify:sample.png"
+                  '{"plot_size": "default", "stratify": "sample_id"}': "genes_per_cell_hist-plot_size:800+800-stratify:sample.png"
               },
               "_UMIS_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "lane"}': "umis_per_cell_hist-plot_size:500+500-stratify:none",
@@ -249,7 +254,7 @@ from cellforest import CellBranch
           "normalize": {
               "_GENES_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': {"stratify": "none", "plot_size": [800, 800]}
-                  '{"plot_size": "default", "stratify": "sample"}': {"stratify": "sample", "plot_size": [800, 800]}
+                  '{"plot_size": "default", "stratify": "sample_id"}': {"stratify": "sample_id", "plot_size": [800, 800]}
               },
               "_UMIS_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': {"stratify": "none", "plot_size": [800, 800]}

@@ -39,7 +39,7 @@ plot_map:
     _GENES_PER_CELL_HIST_:
       plot_kwargs:
         stratify:
-          - sample
+          - sample_id
           - default
     _UMIS_PER_CELL_HIST_:
       # plot_method and filename(s) can be inferred from key if not provided explicitly
@@ -50,26 +50,26 @@ plot_map:
         - umis_per_cell_hist-plot_size:500+500-stratify:cell
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample
+          - sample_id
           - lane
           - default
         plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
-    _FAKE_TEST_PLOT_: ~
     _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
     _PERC_MITO_PER_CELL_VLN_:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample
+          - sample_id
           - default
+    _PERC_MITO_PER_CELL_HIST_: ~
     _UMIS_VS_PERC_MITO_SCAT_: ~
     _PERC_RIBO_PER_CELL_VLN:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample
+          - sample_id
           - default
     _UMIS_VS_PERC_RIBO_SCAT:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
-        stratify: sample
+        stratify: sample_id
     _PERC_HSP_PER_CELL_VLN: ~
 #    _HIGHEST_EXPRS_DENS_:
 #      plot_kwargs:  # will map 1-to-1 (not all possible combinations)
@@ -85,7 +85,7 @@ plot_map:
     _PCA_EMBEDDINGS_SCAT_:
       plot_kwargs:
         stratify:
-          - sample
+          - sample_id
           - nFeature_RNA
         plot_size: large
         npcs: 7
@@ -93,7 +93,7 @@ plot_map:
     _UMAP_EMBEDDINGS_SCAT_:
       plot_kwargs:
         stratify:
-          - sample
+          - sample_id
           - nFeature_RNA
         plot_size: large
     _CELL_CYCLE_SCORING_SCAT_: ~
