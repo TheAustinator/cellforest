@@ -1,7 +1,6 @@
 library(future)
 library(dplyr)
 library(Seurat)
-plan("multiprocess", workers = 6)
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -15,13 +14,15 @@ ident1 <- args[7]
 ident2 <- args[8]
 groupby <- args[9]
 
-r_functions_filepath <- args[10]
+n_cpus <- as.numeric(args[10])
+plan("multiprocess", workers = n_cpus)
+r_functions_filepath <- args[11]
 source(r_functions_filepath)
 library("cellforestR")
 
 
 print("loading metadata"); print(date())
-meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1)
+meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1, quote="")
 print("cellforestR loading seurat object"); print(date())
 srat <- cellforest_load(root_dir, spec_str, "cluster")
 print("metadata filter"); print(date())

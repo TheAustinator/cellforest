@@ -3,7 +3,7 @@ from pathlib import Path
 from dataforest.hooks import dataprocess
 
 from cellforest.processes import R_FUNCTIONS_FILEPATH
-from cellforest.utils.r.run_r_script import run_process_r_script
+from cellforest.utils.r.run_r_script import run_r_script_logged
 
 R_CLUSTER_SCRIPT = Path(__file__).parent / "cluster.R"
 
@@ -29,4 +29,4 @@ def cluster(branch: "CellBranch", run_name: str):
         params["eps"],
         R_FUNCTIONS_FILEPATH,
     ]
-    run_process_r_script(branch, R_CLUSTER_SCRIPT, arg_list, run_name)
+    run_r_script_logged(branch, R_CLUSTER_SCRIPT, arg_list, run_name)

@@ -15,7 +15,7 @@ def test_spec_change(data_dir, sample_metadata, root_path_4):
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-            "_SUBSET_": {"sample": "sample_1"},
+            "_SUBSET_": {"sample_id": "sample_1"},
         }
     ]
     branch = cf.from_sample_metadata(root, sample_metadata, branch_spec=spec)
@@ -32,7 +32,7 @@ def test_spec_change(data_dir, sample_metadata, root_path_4):
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-            "_SUBSET_": {"sample": "sample_1"},
+            "_SUBSET_": {"sample_id": "sample_1"},
         }
     ]
     branch = cf.load(root, branch_spec=spec)

@@ -1,5 +1,7 @@
+import matplotlib.pyplot as plt
+
 from cellforest import CellBranch
-from cellforest.utils.r.run_r_script import run_process_r_script
+from cellforest.utils.r.run_r_script import run_r_script_logged
 from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r
 
 
@@ -20,30 +22,29 @@ def plot_umis_vs_genes_scat(branch: "CellBranch", **kwargs):
 
 @qc_plot_r
 def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+    run_r_script_logged(branch, r_script, args, "plot_perc_mito_per_cell_vln")
 
 
 @qc_plot_r
-def plot_umis_vs_perc_mito_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+def plot_umis_vs_perc_mito_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_mito_scat")
 
 
 @qc_plot_r
 def plot_perc_ribo_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+    run_r_script_logged(branch, r_script, args, "plot_perc_ribo_per_cell_vln")
 
 
 @qc_plot_r
-def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+def plot_umis_vs_perc_ribo_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_ribo_scat")
 
 
 @qc_plot_r
 def plot_perc_hsp_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+    run_r_script_logged(branch, r_script, args, "plot_perc_hsp_per_cell_vln")
 
 
 @qc_plot_r
 def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
-
+    run_r_script_logged(branch, r_script, args, "plot_highest_exprs_dens")

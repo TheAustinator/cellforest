@@ -1,49 +1,53 @@
+import matplotlib.pyplot as plt
+
 from cellforest import CellBranch
-from cellforest.utils.r.run_r_script import run_process_r_script
-from cellforest.plot.qc_plot_wrappers import qc_plot_py, qc_plot_r
+from cellforest.plot.qc_plot_wrappers import qc_plot_py, requires
 
 
+@requires("normalize")
 @qc_plot_py
-def plot_genes_per_cell_hist(branch: "CellBranch", **kwargs):
-    branch.rna.hist("nonzero", axis=0, **kwargs)
+def plot_perc_mito_per_cell_hist(branch: "CellBranch", **kwargs):
+    _hist_col(branch, "percent.mito", **kwargs)
 
 
+@requires("normalize")
 @qc_plot_py
-def plot_umis_per_cell_hist(branch: "CellBranch", **kwargs):
-    branch.rna.hist("sum", axis=0, **kwargs)
+def plot_perc_ribo_per_cell_hist(branch: "CellBranch", **kwargs):
+    _hist_col(branch, "percent.ribo", **kwargs)
 
 
+@requires("normalize")
 @qc_plot_py
-def plot_umis_vs_genes_scat(branch: "CellBranch", **kwargs):
-    branch.rna.scatter(agg_x="nonzero", agg_y="sum", axis=0, **kwargs)
+def plot_perc_hsp_per_cell_hist(branch: "CellBranch", **kwargs):
+    _hist_col(branch, "percent.hsp", **kwargs)
 
 
-@qc_plot_r
-def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+@requires("normalize")
+@qc_plot_py
+def plot_umis_vs_perc_mito_scat(branch: "CellBranch", **kwargs):
+    _scatter_umi_vs_col(branch, "percent.mito", **kwargs)
 
 
-@qc_plot_r
-def plot_umis_vs_perc_mito_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+@requires("normalize")
+@qc_plot_py
+def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", **kwargs):
+    _scatter_umi_vs_col(branch, "percent.ribo", **kwargs)
 
 
-@qc_plot_r
-def plot_perc_ribo_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+@requires("normalize")
+@qc_plot_py
+def plot_umis_vs_perc_mito_scat(branch: "CellBranch", **kwargs):
+    _scatter_umi_vs_col(branch, "percent.hsp", **kwargs)
 
 
-@qc_plot_r
-def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
+def _hist_col(branch: "CellBranch", col, **kwargs):
+    ax = kwargs.pop("ax", plt.gca())
+    ax.hist(branch.meta[col], **kwargs)
+    ax.set_xlabel(col)
 
 
-@qc_plot_r
-def plot_perc_hsp_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
-
-
-@qc_plot_r
-def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_process_r_script(branch, r_script, args, branch.current_process)
-
+def _scatter_umi_vs_col(branch: "CellBranch", col, **kwargs):
+    ax = kwargs.pop("ax", plt.gca())
+    ax.scatter(branch.meta[col], branch.meta[(y_col := "nCount_RNA")], **kwargs)
+    ax.set_xlabel(col)
+    ax.set_ylabel(y_col)

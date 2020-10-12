@@ -1,10 +1,11 @@
 import sys
 
 from pathlib import Path
+from typing import Union
 
 from cellforest.structures.counts import build_counts_store
 from cellforest.utils import r
-from cellforest.utils.shell.shell_command import shell_command
+from cellforest.utils.shell.shell_command import process_shell_command
 
 _PYTHON_EXECUTABLE = sys.executable
 _R_UTILS_DIR = Path(r.__file__).parent
@@ -18,7 +19,8 @@ class Convert:
     @staticmethod
     def pickle_to_rds(pickle_path, meta_path, output_rds_path):
         arg_list = [pickle_path, meta_path, output_rds_path, _PYTHON_EXECUTABLE]
-        Convert._run_r_script(_PICKLE_TO_RDS_SCRIPT, arg_list)
+        log_dir = Path(pickle_path).parent / "_logs"
+        Convert._run_r_script(_PICKLE_TO_RDS_SCRIPT, log_dir, arg_list, "pickle_to_rds")
 
     @staticmethod
     def pickle_to_rds_dir(file_dir):
@@ -28,7 +30,8 @@ class Convert:
     @staticmethod
     def rds_to_pickle(rds_path, output_meta_path, output_pickle_path):
         arg_list = [rds_path, output_meta_path, output_pickle_path, _COUNTS_STORE_MODULE, _PYTHON_EXECUTABLE]
-        Convert._run_r_script(_RDS_TO_PICKLE_SCRIPT, arg_list)
+        log_dir = Path(rds_path).parent / "_logs"
+        Convert._run_r_script(_RDS_TO_PICKLE_SCRIPT, log_dir, arg_list, "rds_to_pickle")
 
     @staticmethod
     def rds_to_pickle_dir(file_dir):
@@ -36,9 +39,9 @@ class Convert:
         Convert.rds_to_pickle(rds_path, output_meta_path, output_pickle_path)
 
     @staticmethod
-    def _run_r_script(script_path: str, arg_list: list):
+    def _run_r_script(script_path: str, working_dir: Union[str, Path], arg_list: list, process_name: str):
         command_string = f"Rscript {str(script_path)} {' '.join(map(str, arg_list))}"
-        shell_command(command_string=command_string)
+        process_shell_command(command_string=command_string, logs_dir=working_dir, logfile_prefix=process_name)
 
     @staticmethod
     def _get_std_paths(file_dir):

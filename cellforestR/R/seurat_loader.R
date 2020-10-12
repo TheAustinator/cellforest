@@ -79,7 +79,7 @@ get_seurat_object <- function(cf_branch) {
 
   spec <- cf_branch$spec
   rds_process <- basename(dirname(dirname(rds_path)))
-  precursors <- spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
+  precursors <- spec$get_precursors_lookup(incl_root = TRUE, incl_current = TRUE)[[current_process]]
   processes_to_load <- precursors[-(1:match(rds_process, precursors))]
 
   # check if rds is located in the same folder as metadata (if not -> needs update)
