@@ -105,7 +105,7 @@ plot_map:
   <tbody>
     <tr>
       <td><img src="docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:100%;" /></td>
-      <td><code lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></code></td>
+      <td><pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre></td>
       <td><i>1.0</i></td>
       <td><i>1.0</i></td>
       <td><i>0.008</i></td>
