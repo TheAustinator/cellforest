@@ -53,14 +53,14 @@
        _GENES_PER_CELL_HIST_:
          plot_kwargs:
            stratify: 
-             - sample
+             - sample_id
              - default
            plot_size: large
    ```
 
    1. `plot_kwargs_defaults` defines the named values for each keyword argument option (e.g., `plot_size["default"] == [800, 800]`); for each keyword argument, there must a `default` option because this will be used for filename inference (we will talk about it in a bit)
 
-   2. Keyword arguments in individual plots will try to seek for the value in `plot_kwargs_defaults` and if found, will use that value to pass on to the plotting function. If not, the noted value is passed on. For example, in the above case, `default` will map to `None` whereas `sample` will just pass on as `sample`
+   2. Keyword arguments in individual plots will try to seek for the value in `plot_kwargs_defaults` and if found, will use that value to pass on to the plotting function. If not, the noted value is passed on. For example, in the above case, `default` will map to `None` whereas `sample_id` will just pass on as `sample_id`
 
    3. **Important rule**: “same length or length 1.” In the above case, `stratify` has 2 defined options (is a list of 2 elements) so CellForest will infer that for each of those stratification options, the plot size will be large (`[1600, 1600]`).
 
@@ -68,7 +68,7 @@
 
       ```yaml
       stratify: 
-        - sample
+        - sample_id
         - default
       plot_size:
         - large
@@ -90,7 +90,7 @@
            - gene_per_cell_hist-b
          plot_kwargs:
            stratify: 
-             - sample
+             - sample_id
              - default
            plot_size: large
    ```
@@ -115,7 +115,7 @@
        _GENES_PER_CELL_HIST_:
          plot_kwargs:
            stratify: 
-             - sample
+             - sample_id
              - default
        _UMIS_PER_CELL_HIST_: ~
            
@@ -124,11 +124,11 @@
        _GENES_PER_CELL_HIST_:
        	plot_method: plot_genes_per_cell_hist
        	filename:
-       		- genes_per_cell_hist-plot_size:800+800-stratify:sample
+       		- genes_per_cell_hist-plot_size:800+800-stratify:sample_id
        		- genes_per_cell_hist-plot_size:800+800-stratify:none
          plot_kwargs:
            stratify: 
-             - sample
+             - sample_id
              - default
            plot_size:
            	- default
@@ -191,7 +191,7 @@
           "normalize": {
               "_GENES_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': "genes_per_cell_hist-plot_size:800+800-stratify:none.png",
-                  '{"plot_size": "default", "stratify": "sample"}': "genes_per_cell_hist-plot_size:800+800-stratify:sample.png"
+                  '{"plot_size": "default", "stratify": "sample_id"}': "genes_per_cell_hist-plot_size:800+800-stratify:sample_id.png"
               },
               "_UMIS_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "lane"}': "umis_per_cell_hist-plot_size:500+500-stratify:none",
@@ -214,7 +214,7 @@
           "normalize": {
               "_GENES_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': {"stratify": "none", "plot_size": [800, 800]}
-                  '{"plot_size": "default", "stratify": "sample"}': {"stratify": "sample", "plot_size": [800, 800]}
+                  '{"plot_size": "default", "stratify": "sample_id"}': {"stratify": "sample_id", "plot_size": [800, 800]}
               },
               "_UMIS_PER_CELL_HIST_": {
                   '{"plot_size": "default", "stratify": "default"}': {"stratify": "none", "plot_size": [800, 800]}
@@ -231,19 +231,19 @@
 | Plot example                                                 | Plot definition and method                                   | Description                                                  | Use case                                                     | Available and suggested `plot_kwargs`                        |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
 | <img src="../docs/_plots/umis_per_barcode_rank_curv.png" alt="umis_per_barcode_rank_curv" style="zoom:50%;" /> | Plot config name: `_UMIS_PER_BARCODE_RANK_CURV_`<br /><br />Method (use at or after `root`): `plot_umis_per_barcode_rank_curv()` | Ranking of barcodes based on UMI count to define inflection points. | Filter out damaged cells (large rank number) or multiplets (very low rank number). | <pre lang="yaml">plot_size: [800, 800]<br/></pre>            |
-| <img src="../docs/_plots/umis_per_cell_hist.png" alt="umis_per_cell_hist" style="zoom:50%;" /> | Plot config name: `_UMIS_PER_CELL_CELL_HIST_`<br /><br />Method (use at or after `root`): `plot_umis_per_cell_hist()` | Distribution of UMI counts per cell (barcode).               | Filter out damaged cells (local peak at low UMI) or multiplets (local peak at high UMI). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:50%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (use at or after `normalize`): `plot_genes_per_cell_hist()` | Distribution of unique gene counts per cell.                 | Filter out low-quality cells where low gene count is indicative of damaged cells. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:50%;" /> | Plot config name: `_UMIS_VS_GENES_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_genes_scat()` | Scatter plot showing relationship between UMI and gene counts per cell. | Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre>All keyword arguments for [pyplot.scatter()](https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html) |
-| <img src="../docs/_plots/perc_mito_per_cell_vln.png" alt="perc_mito_per_cell_vln" style="zoom:50%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_PERC_MITO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_mito_per_cell_vln()` | Violin plot showing distribution of mitochondrial genes percentages per cell. | Filter out damaged cells (very high mito %). Can be used at `cluster` to filter out false clusters with high mito %. If not filtered sufficiently, these cells can form a distinct cluster. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:50%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_mito_scat()` | Scatter plot showing relationship between UMI and mitochondial percentage per cell. | Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:50%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_ribo_per_cell_vln()` | Violin plot showing distribution of ribosomal genes percentages per cell. | Ensure cell population is surviving and is representative.   | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:50%;" /> | Plot config name: `_UMIS_VS_PERC_RIBO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_ribo_scat()` | Scatter plot showing relationship between UMI and ribosomal percentage per cell. | Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/perc_hsp_per_cell_vln.png" alt="perc_hsp_per_cell_vln" style="zoom:50%;" /> | Plot config name: `_PERC_HSP_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_hsp_per_cell_vln()` | Violin plot showing distribution of heat shock protein genes percentages per cell. | Presense of HSPs can indicated presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs (Brenu Autoimmune Dis., 2013). Can also be caused by stressors during sample preparation. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:50%;" /> | Plot config name: `_HIGHEST_EXPRS_DENS_`<br /><br />Method (use at or after `normalize`): `plot_highest_exprs_dens()` | Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes. | Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [1600, 1600]<br/></pre> |
+| <img src="../docs/_plots/umis_per_cell_hist.png" alt="umis_per_cell_hist" style="zoom:50%;" /> | Plot config name: `_UMIS_PER_CELL_CELL_HIST_`<br /><br />Method (use at or after `root`): `plot_umis_per_cell_hist()` | Distribution of UMI counts per cell (barcode).               | Filter out damaged cells (local peak at low UMI) or multiplets (local peak at high UMI). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
+| <img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:50%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (use at or after `normalize`): `plot_genes_per_cell_hist()` | Distribution of unique gene counts per cell.                 | Filter out low-quality cells where low gene count is indicative of damaged cells. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
+| <img src="../docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:50%;" /> | Plot config name: `_UMIS_VS_GENES_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_genes_scat()` | Scatter plot showing relationship between UMI and gene counts per cell. | Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre>All keyword arguments for [pyplot.scatter()](https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html) |
+| <img src="../docs/_plots/perc_mito_per_cell_vln.png" alt="perc_mito_per_cell_vln" style="zoom:50%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_PERC_MITO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_mito_per_cell_vln()` | Violin plot showing distribution of mitochondrial genes percentages per cell. | Filter out damaged cells (very high mito %). Can be used at `cluster` to filter out false clusters with high mito %. If not filtered sufficiently, these cells can form a distinct cluster. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:50%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_mito_scat()` | Scatter plot showing relationship between UMI and mitochondial percentage per cell. | Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:50%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_ribo_per_cell_vln()` | Violin plot showing distribution of ribosomal genes percentages per cell. | Ensure cell population is surviving and is representative.   | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:50%;" /> | Plot config name: `_UMIS_VS_PERC_RIBO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_ribo_scat()` | Scatter plot showing relationship between UMI and ribosomal percentage per cell. | Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/perc_hsp_per_cell_vln.png" alt="perc_hsp_per_cell_vln" style="zoom:50%;" /> | Plot config name: `_PERC_HSP_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_hsp_per_cell_vln()` | Violin plot showing distribution of heat shock protein genes percentages per cell. | Presense of HSPs can indicated presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs (Brenu Autoimmune Dis., 2013). Can also be caused by stressors during sample_id preparation. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:50%;" /> | Plot config name: `_HIGHEST_EXPRS_DENS_`<br /><br />Method (use at or after `normalize`): `plot_highest_exprs_dens()` | Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes. | Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [1600, 1600]<br/></pre> |
 | <img src="../docs/_plots/pca_elbow_curv.png" alt="pca_elbow_curv" style="zoom:50%;" /> | Plot config name: `_PCA_ELBOW_CURV_`<br /><br />Method (use at or after `reduce`): `plot_pca_elbow_curv()` | Elbow curve plot showing standard deviation contribution of principal components, from 1 to `n_pcs`. | Determine a cutoff point for dimensionality reduction (usually at the point after which the curve flattens). | <pre lang="yaml">plot_size: [800, 800]<br/></pre>            |
-| <img src="../docs/_plots/pca_embeddings_scat.png" alt="pca_embeddings_scat" style="zoom:50%;" /> | Plot config name: `_PCA_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_pca_embeddings_scat()` | Facet plot showing relationship between principal components. | Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [1600, 1600]<br/>npcs: 7  # number of facets per dimension<br />alpha: 0.4</pre> |
+| <img src="../docs/_plots/pca_embeddings_scat.png" alt="pca_embeddings_scat" style="zoom:50%;" /> | Plot config name: `_PCA_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_pca_embeddings_scat()` | Facet plot showing relationship between principal components. | Examine sources of variance (donor-donor, lane-lane, timing, sample_id, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [1600, 1600]<br/>npcs: 7  # number of facets per dimension<br />alpha: 0.4</pre> |
 | <img src="../docs/_plots/pca_loadings_scat.png" alt="pca_loadings_scat" style="zoom:50%;" /> | Plot config name: `_PCA_LOADINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_pca_loadings_scat()` | Facet plot showing relationship between PCA loadings (coefficients for top variant genes). | Examine genes that have high variance and have relatively high value in PC_1 as potential signs of batch effect. | <pre lang="yaml">plot_size: [1600, 1600]<br/>npcs: 7<br />alpha: 0.8<br />size: 0.2  # point size</pre> |
-| <img src="../docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:50%;" /> | Plot config name: `_UMAP_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_umap_embeddings_scat()` | Facet plot showing relationship between principal components in UMAP. | Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>  - nFeature_RNA<br />plot_size: [1600, 1600]<br/>npcs: 2  # number of facets per dimension<br />alpha: 0.4</pre> |
+| <img src="../docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:50%;" /> | Plot config name: `_UMAP_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_umap_embeddings_scat()` | Facet plot showing relationship between principal components in UMAP. | Examine sources of variance (donor-donor, lane-lane, timing, sample_id, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>  - nFeature_RNA<br />plot_size: [1600, 1600]<br/>npcs: 2  # number of facets per dimension<br />alpha: 0.4</pre> |
 | <img src="../docs/_plots/cell_cycle_scoring_scat.png" alt="cell_cycle_scoring_scat" style="zoom:50%;" /> | Plot config name: `_CELL_CYCLE_SCORING_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_cell_cycle_scoring_scat()` | UMAP scatter plot showing cycles of each cell.               | Capture different clusters of cells at different stages in cycle. May make it difficult to identify cellular subtypes. | <pre lang="yaml">plot_size: [800, 800]<br/>reduction: umap</pre> |
 | <img src="../docs/_plots/umis_per_cell_hist_cluster.png" alt="umis_per_cell_hist_cluster" style="zoom:50%;" /> | Plot config name: `_UMIS_PER_CELL_CELL_HIST_`<br /><br />Method (used at `cluster`): `plot_umis_per_cell_hist()` | Distributions of UMI counts per cell, stratified by cluster. |                                                              | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/>bins: 40<br/>alpha: 0.4<br /></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
 | <img src="../docs/_plots/genes_per_cell_hist_cluster.png" alt="genes_per_cell_hist_cluster" style="zoom:50%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (used at `cluster`): `plot_genes_per_cell_hist()` | Distributions of unique gene counts per cell, stratified by cluster. |                                                              | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/>bins: 40<br/>alpha: 0.4<br /></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
