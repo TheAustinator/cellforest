@@ -279,6 +279,19 @@ plot_size: [800, 800]
 alpha: 0.4
       </pre></td>
     </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_per_cell_hist.png" alt="umis_per_cell_hist" style="zoom:50%;" /><br/><code>_UMIS_PER_CELL_CELL_HIST_</code><br/><code>plot_umis_per_cell_hist()</code></td>
+      <td>Distribution of UMI counts per cell (barcode).</td>
+      <td>Filter out stressed populations/ potential dead cells/background noise (local peak at low UMI) or proliferating cell types/multiplets/oversampled transcripts (local peak at high UMI).</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+alpha: 0.4
+bins: 50
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
+    </tr>
     
   </tbody>
 </table>
