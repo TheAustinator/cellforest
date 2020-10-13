@@ -257,13 +257,13 @@
 | <img src="../docs/_plots/marker_genes_per_cluster_bar.png" alt="marker_genes_per_cluster_bar" style="zoom:100%;" /><br />(does not work yet) | Plot config name: `_MARKER_GENES_PER_CLUSTER_BAR_`<br /><br />Method (use at or after `markers`): `plot_marker_genes_per_cluster_bar()` | Bar plot of number of statisticall significant marker genes per cluster. | Analyze cluster sensitivity to changes in parameters (which cluster are/aren't specific). | <pre lang="yaml">plot_size: [1600, 800]</pre>                |
 | New plots                                                    | Plot config name: `_<PLOT NAME>_<PLOT TYPE>_`<br /><br />Method (use at or after process in `["root", "normalize", "reduce", "cluster", "diffexp", "markers"]`): `plot_<plot_name>_<plot_type>()` | To develop new plots, see Section III.                       | Explain how to interpret plot, what problems does it solve, what are edge cases to look out for. | What `plot_kwargs` are to be specified and what are the defaults? |
 
-<table border="1" class="dataframe">
+<table border="0" class="dataframe">
   <thead>
     <tr style="text-align: right;">
       <th rowspan="2">Plot example</th>
       <th rowspan="2">Plot definition and method</th>
       <th rowspan="2">Description</th>
-      <th rowspan="2">Use case</th>
+      <th rowspan="2" width="50%">Use case</th>
       <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
     </tr>
   </thead>
