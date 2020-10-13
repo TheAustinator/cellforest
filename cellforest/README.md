@@ -260,15 +260,15 @@
 <table border="0" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th rowspan="2">Plot definition and method</th>
-      <th rowspan="2" width="20%">Description</th>
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
       <th rowspan="2" width="30%">Use case</th>
       <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><img src="../docs/_plots/umis_per_barcode_rank_curv.png" alt="umis_per_barcode_rank_curv" style="zoom:100%;" /><br/><code>_UMIS_PER_BARCODE_RANK_CURV_</code><br/><code>plot_umis_per_barcode_rank_curv()</code></td>
+      <td><img src="../docs/_plots/umis_per_barcode_rank_curv.png" alt="umis_per_barcode_rank_curv" style="zoom:50%;" /><br/><code>_UMIS_PER_BARCODE_RANK_CURV_</code><br/><code>plot_umis_per_barcode_rank_curv()</code></td>
       <td>Ranking of barcodes based on UMI count to define inflection points.</td>
       <td>Filter out damaged cells (large rank number) or multiplets (very low rank number). Also, can be used to check CellRanger’s automatic filtering.</td>
       <td><pre lang="yaml">
