@@ -3,7 +3,7 @@ from pathlib import Path
 from dataforest.hooks import dataprocess
 import multiprocessing
 
-from cellforest.processes import R_FUNCTIONS_FILEPATH
+# from cellforest.processes import R_FUNCTIONS_FILEPATH
 from cellforest.utils.r.run_r_script import run_r_script_logged
 
 R_MARKERS_SCRIPT = Path(__file__).parent / "markers.R"
@@ -35,7 +35,7 @@ def markers(branch: "CellBranch", run_name: str):
         params["logfc_thresh"],
         params["test"],
         N_CPUS,
-        R_FUNCTIONS_FILEPATH,
+        # R_FUNCTIONS_FILEPATH,
     ]
     run_r_script_logged(branch, R_MARKERS_SCRIPT, arg_list, run_name)
 
@@ -67,7 +67,7 @@ def diffexp(branch: "CellBranch", run_name: str):
         ident2,
         groupby,
         N_CPUS,
-        R_FUNCTIONS_FILEPATH,
+        # R_FUNCTIONS_FILEPATH,
     ]
     run_r_script_logged(branch, R_DIFFEXP_SCRIPT, arg_list, run_name)
 
@@ -86,7 +86,7 @@ def diffexp_bulk(branch: "CellBranch"):
     ident2 = groups.max()
     groupby = "partition_code"
     logfc_thresh = branch.spec[process_name]["logfc_thresh"]
-    r_functions_filepath = branch.schema.R_FILEPATHS["FUNCTIONS_FILE_PATH"]
+    # r_functions_filepath = branch.schema.R_FILEPATHS["FUNCTIONS_FILE_PATH"]
     arg_list = [
         input_metadata_path,
         input_rds_path,
@@ -96,7 +96,7 @@ def diffexp_bulk(branch: "CellBranch"):
         ident2,
         groupby,
         logfc_thresh,
-        r_functions_filepath,
+        # r_functions_filepath,
     ]
     r_diff_exp_bulk_filepath = branch.schema.R_FILEPATHS["DIFF_EXP_BULK_SCRIPT"]
     ProcessMethodsSC._run_r_script(branch, r_diff_exp_bulk_filepath, arg_list, process_name)

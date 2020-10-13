@@ -4,7 +4,8 @@ from dataforest.hooks import dataprocess
 
 # TODO: what to do about core/utility methods? core module? move to utils?
 from cellforest.utils.r.run_r_script import run_r_script_logged
-from cellforest.processes import R_FUNCTIONS_FILEPATH
+
+# from cellforest.processes import R_FUNCTIONS_FILEPATH
 
 R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
 R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
@@ -47,7 +48,7 @@ def normalize(branch: "CellBranch", run_name: str):
         max_genes,
         min_cells,
         perc_mito_cutoff,
-        R_FUNCTIONS_FILEPATH,
+        # R_FUNCTIONS_FILEPATH,
     ]
     if method == "sctransform":
         output_corrected_umi_path = process_run.path_map["corrected_umi"]

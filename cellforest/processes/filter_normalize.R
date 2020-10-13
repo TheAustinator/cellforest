@@ -1,5 +1,6 @@
 library(future)
 library(dplyr)
+library(cellforestR)
 plan("multiprocess", workers = 16)
 options(future.globals.maxSize = 16000 * 1024^2)
 
@@ -14,8 +15,8 @@ perc_mito_cutoff <- as.numeric(args[5])
 num_features <- as.numeric(args[6])
 num_pcs <- as.numeric(args[7])
 
-r_functions_filepath <- args[8]
-source(r_functions_filepath)
+#r_functions_filepath <- args[8]
+#source(r_functions_filepath)
 
 output_rds_path <- paste(rdata_output_dir, "output.rds", sep = "/")
 filtered_barcodes_path <- paste(rdata_output_dir, "filtered_cell_barcodes.tsv", sep = "/")

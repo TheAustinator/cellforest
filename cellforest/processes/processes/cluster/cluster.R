@@ -8,10 +8,10 @@ num_pcs <- as.numeric(args[5])
 resolution <- as.numeric(args[6])
 eps <- as.numeric(args[7])
 
-r_functions_filepath <- args[8]
-print("eps"); print(eps)
-print("functions"); print(r_functions_filepath)
-source(r_functions_filepath)
+#r_functions_filepath <- args[8]
+#print("eps"); print(eps)
+#print("functions"); print(r_functions_filepath)
+#source(r_functions_filepath)
 library(cellforestR)
 
 print("loading metadata"); print(date())

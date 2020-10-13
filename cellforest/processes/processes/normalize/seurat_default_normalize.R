@@ -1,3 +1,6 @@
+library(cellforestR)
+library(Seurat)
+
 args <- commandArgs(trailingOnly = TRUE)
 
 input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
@@ -7,12 +10,12 @@ min_genes <- as.numeric(args[4])
 max_genes <- as.numeric(args[5])
 min_cells <- as.numeric(args[6])
 perc_mito_cutoff <- as.numeric(args[7])
-r_functions_filepath <- args[8]
+#r_functions_filepath <- args[8]
 
-verbose <- as.logical(args[9])
-nfeatures <- as.numeric(args[10])
+verbose <- as.logical(args[8])
+nfeatures <- as.numeric(args[9])
 
-source(r_functions_filepath)
+#source(r_functions_filepath)
 
 
 print("creating Seurat object"); print(date())

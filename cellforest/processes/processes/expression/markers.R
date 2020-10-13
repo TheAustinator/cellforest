@@ -1,5 +1,6 @@
 library(future)
 library(dplyr)
+library(cellforestR)
 
 options(future.globals.maxSize = 8000 * 1024^2)
 
@@ -14,9 +15,8 @@ test <- args[6]
 
 n_cpus <- as.numeric(args[7])
 plan("multiprocess", workers = n_cpus)
-r_functions_filepath <- args[8]
-source(r_functions_filepath)
-library("cellforestR")
+#r_functions_filepath <- args[8]
+#source(r_functions_filepath)
 
 print("loading metadata"); print(date())
 meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1, quote="")

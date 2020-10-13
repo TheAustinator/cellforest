@@ -7,9 +7,10 @@ from pathlib import Path
 import pytest
 
 import cellforest as cf
+from cellforest import useconfig
 from tests.utils.get_test_data import get_test_data
 
-
+# TODO: remove plots from config for all tests except plotting tests
 @pytest.fixture
 def data_dir():
     path = Path(__file__).parent / "data"
@@ -104,8 +105,8 @@ def counts_path(root_path):
     return root_path / "rna.pickle"
 
 
-@pytest.fixture
-def test_from_input_dirs_fix(root_path, sample_paths):
+@useconfig("no_plot_config")
+def test_from_input_dirs(root_path, sample_paths):
     branch = cf.from_input_dirs(root_path, sample_paths, mode="rna")
     _ = branch.meta
     _ = branch.rna
@@ -113,6 +114,12 @@ def test_from_input_dirs_fix(root_path, sample_paths):
 
 
 @pytest.fixture
+def test_from_input_dirs_fix():
+    return test_from_input_dirs()
+
+
+@pytest.fixture
+@useconfig("no_plot_config")
 def build_root(root_path, sample_metadata):
     branch = cf.from_sample_metadata(root_path, sample_metadata)
     _ = branch.meta
@@ -227,6 +234,7 @@ def processes_of_norm_reduce_spec(branch_spec_reduce):
 
 
 @pytest.fixture
+@useconfig("no_plot_config")
 def test_norm(root_path, branch_spec_norm, build_root):
     branch = cf.load(root_path, branch_spec_norm)
     branch.process.normalize()
@@ -234,6 +242,7 @@ def test_norm(root_path, branch_spec_norm, build_root):
 
 
 @pytest.fixture
+@useconfig("no_plot_config")
 def test_reduce(root_path, branch_spec_reduce, test_norm):
     branch = cf.load(root_path, branch_spec_reduce)
     branch.process.reduce()
@@ -241,6 +250,7 @@ def test_reduce(root_path, branch_spec_reduce, test_norm):
 
 
 @pytest.fixture
+@useconfig("no_plot_config")
 def test_cluster(root_path, branch_spec_cluster, test_reduce):
     branch = cf.load(root_path, branch_spec_cluster)
     branch.process.cluster()
@@ -248,6 +258,7 @@ def test_cluster(root_path, branch_spec_cluster, test_reduce):
 
 
 @pytest.fixture
+@useconfig("no_plot_config")
 def test_markers(root_path, branch_spec_markers, test_cluster):
     branch = cf.load(root_path, branch_spec_markers)
     branch.process.markers()
@@ -255,16 +266,17 @@ def test_markers(root_path, branch_spec_markers, test_cluster):
 
 
 @pytest.fixture
+@useconfig("no_plot_config")
 def test_diffexp(root_path, branch_spec_diffexp, test_cluster):
     branch = cf.load(root_path, branch_spec_diffexp)
     branch.process.diffexp()
     return branch
 
 
-@pytest.fixture
-def load_test_config():
-    cf.update_config(Path(__file__).parent / "config" / "test_config.yaml")
-    return
+# @pytest.fixture
+# def load_test_config():
+#     cf.update_config(Path(__file__).parent / "config" / "no_plot_config.yaml")
+#     return
 
 
 @pytest.fixture
