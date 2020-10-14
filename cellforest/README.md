@@ -227,7 +227,7 @@
    5. On the level above, between `plot_methods` and `plot_kwargs`, there is a 1-to-1 correspondence of what plotting method is used for each plot and what keyword arguments that plot has
 
 ### III. All implemented plots
-
+#### 1. Plots available at `root` and onwards
 <table border="0" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -261,6 +261,26 @@ plot_size: [800, 800]
 bins: 50
       </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
     </tr>
+    <tr>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code><br/>Place into <code>cellforest/plot/root_qc.py</code> and <code>cellforest/plot/core_qc.py</code></td></td>
+      <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
+      <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
+      <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>
+    </tr>
+  </tbody>
+</table>
+
+#### 2. Plots available at `normalize` and onwards
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
+      <th rowspan="2" width="30%">Use case</th>
+      <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
       <td><img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:50%;" /><br/><code>_GENES_PER_CELL_HIST_</code><br/><code>plot_genes_per_cell_hist()</code></td>
       <td>Distribution of unique gene counts per cell.</td>
@@ -353,6 +373,26 @@ plot_size: [1600, 1600]
       </pre></td>
     </tr>
     <tr>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code><br/>Place into <code>cellforest/plot/root_qc.py</code></td></td>
+      <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
+      <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
+      <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>
+    </tr>
+  </tbody>
+</table>
+
+#### 3. Plots available at `reduce` and onwards
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
+      <th rowspan="2" width="30%">Use case</th>
+      <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
       <td><img src="../docs/_plots/pca_elbow_curv.png" alt="pca_elbow_curv" style="zoom:50%;" /><br/><code>_PCA_ELBOW_CURV_</code><br/><code>plot_pca_elbow_curv()</code></td>
       <td>Elbow curve plot showing standard deviation contribution of principal components, from 1 to <code>n_pcs</code>.</td>
       <td>Determine a cutoff point for dimensionality reduction (usually at the point after which the curve flattens).</td>
@@ -410,6 +450,26 @@ plot_size: [800, 800]
 reduction: umap
       </pre></td>
     </tr>
+    <tr>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code><br/>Place into <code>cellforest/plot/reduce_qc.py</code></td></td>
+      <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
+      <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
+      <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>
+    </tr>
+  </tbody>
+</table>
+
+#### 4. Plots available at `cluster` and onwards
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
+      <th rowspan="2" width="30%">Use case</th>
+      <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
       <td><img src="../docs/_plots/umis_per_cell_hist_cluster.png" alt="umis_per_cell_hist_cluster" style="zoom:50%;" /><br/><code>_UMIS_PER_CELL_CELL_HIST_</code><br/><code>plot_umis_per_cell_hist()</code></td>
       <td>Distributions of UMI counts per cell, stratified by cluster.</td>
@@ -486,6 +546,26 @@ plot_size: [1600, 1600]
       </pre></td>
     </tr>
     <tr>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code><br/>Place into <code>cellforest/plot/cluster_qc.py</code></td>
+      <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
+      <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
+      <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>
+    </tr>
+  </tbody>
+</table>
+
+#### 5. Plots available at `markers`
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
+      <th rowspan="2" width="30%">Use case</th>
+      <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
       <td><img src="../docs/_plots/marker_genes_per_cluster_bar.png" alt="marker_genes_per_cluster_bar" style="zoom:50%;" /><br />(does not work yet)<br/><code>_MARKER_GENES_PER_CLUSTER_BAR_</code><br/><code>plot_marker_genes_per_cluster_bar()</code></td>
       <td>Bar plot of number of statisticall significant marker genes per cluster.</td>
       <td>Analyze cluster sensitivity to changes in parameters (which cluster are/aren't specific).</td>
@@ -495,7 +575,7 @@ plot_size: [1600, 800]
       </pre></td>
     </tr>
     <tr>
-      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code></td>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code><br/>Place into <code>cellforest/plot/markers_qc.py</code></td></td>
       <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
       <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
       <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>

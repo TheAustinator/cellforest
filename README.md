@@ -55,6 +55,67 @@ Here is a pick of plots commonly used for scRNA-Seq, already implemented in Cell
 | <img src="docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:100%;" /> | Plot config name: `_HIGHEST_EXPRS_DENS_`<br /><br />Method (use at or after `normalize`): `plot_highest_exprs_dens()` | Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes. | Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>plot_size: [1600, 1600]<br/></pre>   |
 | <img src="docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:100%;" /> | Plot config name: `_UMAP_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_umap_embeddings_scat()` | Facet plot showing relationship between principal components in UMAP. | Examine sources of variance (donor-donor, lane-lane, timing, sample_id, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample_id<br/>  - nFeature_RNA<br />plot_size: [1600, 1600]<br/>npcs: 2  # number of facets per dimension<br />alpha: 0.4</pre> |
 | <img src="docs/_plots/perc_ribo_per_cell_vln_cluster.png" alt="perc_ribo_per_cell_vln_cluster" style="zoom:100%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (used at `cluster`): `plot_perc_ribo_per_cell_vln()` | Violin plots showing distribution of ribosomal genes percentages per cell, stratified by cluster. |                                                              | <pre lang="yaml">stratify: cluster<br/>plot_size: [1600, 800]<br/></pre> |
+
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th rowspan="2" width="20%">Plot definition and method</th>
+      <th rowspan="2" width="30%">Description</th>
+      <th rowspan="2" width="30%">Use case</th>
+      <th rowspan="2">Available and suggested <code>plot_kwargs</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><img src="docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:50%;" /><br/>Plot config name: <code>_UMIS_VS_GENES_SCAT_</code><br/>Method (use at or after "normalize"): <code>`plot_umis_vs_genes_scat()</code></td>
+      <td>Scatter plot showing relationship between UMI and gene counts per cell.</td>
+      <td>Generally there should be a good correlation. Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage).</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+bins: 50
+alpha: 0.4
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html">pyplot.scatter()</a></td>
+    </tr>
+    <tr>
+      <td><img src="docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:50%;" /><br/>Plot config name: <code>_HIGHEST_EXPRS_DENS_</code><br/>Method (use at or after "normalize"): <code>plot_highest_exprs_dens()</code></td>
+      <td>Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes.</td>
+      <td>Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [1600, 1600]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:50%;" /><br/>Plot config name: <code>_UMAP_EMBEDDINGS_SCAT_</code><br/>Method (use at or after "reduce"): <code>plot_umap_embeddings_scat()</code></td>
+      <td>Facet plot showing relationship between principal components in UMAP.</td>
+      <td>Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+  - nFeature_RNA
+plot_size: [1600, 1600]
+alpha: 0.4
+npcs: 2
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="docs/_plots/perc_ribo_per_cell_vln_cluster.png" alt="perc_ribo_per_cell_vln_cluster" style="zoom:50%;" /><br/>Plot config name: <code>_PERC_RIBO_PER_CELL_VLN_</code><br/>Method (use at or after "cluster") <code>plot_perc_ribo_per_cell_vln()</code></td>
+      <td>Violin plots showing distribution of ribosomal genes percentages per cell, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 800]
+      </pre></td>
+    </tr>
+  </tbody>
+</table>
+
 ### II. Quick specification
 Plots declaration can done before the tree is run or after, with forcing generation of not-yet-created plots. Analogous to process run outputs, all plots are stored in `_plots`, inside the folders for corresponding process outputs. Now, we shall look at an example configuration for QC plotting:
 ```yaml
