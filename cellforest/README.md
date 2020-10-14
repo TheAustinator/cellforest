@@ -4,6 +4,11 @@
   * [I. Setting up QC plotting](#i-setting-up-qc-plotting)
   * [II. Parametrizing QC plots](#ii-parametrizing-qc-plots)
   * [III. All implemented plots](#iii-all-implemented-plots)
+    + [1. Plots available at `root` and onwards](#1-plots-available-at--root--and-onwards)
+    + [2. Plots available at `normalize` and onwards](#2-plots-available-at--normalize--and-onwards)
+    + [3. Plots available at `reduce` and onwards](#3-plots-available-at--reduce--and-onwards)
+    + [4. Plots available at `cluster` and onwards](#4-plots-available-at--cluster--and-onwards)
+    + [5. Plots available at `markers`](#5-plots-available-at--markers-)
   * [IV. Adding new or modifying existing QC plots](#iv-adding-new-or-modifying-existing-qc-plots)
 ## Automated Quality Control (QC) Plotting 
 
