@@ -26,6 +26,10 @@ if (!is.null(subset_key) && !all(is.na(subset_key))) {
 } else {
   subset <- NULL
 }
+print("root_dir"); print(root_dir)
+print("spec_str"); print(spec_str)
+print("current_process"); print(current_process)
+print("subset"); print(subset)
 seurat_obj <- cellforest_load(root_dir, spec_str, current_process, subset)
 
 

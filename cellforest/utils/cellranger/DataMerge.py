@@ -1,6 +1,7 @@
+import gc
 import os
 
-import pandas as pd
+from joblib import Parallel, delayed
 
 from cellforest import Counts
 
@@ -9,12 +10,21 @@ class DataMerge:
     @staticmethod
     def merge_assay(paths, mode, metadata=None, save_dir=None):
         method = getattr(DataMerge, f"_merge_{mode}")
-        return method(paths, metadata, save_dir)
+        ret = method(paths, metadata, save_dir)
+        gc.collect()
+        return ret
 
     @staticmethod
     def _merge_rna(paths, metadata, save_dir, id_col="sample_id"):
         """"""
-        rna_list = [Counts.from_cellranger(dir_) for dir_ in paths]
+        pool = Parallel(n_jobs=-2)
+        # TODO: significant memory leakage -- maybe make an optional kwarg
+        rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
+        widths = list(map(lambda x: x.shape[1], rna_list))
+        if len(set(widths)) > 1:
+            raise ValueError(
+                f"Can't merge matrices with mixed shapes: {set(widths)}. Details: {list(zip(paths, widths))}"
+            )
         rna = Counts.concatenate(rna_list)
         meta = None
         if metadata is not None:

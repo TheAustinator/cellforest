@@ -40,6 +40,7 @@ cellforest_load <- function(root_dir, branch_spec, process, subset = NULL, filte
   #  temp_env <- new.env()
   #
   #  eval(parse(text = subset), envir = temp_env)
+  #  AddMetaData()
   #  seurat_obj <- subset(seurat_obj, subset = subset[1] == subset[2])
   #}
   #if (!is.null(filter_) && !is.na(filter_)) {
