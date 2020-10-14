@@ -36,7 +36,7 @@ def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", **kwargs):
 
 @requires("normalize")
 @qc_plot_py
-def plot_umis_vs_perc_mito_scat(branch: "CellBranch", **kwargs):
+def plot_umis_vs_perc_hsp_scat(branch: "CellBranch", **kwargs):
     _scatter_umi_vs_col(branch, "percent.hsp", **kwargs)
 
 

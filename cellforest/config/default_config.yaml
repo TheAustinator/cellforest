@@ -41,6 +41,7 @@ plot_map:
         stratify:
           - sample_id
           - default
+        bins: 50
     _UMIS_PER_CELL_HIST_:
       # plot_method and filename(s) can be inferred from key if not provided explicitly
       plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
@@ -54,14 +55,18 @@ plot_map:
           - lane
           - default
         plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
+        bins: 50
     _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
     _PERC_MITO_PER_CELL_VLN_:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
           - sample_id
           - default
+        alpha: 0.4
     _PERC_MITO_PER_CELL_HIST_: ~
-    _UMIS_VS_PERC_MITO_SCAT_: ~
+    _UMIS_VS_PERC_MITO_SCAT_:
+      plot_kwargs:
+        alpha: 0.4
     _PERC_RIBO_PER_CELL_VLN:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
@@ -101,13 +106,17 @@ plot_map:
     _GENES_PER_CELL_HIST_:
       plot_kwargs:
         stratify: cluster
+        bins: 50
+        alpha: 0.4
     _UMIS_PER_CELL_HIST_:
       plot_kwargs:
         stratify: cluster
+        bins: 50
+        alpha: 0.4
     _UMIS_VS_GENES_SCAT_:
       plot_kwargs:
         stratify: cluster
-        alpha: 0.2
+        alpha: 0.4
     _PERC_MITO_PER_CELL_VLN_:
       plot_kwargs:
         stratify: cluster

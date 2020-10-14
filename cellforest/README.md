@@ -235,7 +235,7 @@
 | <img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:100%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (use at or after `normalize`): `plot_genes_per_cell_hist()` | Distribution of unique gene counts per cell.                 | Filter out low-quality cells where low gene count is indicative of damaged cells. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
 | <img src="../docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_GENES_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_genes_scat()` | Scatter plot showing relationship between UMI and gene counts per cell. | Generally there should be a good correlation. Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre>All keyword arguments for [pyplot.scatter()](https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html) |
 | <img src="../docs/_plots/perc_mito_per_cell_vln.png" alt="perc_mito_per_cell_vln" style="zoom:100%;" /><br />(needs to be regenerated with fuller data), could be not pulling mito reads | Plot config name: `_PERC_MITO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_mito_per_cell_vln()` | Violin plot showing distribution of mitochondrial genes percentages per cell. | Filter out damaged cells (very high mito %). Can be used at `cluster` to filter out false clusters with high mito %. If not filtered sufficiently, these cells can form a distinct cluster. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:100%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_mito_scat()` | Scatter plot showing relationship between UMI and mitochondial percentage per cell. | Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
+| <img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:100%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_mito_scat()` | Scatter plot showing relationship between UMI and mitochondial percentage per cell. | Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre> |
 | <img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:100%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_ribo_per_cell_vln()` | Violin plot showing distribution of ribosomal genes percentages per cell. | Ensure cell population is surviving and is representative.   | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
 | <img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_PERC_RIBO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_ribo_scat()` | Scatter plot showing relationship between UMI and ribosomal percentage per cell. | Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
 | <img src="../docs/_plots/perc_hsp_per_cell_vln.png" alt="perc_hsp_per_cell_vln" style="zoom:100%;" /> | Plot config name: `_PERC_HSP_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_hsp_per_cell_vln()` | Violin plot showing distribution of heat shock protein genes percentages per cell. | Presense of HSPs can indicate presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs. Can also be caused by stressors during sample preparation. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
@@ -276,7 +276,6 @@ stratify:
   - none
   - sample_id
 plot_size: [800, 800]
-alpha: 0.4
       </pre></td>
     </tr>
     <tr>
@@ -288,7 +287,18 @@ stratify:
   - none
   - sample_id
 plot_size: [800, 800]
-alpha: 0.4
+bins: 50
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:50%;" /><br/><code>_GENES_PER_CELL_HIST_</code><br/><code>plot_genes_per_cell_hist()</code></td>
+      <td>Distribution of unique gene counts per cell.</td>
+      <td>Filter out low-quality cells where low gene count is indicative of damaged cells.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
 bins: 50
       </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
     </tr>
