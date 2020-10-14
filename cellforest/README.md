@@ -228,35 +228,6 @@
 
 ### III. All implemented plots
 
-| Plot example                                                 | Plot definition and method                                   | Description                                                  | Use case                                                     | Available and suggested `plot_kwargs`                        |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| <img src="../docs/_plots/umis_per_barcode_rank_curv.png" alt="umis_per_barcode_rank_curv" style="zoom:100%;" /> | Plot config name: `_UMIS_PER_BARCODE_RANK_CURV_`<br /><br />Method (use at or after `root`): `plot_umis_per_barcode_rank_curv()` | Ranking of barcodes based on UMI count to define inflection points. | Filter out damaged cells (large rank number) or multiplets (very low rank number). Also, can be used to check CellRanger’s automatic filtering. | <pre lang="yaml">plot_size: [800, 800]<br/></pre>            |
-| <img src="../docs/_plots/umis_per_cell_hist.png" alt="umis_per_cell_hist" style="zoom:100%;" /><br />(regenerate with more bins :) | Plot config name: `_UMIS_PER_CELL_CELL_HIST_`<br /><br />Method (use at or after `root`): `plot_umis_per_cell_hist()` | Distribution of UMI counts per cell (barcode).               | Filter out stressed populations/ potential dead cells/background noise (local peak at low UMI) or proliferating cell types/multiplets/oversampled transcripts (local peak at high UMI). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/genes_per_cell_hist.png" alt="genes_per_cell_hist" style="zoom:100%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (use at or after `normalize`): `plot_genes_per_cell_hist()` | Distribution of unique gene counts per cell.                 | Filter out low-quality cells where low gene count is indicative of damaged cells. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>bins: 50<br/></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_GENES_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_genes_scat()` | Scatter plot showing relationship between UMI and gene counts per cell. | Generally there should be a good correlation. Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage). | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre>All keyword arguments for [pyplot.scatter()](https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html) |
-| <img src="../docs/_plots/perc_mito_per_cell_vln.png" alt="perc_mito_per_cell_vln" style="zoom:100%;" /><br />(needs to be regenerated with fuller data), could be not pulling mito reads | Plot config name: `_PERC_MITO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_mito_per_cell_vln()` | Violin plot showing distribution of mitochondrial genes percentages per cell. | Filter out damaged cells (very high mito %). Can be used at `cluster` to filter out false clusters with high mito %. If not filtered sufficiently, these cells can form a distinct cluster. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:100%;" /><br />(needs to be regenerated with fuller data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_mito_scat()` | Scatter plot showing relationship between UMI and mitochondial percentage per cell. | Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/>alpha: 0.4<br/></pre> |
-| <img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:100%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_ribo_per_cell_vln()` | Violin plot showing distribution of ribosomal genes percentages per cell. | Ensure cell population is surviving and is representative.   | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_PERC_RIBO_SCAT_`<br /><br />Method (use at or after `normalize`): `plot_umis_vs_perc_ribo_scat()` | Scatter plot showing relationship between UMI and ribosomal percentage per cell. | Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/perc_hsp_per_cell_vln.png" alt="perc_hsp_per_cell_vln" style="zoom:100%;" /> | Plot config name: `_PERC_HSP_PER_CELL_VLN_`<br /><br />Method (use at or after `normalize`): `plot_perc_hsp_per_cell_vln()` | Violin plot showing distribution of heat shock protein genes percentages per cell. | Presense of HSPs can indicate presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs. Can also be caused by stressors during sample preparation. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:100%;" /> | Plot config name: `_HIGHEST_EXPRS_DENS_`<br /><br />Method (use at or after `normalize`): `plot_highest_exprs_dens()` | Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes. | Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [1600, 1600]<br/></pre> |
-| <img src="../docs/_plots/pca_elbow_curv.png" alt="pca_elbow_curv" style="zoom:100%;" /> | Plot config name: `_PCA_ELBOW_CURV_`<br /><br />Method (use at or after `reduce`): `plot_pca_elbow_curv()` | Elbow curve plot showing standard deviation contribution of principal components, from 1 to `n_pcs`. | Determine a cutoff point for dimensionality reduction (usually at the point after which the curve flattens). | <pre lang="yaml">plot_size: [800, 800]<br/></pre>            |
-| <img src="../docs/_plots/pca_embeddings_scat.png" alt="pca_embeddings_scat" style="zoom:100%;" /> | Plot config name: `_PCA_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_pca_embeddings_scat()` | Facet plot showing relationship between principal components. | Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>plot_size: [1600, 1600]<br/>npcs: 7  # number of facets per dimension<br />alpha: 0.4</pre> |
-| <img src="../docs/_plots/pca_loadings_scat.png" alt="pca_loadings_scat" style="zoom:100%;" /> | Plot config name: `_PCA_LOADINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_pca_loadings_scat()` | Facet plot showing relationship between PCA loadings (coefficients for top variant genes). | Examine genes that have high variance and have relatively high value in PC_1 as potential signs of batch effect. | <pre lang="yaml">plot_size: [1600, 1600]<br/>npcs: 7<br />alpha: 0.8<br />size: 0.2  # point size</pre> |
-| <img src="../docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:100%;" /> | Plot config name: `_UMAP_EMBEDDINGS_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_umap_embeddings_scat()` | Facet plot showing relationship between principal components in UMAP. | Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects. | <pre lang="yaml">stratify:<br/>  - none<br/>  - sample<br/>  - nFeature_RNA<br />plot_size: [1600, 1600]<br/>npcs: 2  # number of facets per dimension<br />alpha: 0.4</pre> |
-| <img src="../docs/_plots/cell_cycle_scoring_scat.png" alt="cell_cycle_scoring_scat" style="zoom:100%;" /> | Plot config name: `_CELL_CYCLE_SCORING_SCAT_`<br /><br />Method (use at or after `reduce`): `plot_cell_cycle_scoring_scat()` | UMAP scatter plot showing cycles of each cell.               | Capture different clusters of cells at different stages. May make it difficult to identify cellular subtypes. Check if clusters form due to checkpoint genes in regular cell cycles or by-product of disease. In addition, looking into highly variable genes can help. | <pre lang="yaml">plot_size: [800, 800]<br/>reduction: umap</pre> |
-| <img src="../docs/_plots/umis_per_cell_hist_cluster.png" alt="umis_per_cell_hist_cluster" style="zoom:100%;" /> | Plot config name: `_UMIS_PER_CELL_CELL_HIST_`<br /><br />Method (used at `cluster`): `plot_umis_per_cell_hist()` | Distributions of UMI counts per cell, stratified by cluster. | TODO-QC: FILL IN HERE Typical healthy range, looking at coverage, distribution of reads per cell. Stressed populations or potential dead or background noise. Unusual cells (proliferating cell types/doublets), transcripts that may have been oversampled. Used to draw threshold for total UMI count | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/>bins: 40<br/>alpha: 0.4<br /></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/genes_per_cell_hist_cluster.png" alt="genes_per_cell_hist_cluster" style="zoom:100%;" /> | Plot config name: `_GENES_PER_CELL_HIST_`<br /><br />Method (used at `cluster`): `plot_genes_per_cell_hist()` | Distributions of unique gene counts per cell, stratified by cluster. | TODO-QC: FILL IN HERE n_feature in Seurat threshold to filter out? | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/>bins: 40<br/>alpha: 0.4<br /></pre>All keyword arguments for [pyplot.hist()](https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html) |
-| <img src="../docs/_plots/umis_vs_genes_cluster.png" alt="umis_vs_genes_cluster" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_GENES_SCAT_`<br /><br />Method (used at `cluster`): `plot_umis_vs_genes_scat()` | Scatter plots showing relationship between UMI and gene counts per cell, stratified by cluster. | TODO-QC: FILL IN HERE No robust trascript get picked up (5') | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/>alpha: 0.4<br /></pre>All keyword arguments for [pyplot.scatter()](https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html) |
-| <img src="../docs/_plots/perc_mito_per_cell_vln_cluster.png" alt="perc_mito_per_cell_vln_cluster" style="zoom:100%;" /><br />(needs to be regenerated on fuller data) | Plot config name: `_PERC_MITO_PER_CELL_VLN_`<br /><br />Method (used at `cluster`): `plot_perc_mito_per_cell_vln()` | Violin plots showing distribution of mitochondrial genes percentages per cell, stratified by cluster. | Additional filtering based on bad clusters (clusters of high mito %). | <pre lang="yaml">stratify: cluster<br/>plot_size: [1600, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_mito_scat-plot_size:800+800-stratify:cluster_id.png" alt="umis_vs_perc_mito_scat-plot_size:800+800-stratify:cluster_id" style="zoom:100%;" /><br />(needs to be regerenated on full data) | Plot config name: `_UMIS_VS_PERC_MITO_SCAT_`<br /><br />Method (used at `cluster`): `plot_umis_vs_perc_mito_scat()` | Scatter plots showing relationship between UMI and mitochondial percentage per cell, stratified by cluster. | Check that generally cells are between 0-0.2 in mito and normal distribution on UMI (y axis). Note: certain cell types might have very high mito %. | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/perc_ribo_per_cell_vln_cluster.png" alt="perc_ribo_per_cell_vln_cluster" style="zoom:100%;" /> | Plot config name: `_PERC_RIBO_PER_CELL_VLN_`<br /><br />Method (used at `cluster`): `plot_perc_ribo_per_cell_vln()` | Violin plots showing distribution of ribosomal genes percentages per cell, stratified by cluster. | TODO-QC: FILL IN HERE                                        | <pre lang="yaml">stratify: cluster<br/>plot_size: [1600, 800]<br/></pre> |
-| <img src="../docs/_plots/umis_vs_perc_ribo_scat_cluster.png" alt="umis_vs_perc_ribo_scat_cluster" style="zoom:100%;" /> | Plot config name: `_UMIS_VS_PERC_RIBO_SCAT_`<br /><br />Method (used at `cluster`): `plot_umis_vs_perc_ribo_scat()` | Scatter plots showing relationship between UMI and ribosomal percentage per cell, stratified by cluster. | TODO-QC: FILL IN HERE                                        | <pre lang="yaml">stratify: cluster<br/>plot_size: [800, 800]<br/></pre> |
-| <img src="../docs/_plots/perc_hsp_per_cell_vln_cluster.png" alt="perc_hsp_per_cell_vln_cluster" style="zoom:100%;" /> | Plot config name: `_PERC_HSP_PER_CELL_VLN_`<br /><br />Method (used at `cluster`): `plot_perc_hsp_per_cell_vln()` | Violin plots showing distribution of heat shock protein genes percentages per cell, stratified by cluster. | Presense of HSPs can indicate presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs. Can also be caused by stressors during sample preparation. | <pre lang="yaml">stratify: cluster<br/>plot_size: [1600, 800]<br/></pre> |
-| <img src="../docs/_plots/highest_exprs_dens_cluster.png" alt="highest_exprs_dens_cluster" style="zoom:100%;" /> | Plot config name: `_HIGHEST_EXPRS_DENS_`<br /><br />Method (used at `cluster`: `plot_highest_exprs_dens()` | Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes, stratified by cluster. | TODO-QC: FILL IN HERE                                        | <pre lang="yaml">stratify: cluster<br/>plot_size: [1600, 1600]<br/></pre> |
-| <img src="../docs/_plots/marker_genes_per_cluster_bar.png" alt="marker_genes_per_cluster_bar" style="zoom:100%;" /><br />(does not work yet) | Plot config name: `_MARKER_GENES_PER_CLUSTER_BAR_`<br /><br />Method (use at or after `markers`): `plot_marker_genes_per_cluster_bar()` | Bar plot of number of statisticall significant marker genes per cluster. | Analyze cluster sensitivity to changes in parameters (which cluster are/aren't specific). | <pre lang="yaml">plot_size: [1600, 800]</pre>                |
-| New plots                                                    | Plot config name: `_<PLOT NAME>_<PLOT TYPE>_`<br /><br />Method (use at or after process in `["root", "normalize", "reduce", "cluster", "diffexp", "markers"]`): `plot_<plot_name>_<plot_type>()` | To develop new plots, see Section III.                       | Explain how to interpret plot, what problems does it solve, what are edge cases to look out for. | What `plot_kwargs` are to be specified and what are the defaults? |
-
 <table border="0" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -302,7 +273,233 @@ plot_size: [800, 800]
 bins: 50
       </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
     </tr>
-    
+    <tr>
+      <td><img src="../docs/_plots/umis_vs_genes_scat.png" alt="umis_vs_genes_scat" style="zoom:50%;" /><br/><code>_UMIS_VS_GENES_SCAT_</code><br/><code>`plot_umis_vs_genes_scat()</code></td>
+      <td>Scatter plot showing relationship between UMI and gene counts per cell.</td>
+      <td>Generally there should be a good correlation. Filter out damaged cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage).</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+bins: 50
+alpha: 0.4
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html">pyplot.scatter()</a></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_mito_per_cell_vln.png" alt="perc_mito_per_cell_vln" style="zoom:50%;" /><br/><code>_PERC_MITO_PER_CELL_VLN_</code><br/><code>plot_perc_mito_per_cell_vln()</code></td>
+      <td>Violin plot showing distribution of mitochondrial genes percentages per cell.</td>
+      <td>Filter out damaged cells (very high mito %). Can be used at <code>cluster</code> to filter out false clusters with high mito %. If not filtered sufficiently, these cells can form a distinct cluster.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_vs_perc_mito_scat.png" alt="umis_vs_perc_mito_scat" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_MITO_SCAT_</code><br/><code>plot_umis_vs_perc_mito_scat()</code></td>
+      <td>Scatter plot showing relationship between UMI and mitochondial percentage per cell.</td>
+      <td>Filter out damaged cells that have low UMI count and high mito % or multiplets of damaged cells (high UMI, high mito %). Note: it is possible to have cell type with high mito % but unlikely that mito > 80% is not a dead cell.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:50%;" /><br/><code>_PERC_RIBO_PER_CELL_VLN_</code><br/><code>plot_perc_ribo_per_cell_vln()</code></td>
+      <td>Violin plot showing distribution of ribosomal genes percentages per cell.</td>
+      <td>Ensure cell population is surviving and is representative.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_RIBO_SCAT_</code><br/><code>plot_umis_vs_perc_ribo_scat()</code></td>
+      <td>Scatter plot showing relationship between UMI and ribosomal percentage per cell.</td>
+      <td>Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_hsp_per_cell_vln.png" alt="perc_hsp_per_cell_vln" style="zoom:50%;" /><br/><code>_PERC_HSP_PER_CELL_VLN_</code><br/><code>plot_perc_hsp_per_cell_vln()</code></td>
+      <td>Violin plot showing distribution of heat shock protein genes percentages per cell.</td>
+      <td>Presense of HSPs can indicate presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs. Can also be caused by stressors during sample preparation.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/highest_exprs_dens.png" alt="highest_exprs_dens" style="zoom:50%;" /><br/><code>_HIGHEST_EXPRS_DENS_</code><br/><code>plot_highest_exprs_dens()</code></td>
+      <td>Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes.</td>
+      <td>Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [1600, 1600]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/pca_elbow_curv.png" alt="pca_elbow_curv" style="zoom:50%;" /><br/><code>_PCA_ELBOW_CURV_</code><br/><code>plot_pca_elbow_curv()</code></td>
+      <td>Elbow curve plot showing standard deviation contribution of principal components, from 1 to <code>n_pcs</code>.</td>
+      <td>Determine a cutoff point for dimensionality reduction (usually at the point after which the curve flattens).</td>
+      <td><pre lang="yaml">
+plot_size: [800, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/pca_embeddings_scat.png" alt="pca_embeddings_scat" style="zoom:50%;" /><br/><code>_PCA_EMBEDDINGS_SCAT_</code><br/><code>plot_pca_embeddings_scat()</code></td>
+      <td>Facet plot showing relationship between principal components.</td>
+      <td>Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [1600, 1600]
+alpha: 0.4
+npcs: 7
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/pca_loadings_scat.png" alt="pca_loadings_scat" style="zoom:50%;" /><br/><code>_PCA_LOADINGS_SCAT_</code><br/><code>plot_pca_loadings_scat()</code></td>
+      <td>Facet plot showing relationship between PCA loadings (coefficients for top variant genes).</td>
+      <td>Examine genes that have high variance and have relatively high value in PC_1 as potential signs of batch effect.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+plot_size: [1600, 1600]
+alpha: 0.8
+size: 0.2
+npcs: 7
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umap_embeddings_scat.png" alt="umap_embeddings_scat" style="zoom:50%;" /><br/><code>_UMAP_EMBEDDINGS_SCAT_</code><br/><code>plot_umap_embeddings_scat()</code></td>
+      <td>Facet plot showing relationship between principal components in UMAP.</td>
+      <td>Examine sources of variance (donor-donor, lane-lane, timing, sample, etc.) and identify batch effects.</td>
+      <td><pre lang="yaml">
+stratify:
+  - none
+  - sample_id
+  - nFeature_RNA
+plot_size: [1600, 1600]
+alpha: 0.4
+npcs: 2
+      </pre></td>
+    </tr>
+    <tr>
+      <td><<img src="../docs/_plots/cell_cycle_scoring_scat.png" alt="cell_cycle_scoring_scat" style="zoom:50%;" /><br/><code>_CELL_CYCLE_SCORING_SCAT_</code><br/><code>plot_cell_cycle_scoring_scat()</code></td>
+      <td>UMAP scatter plot showing cycles of each cell.</td>
+      <td>apture different clusters of cells at different stages. May make it difficult to identify cellular subtypes. Check if clusters form due to checkpoint genes in regular cell cycles or by-product of disease. In addition, looking into highly variable genes can help.</td>
+      <td><pre lang="yaml">
+plot_size: [800, 800]
+reduction: umap
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_per_cell_hist_cluster.png" alt="umis_per_cell_hist_cluster" style="zoom:50%;" /><br/><code>_UMIS_PER_CELL_CELL_HIST_</code><br/><code>plot_umis_per_cell_hist()</code></td>
+      <td>Distributions of UMI counts per cell, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE Typical healthy range, looking at coverage, distribution of reads per cell. Stressed populations or potential dead or background noise. Unusual cells (proliferating cell types/doublets), transcripts that may have been oversampled. Used to draw threshold for total UMI count.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [800, 800]
+bins: 40
+alpha: 0.4
+      </pre><br/>All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
+    </tr>
+    <tr>
+      <td><<img src="../docs/_plots/umis_vs_genes_cluster.png" alt="umis_vs_genes_cluster" style="zoom:50%;" /><br/><code>_UMIS_VS_GENES_SCAT_</code><br/><code>plot_umis_vs_genes_scat()</code></td>
+      <td>Scatter plots showing relationship between UMI and gene counts per cell, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE No robust trascript get picked up (5').</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [800, 800]
+alpha: 0.4
+      </pre><br/>All keyword arguments for <a href="https://matplotlib.org/3.3.1/api/_as_gen/matplotlib.pyplot.hist.html">pyplot.hist()</a></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_mito_per_cell_vln_cluster.png" alt="perc_mito_per_cell_vln_cluster" style="zoom:50%;" /><br/><code>_PERC_MITO_PER_CELL_VLN_</code><br/><code>plot_perc_mito_per_cell_vln()</code></td>
+      <td>Violin plots showing distribution of mitochondrial genes percentages per cell, stratified by cluster.</td>
+      <td>Additional filtering based on bad clusters (clusters of high mito %).</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_vs_perc_mito_scat_cluster.png" alt="umis_vs_perc_mito_scat_cluster" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_MITO_SCAT_</code><br/><code>plot_umis_vs_perc_mito_scat()</code></td>
+      <td>Scatter plots showing relationship between UMI and mitochondial percentage per cell, stratified by cluster.</td>
+      <td>Check that generally cells are between 0-20% in mito and normal distribution on UMI (y axis). Note: certain cell types might have very high mito %.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [800, 800]
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html">pyplot.scatter()</a></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_ribo_per_cell_vln_cluster.png" alt="perc_ribo_per_cell_vln_cluster" style="zoom:50%;" /><br/><code>_PERC_RIBO_PER_CELL_VLN_</code><br/><code>plot_perc_ribo_per_cell_vln()</code></td>
+      <td>Violin plots showing distribution of ribosomal genes percentages per cell, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/umis_vs_perc_ribo_scat_cluster.png" alt="umis_vs_perc_ribo_scat_cluster" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_RIBO_SCAT_</code><br/><code>plot_umis_vs_perc_ribo_scat()</code></td>
+      <td>Scatter plots showing relationship between UMI and ribosomal percentage per cell, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [800, 800]
+      </pre><br />All keyword arguments for <a href="https://matplotlib.org/3.3.2/api/_as_gen/matplotlib.pyplot.scatter.html">pyplot.scatter()</a></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/perc_hsp_per_cell_vln_cluster.png" alt="perc_hsp_per_cell_vln_cluster" style="zoom:50%;" /><br/><code>_PERC_HSP_PER_CELL_VLN_</code><br/><code>plot_perc_hsp_per_cell_vln()</code></td>
+      <td>Violin plots showing distribution of heat shock protein genes percentages per cell, stratified by cluster.</td>
+      <td>Presense of HSPs can indicate presense of immunogens during inflammatory episodes, downregulation of T-cell-related cytokine dominance (in inflammation), cytokine production in Tregs. Can also be caused by stressors during sample preparation.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/highest_exprs_dens_cluster.png" alt="highest_exprs_dens_cluster" style="zoom:50%;" /><br/><code>_HIGHEST_EXPRS_DENS_</code><br/><code>plot_highest_exprs_dens()</code></td>
+      <td>Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes, stratified by cluster.</td>
+      <td>TODO-QC: FILL IN HERE.</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 1600]
+      </pre></td>
+    </tr>
+    <tr>
+      <td><img src="../docs/_plots/marker_genes_per_cluster_bar.png" alt="marker_genes_per_cluster_bar" style="zoom:50%;" /><br />(does not work yet)<br/><code>_MARKER_GENES_PER_CLUSTER_BAR_</code><br/><code>plot_marker_genes_per_cluster_bar()</code></td>
+      <td>Bar plot of number of statisticall significant marker genes per cluster.</td>
+      <td>Analyze cluster sensitivity to changes in parameters (which cluster are/aren't specific).</td>
+      <td><pre lang="yaml">
+stratify: cluster
+plot_size: [1600, 800]
+      </pre></td>
+    </tr>
+    <tr>
+      <td>New plots<br/><code>_&lt;PLOT NAME&gt;_&lt;PLOT TYPE&gt;_</code><br/><code>plot_&lt;plot_name&gt;_&lt;plot_type&gt;()</code></td>
+      <td>To develop new plots, see <a href="#iii-all-implemented-plots">Section III</a>.</td>
+      <td>Explain how to interpret plot, what problems does it solve, what are edge cases to look out for.</td>
+      <td>What <code>plot_kwargs</code> are to be specified and what are the defaults?</td>
+    </tr>
   </tbody>
 </table>
 
