@@ -1,4 +1,10 @@
+library(future)
+library(parallel)
 library(cellforestR)
+library(Seurat)
+
+options(future.globals.maxSize = 8000 * 1024^2)
+plan("multiprocess", workers = detectCores() - 1)
 
 args <- commandArgs(trailingOnly = TRUE)
 

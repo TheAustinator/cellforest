@@ -46,13 +46,14 @@ plot_map:
       # plot_method and filename(s) can be inferred from key if not provided explicitly
       plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
       filename:  # optional, will overwrite inferred name
+        - umis_per_cell_hist-plot_size:500+500-stratify:donor+cell_types
         - umis_per_cell_hist-plot_size:500+500-stratify:donor
-        - umis_per_cell_hist-plot_size:500+500-stratify:lane
-        - umis_per_cell_hist-plot_size:500+500-stratify:cell
+        - umis_per_cell_hist-plot_size:500+500-stratify:default
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
+          - - donor
+            - cell_types
           - donor
-          - lane
           - default
         plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
     _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
