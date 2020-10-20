@@ -1,5 +1,7 @@
 library(future)
 library(dplyr)
+library(parallel)
+library(Seurat)
 library(cellforestR)
 
 options(future.globals.maxSize = 8000 * 1024^2)

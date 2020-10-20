@@ -8,5 +8,6 @@ pandas
 path
 pyyaml
 scipy
+seaborn
 typeguard
 umap-learn

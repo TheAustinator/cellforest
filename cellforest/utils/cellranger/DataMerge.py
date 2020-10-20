@@ -15,7 +15,7 @@ class DataMerge:
         return ret
 
     @staticmethod
-    def _merge_rna(paths, metadata, save_dir, id_col="sample_id"):
+    def _merge_rna(paths, metadata, save_dir, id_col="lane_id"):
         """"""
         pool = Parallel(n_jobs=-2)
         # TODO: significant memory leakage -- maybe make an optional kwarg
@@ -35,7 +35,10 @@ class DataMerge:
             if id_col in metadata:
                 rna.index = rna.index.str.slice(0, -1) + meta[id_col]
         if rna.index.duplicated().any():
-            raise ValueError("cell identifiers must be unique. Consider using metadata with `entity_id` column")
+            raise ValueError(
+                "cell identifiers must be unique. Consider using metadata with `lane_id` column or specify a custom "
+                "`id_col"
+            )
         if meta is not None:
             meta.index = rna.cell_ids
         else:

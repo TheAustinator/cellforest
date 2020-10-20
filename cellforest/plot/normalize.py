@@ -1,5 +1,6 @@
 from dataforest.plot import plot_py, plot_r, requires
 import matplotlib.pyplot as plt
+from seaborn import violinplot
 
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_r_script_logged
@@ -43,8 +44,8 @@ def plot_umis_vs_perc_hsp_scat(branch: "CellBranch", **kwargs):
 
 @requires("normalize")
 @plot_r
-def plot_perc_mito_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_r_script_logged(branch, r_script, args, "plot_perc_mito_per_cell_vln")
+def plot_perc_mito_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_r_script_logged(branch, r_script, args, "plot_perc_mito_per_cell_vln_r")
 
 
 @requires("normalize")
@@ -55,8 +56,8 @@ def plot_umis_vs_perc_mito_scat_r(branch: "CellBranch", r_script: str, args: lis
 
 @requires("normalize")
 @plot_r
-def plot_perc_ribo_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_r_script_logged(branch, r_script, args, "plot_perc_ribo_per_cell_vln")
+def plot_perc_ribo_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_r_script_logged(branch, r_script, args, "plot_perc_ribo_per_cell_vln_r")
 
 
 @requires("normalize")
@@ -67,8 +68,8 @@ def plot_umis_vs_perc_ribo_scat_r(branch: "CellBranch", r_script: str, args: lis
 
 @requires("normalize")
 @plot_r
-def plot_perc_hsp_per_cell_vln(branch: "CellBranch", r_script: str, args: list, **kwargs):
-    run_r_script_logged(branch, r_script, args, "plot_perc_hsp_per_cell_vln")
+def plot_perc_hsp_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+    run_r_script_logged(branch, r_script, args, "plot_perc_hsp_per_cell_vln_r")
 
 
 def _hist_col(branch: "CellBranch", col, **kwargs):
@@ -79,6 +80,7 @@ def _hist_col(branch: "CellBranch", col, **kwargs):
 
 def _scatter_umi_vs_col(branch: "CellBranch", col, **kwargs):
     ax = kwargs.pop("ax", plt.gca())
-    ax.scatter(branch.meta[col], branch.meta[(y_col := "nCount_RNA")], **kwargs)
+    y_col = "nCount_RNA"
+    ax.scatter(branch.meta[col], branch.meta[y_col], **kwargs)
     ax.set_xlabel(col)
     ax.set_ylabel(y_col)

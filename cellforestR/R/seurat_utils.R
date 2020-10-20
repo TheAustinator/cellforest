@@ -74,7 +74,7 @@ save_embeddings <- function(seurat_object, output_dir) {
 #' @export
 run_pca <- function(seurat_object, output_embeddings_path, output_loadings_path, output_stdev_path, npcs = 30) {
   print("Running PCA"); print(date())
-  seurat_object <- RunPCA(object = seurat_object, features = VariableFeatures(seurat_obj) verbose = TRUE, npcs = npcs)
+  seurat_object <- RunPCA(object = seurat_object, features = VariableFeatures(seurat_object), verbose = TRUE, npcs = npcs)
 
   # Should add this in later and this script will be a decision point
   # JackStrawPlot(object = seurat_object, PCs = 1:12)
