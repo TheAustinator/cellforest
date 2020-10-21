@@ -48,7 +48,7 @@ from cellforest import CellBranch
 ## Quality Control Plotting
 Following the paradigm of tree of parameters, Cellforest implements automated generation of quality control (QC) plots after each process run. This means that a user can retroactively look up preliminary analyses, such as how the cells clustered, without having to run and re-run the pipeline on different parameters. Compared to ad hoc parameters picking (reactive) QC plots implementation pre-defines all plots on a wide range of parameters (proactive) which leads to drastic time savings for analyses requiring constant iteration of upstream parameters.
 ### I. Example plots
-Here is a pick of plots commonly used for scRNA-Seq, already implemented in Cellforest. For a full list, check out [III. All implemented plots](cellforest/README.md#iii-all-implemented-plots).
+Here is a pick of plots commonly used for scRNA-Seq, already implemented in Cellforest. For a full list, check out [All implemented plots](cellforest/README.md#iii-all-implemented-plots).
 
 <table border="0" class="dataframe">
   <thead>
@@ -125,8 +125,8 @@ plot_map:
         plot_size: [800, 800]
 ```
 1. This piece shall be located in `default_config.yaml` along with process specifications. 2nd level keys (`root`, `normalize`) indicate definition of plots at the corresponding process alias/name
-2. Plot names are in the format of `_<PLOT_NAME>_<PLOT_TYPE>_`, for the full list of available plot names, refer to INSERT_LINK.
+2. Plot names are in the format of `_<PLOT_NAME>_<PLOT_TYPE>_`, for the full list of available plot names, refer to [All umplemented plots](cellforest/README.md#iii-all-implemented-plots).
 3. For each plot we can specify parameters. For example, `stratify` groups the cells by a specified column in the metadata. In this case, there will be two plots created: first stratified by `sample_id` ID with generated plot size of 800x800 pixels and second plot on all data (no stratification) with size 800x800 pixels.
 4. As soon as you initialize a branch (`branch = cellforest.from_sample_metadata(root_dir, meta, branch_spec=branch_spec)`) or run a process (e.g., `branch.process.normalize()`), specified plots will be generated immediately after process finishes running.
-5. For advanced plotting specifications, refer to INSERT_LINK.
+5. For advanced plotting specifications, refer to [Parametrizing QC plotting](cellforest/README.md#ii-parametrizing-qc-plots)
 

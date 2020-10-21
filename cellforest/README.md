@@ -336,7 +336,7 @@ plot_size: [800, 800]
     <tr>
       <td><img src="../docs/_plots/perc_ribo_per_cell_vln.png" alt="perc_ribo_per_cell_vln" style="zoom:50%;" /><br/><code>_PERC_RIBO_PER_CELL_VLN_</code><br/><code>plot_perc_ribo_per_cell_vln()</code></td>
       <td>Violin plot showing distribution of ribosomal genes percentages per cell.</td>
-      <td>Ensure cell population is surviving and is representative.</td>
+      <td>Ensure cell population is surviving and is representative. Ribosobal gene counts can vary based on cell type.</td>
       <td><pre lang="yaml">
 stratify:
   - none
@@ -347,7 +347,7 @@ plot_size: [800, 800]
     <tr>
       <td><img src="../docs/_plots/umis_vs_perc_ribo_scat.png" alt="umis_vs_perc_ribo_scat" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_RIBO_SCAT_</code><br/><code>plot_umis_vs_perc_ribo_scat()</code></td>
       <td>Scatter plot showing relationship between UMI and ribosomal percentage per cell.</td>
-      <td>Filter out low ribo % and low UMI as damaged cells or low ribo % and high UMI as damaged multiplets. Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress.</td>
+      <td>Variance in ribo % might indicate changes in cell state/phenotype. Protein synthesis can also be altered during cell stress.</td>
       <td><pre lang="yaml">
 stratify:
   - none
@@ -449,7 +449,7 @@ npcs: 2
     <tr>
       <td><<img src="../docs/_plots/cell_cycle_scoring_scat.png" alt="cell_cycle_scoring_scat" style="zoom:50%;" /><br/><code>_CELL_CYCLE_SCORING_SCAT_</code><br/><code>plot_cell_cycle_scoring_scat()</code></td>
       <td>UMAP scatter plot showing cycles of each cell.</td>
-      <td>apture different clusters of cells at different stages. May make it difficult to identify cellular subtypes. Check if clusters form due to checkpoint genes in regular cell cycles or by-product of disease. In addition, looking into highly variable genes can help.</td>
+      <td>Capture clusters of cells at different stages. Check if clusters form due to checkpoint genes in regular cell cycles or by-product of disease. In addition, looking into highly variable genes can help.</td>
       <td><pre lang="yaml">
 plot_size: [800, 800]
 reduction: umap
@@ -477,8 +477,8 @@ reduction: umap
   <tbody>
     <tr>
       <td><img src="../docs/_plots/umis_per_cell_hist_cluster.png" alt="umis_per_cell_hist_cluster" style="zoom:50%;" /><br/><code>_UMIS_PER_CELL_CELL_HIST_</code><br/><code>plot_umis_per_cell_hist()</code></td>
-      <td>Distributions of UMI counts per cell, stratified by cluster.</td>
-      <td>TODO-QC: FILL IN HERE Typical healthy range, looking at coverage, distribution of reads per cell. Stressed populations or potential dead or background noise. Unusual cells (proliferating cell types/doublets), transcripts that may have been oversampled. Used to draw threshold for total UMI count.</td>
+      <td>Distributions of UMI counts per cell, stratified by cluster. Used to draw threshold for total UMI count.</td>
+      <td>Compare to typical healthy range of UMI counts. Observe distribution of reads per cell, are there any unusual peaks? Unusual peaks towards the low end can be indicative of stressed populations, potential dead, or background noise. Peaks to the high end can indicate proliferating cell types, doublets, or that transcripts that may have been oversampled.</td>
       <td><pre lang="yaml">
 stratify: cluster
 plot_size: [800, 800]
@@ -489,7 +489,7 @@ alpha: 0.4
     <tr>
       <td><<img src="../docs/_plots/umis_vs_genes_cluster.png" alt="umis_vs_genes_cluster" style="zoom:50%;" /><br/><code>_UMIS_VS_GENES_SCAT_</code><br/><code>plot_umis_vs_genes_scat()</code></td>
       <td>Scatter plots showing relationship between UMI and gene counts per cell, stratified by cluster.</td>
-      <td>TODO-QC: FILL IN HERE No robust trascript get picked up (5').</td>
+      <td>Generally there should be a good correlation. Filter out clusters with low quality cells: based on low UMI, gene count and/or low UMI, moderate gene count (high mitochonrial genes percentage).</td>
       <td><pre lang="yaml">
 stratify: cluster
 plot_size: [800, 800]
@@ -517,7 +517,7 @@ plot_size: [800, 800]
     <tr>
       <td><img src="../docs/_plots/perc_ribo_per_cell_vln_cluster.png" alt="perc_ribo_per_cell_vln_cluster" style="zoom:50%;" /><br/><code>_PERC_RIBO_PER_CELL_VLN_</code><br/><code>plot_perc_ribo_per_cell_vln()</code></td>
       <td>Violin plots showing distribution of ribosomal genes percentages per cell, stratified by cluster.</td>
-      <td>TODO-QC: FILL IN HERE.</td>
+      <td>Ribosobal gene counts can vary based on cell type. Pay attention to clusters with unusually high ribo % as those can indicate correlation with principal components to avoid <a href="https://kb.10xgenomics.com/hc/en-us/articles/218169723-What-fraction-of-reads-map-to-ribosomal-proteins-">technical effects.</a></td>
       <td><pre lang="yaml">
 stratify: cluster
 plot_size: [1600, 800]
@@ -526,7 +526,7 @@ plot_size: [1600, 800]
     <tr>
       <td><img src="../docs/_plots/umis_vs_perc_ribo_scat_cluster.png" alt="umis_vs_perc_ribo_scat_cluster" style="zoom:50%;" /><br/><code>_UMIS_VS_PERC_RIBO_SCAT_</code><br/><code>plot_umis_vs_perc_ribo_scat()</code></td>
       <td>Scatter plots showing relationship between UMI and ribosomal percentage per cell, stratified by cluster.</td>
-      <td>TODO-QC: FILL IN HERE.</td>
+      <td>Variance in ribo % might indicate changes in cell state/phenotype/cell stress. Find clusters with unusual ribo % and compare cell state with neighbor clusters.</td>
       <td><pre lang="yaml">
 stratify: cluster
 plot_size: [800, 800]
@@ -544,7 +544,7 @@ plot_size: [1600, 800]
     <tr>
       <td><img src="../docs/_plots/highest_exprs_dens_cluster.png" alt="highest_exprs_dens_cluster" style="zoom:50%;" /><br/><code>_HIGHEST_EXPRS_DENS_</code><br/><code>plot_highest_exprs_dens()</code></td>
       <td>Dense plots showing distribution of UMI counts per cell in 50 highest expressing genes, stratified by cluster.</td>
-      <td>TODO-QC: FILL IN HERE.</td>
+      <td>Determine main expressing genes to ensure that cells are filtered correctly and there are not many dead cells (e.g., mito genes as top expression genes) influencing the analysis.</td>
       <td><pre lang="yaml">
 stratify: cluster
 plot_size: [1600, 1600]
