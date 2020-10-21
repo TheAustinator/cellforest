@@ -11,8 +11,8 @@ import pandas as pd
 
 from cellforest import CellBranch
 
-_DEFAULT_PLOT_RESOLUTION_PX = (500, 500)  # width, height in pixels
-_DEFAULT_BIG_PLOT_RESOLUTION_PX = (1000, 1000)  # width, height in pixels
+_DEFAULT_PLOT_RESOLUTION_PX = (800, 800)  # width, height in pixels
+_DEFAULT_BIG_PLOT_RESOLUTION_PX = (1600, 1600)  # width, height in pixels
 _PLOT_FILE_EXT = ".png"
 
 _R_PLOT_SCRIPTS_PATH = Path(__file__).parent / "r"
@@ -23,8 +23,23 @@ _NONE_VARIATIONS = [None, "none", "None", "NULL", "NA"]
 _LOG = logging.getLogger("qc_plot_wrappers")
 
 
-# TODO: move these bad boiz to dataforest
+# TODO-QC: move these bad boiz to dataforest
 def qc_plot_py(plot_func):
+    """
+    Wrapper for matplotlib-based plotting functions to handle plot_kwargs parsing
+    and plot saving so that all you need to do is produce a pyplot :)
+
+    Example (wrap your plotting function):
+        >>> @qc_plot_py
+        >>> def plot_umis_per_cell_hist(branch: "CellBranch", **kwargs):
+        >>>     branch.rna.hist("sum", axis=0, **kwargs)
+
+    Mechanism of action:
+    1. Custom parameters (stratify, plot_size, plot_path) are parsed out
+    2. Other plotting function-related kwargs are passed down (for example, `bins=20` for `plt.hist()`)
+    3. Plots are saved to plot_path (can be inferred) with plot_size
+    """
+
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
         plot_path = kwargs.pop("plot_path", None)
@@ -64,6 +79,25 @@ def qc_plot_py(plot_func):
 
 
 def qc_plot_r(plot_func):
+    """
+    Wrapper for ggplot-based plotting functions to handle plot_kwargs parsing
+    and plot saving so that all you need to do is produce a ggplot2 output :>
+
+    Example (wrap your plotting function):
+        >>> @qc_plot_r
+        >>> def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
+            >>> # you can append additional information from `branch` into
+            >>> # args (e.g., `args.append(branch.current_path)`) and parse out
+            >>> # in the R plotting script with `some_param <- args[10]` or 11, 12, ...
+            >>> run_r_script_logged(branch, r_script, args, branch.current_process)
+
+    Mechanism of action:
+    1. Custom parameters (stratify, plot_size, plot_path) are parsed out
+    2. Information on branch spec, process, and remaining kwargs are passed to `plot_entry_point.R`
+    3. Specific arguments are accepted (usable parameters depend on plotting scripts implementation)
+    4. `Rscript` upon plotting scripts is called and plotting files are saved
+    """
+
     @wraps(plot_func)
     def wrapper(branch: "CellBranch", **kwargs):
         # TODO: move temp spec to a hook

@@ -90,11 +90,6 @@ def root_path_example(data_dir):
 
 
 @pytest.fixture
-def metadata_path(data_dir):
-    pass
-
-
-@pytest.fixture
 def sample_metadata(sample_metadata_path):
     return pd.read_csv(sample_metadata_path, sep="\t")
 
