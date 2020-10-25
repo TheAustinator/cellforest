@@ -10,7 +10,8 @@ class DataMerge:
     @staticmethod
     def merge_assay(paths, mode, metadata=None, save_dir=None):
         method = getattr(DataMerge, f"_merge_{mode}")
-        ret = method(paths, metadata, save_dir)
+        id_col = "entity_id" if "entity_id" in metadata else "lane_id"
+        ret = method(paths, metadata, save_dir, id_col)
         gc.collect()
         return ret
 

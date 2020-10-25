@@ -2,6 +2,7 @@ from pathlib import Path
 
 from dataforest import get_current_config
 
+from cellforest.defaults import defaults
 from cellforest.structures.counts.Counts import Counts
 from cellforest.templates.CellBranch import CellBranch
 from cellforest.templates.CellInterface import CellInterface
