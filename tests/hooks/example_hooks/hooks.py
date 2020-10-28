@@ -6,6 +6,6 @@ def hook_example_no_args(dp):
     print("hook_example_no_args")
 
 
-@hook(attrs=("requires",))
+@hook("requires")
 def hook_example_args(dp):
     print("hook_example_args")

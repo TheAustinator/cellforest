@@ -1,4 +1,5 @@
 from copy import deepcopy
+from typing import Type
 
 
 class DefaultsMeta(type):
@@ -46,3 +47,20 @@ class DefaultsMeta(type):
 
 class defaults(metaclass=DefaultsMeta):
     pass
+
+
+def build_const_container(container_name: str, const_dict: dict):
+    container_meta = type(f"{container_name}Meta", {"__init__": _container_meta_init})
+    for k, v in const_dict.items():
+        setattr(container_meta, k, v)
+    # container =
+
+
+class ConstContainer:
+    def __init__(self, container_name: str, const_dict: dict):
+        for k, v in const_dict:
+            setattr(self, k, v)
+
+    @classmethod
+    def build(cls, container_name: str, const_dict: dict) -> Type:
+        raise NotImplementedError()

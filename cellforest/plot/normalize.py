@@ -1,73 +1,64 @@
-from dataforest.plot import plot_py, plot_r, requires
+from dataforest.plot import plot_py, plot_r
 import matplotlib.pyplot as plt
-from seaborn import violinplot
 
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_r_script_logged
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_perc_mito_per_cell_hist(branch: "CellBranch", **kwargs):
     _hist_col(branch, "percent.mito", **kwargs)
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_perc_ribo_per_cell_hist(branch: "CellBranch", **kwargs):
     _hist_col(branch, "percent.ribo", **kwargs)
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_perc_hsp_per_cell_hist(branch: "CellBranch", **kwargs):
+    import ipdb
+
+    ipdb.set_trace()
     _hist_col(branch, "percent.hsp", **kwargs)
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_umis_vs_perc_mito_scat(branch: "CellBranch", **kwargs):
     _scatter_umi_vs_col(branch, "percent.mito", **kwargs)
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_umis_vs_perc_ribo_scat(branch: "CellBranch", **kwargs):
     _scatter_umi_vs_col(branch, "percent.ribo", **kwargs)
 
 
-@requires("normalize")
-@plot_py
+@plot_py(requires="normalize")
 def plot_umis_vs_perc_hsp_scat(branch: "CellBranch", **kwargs):
     _scatter_umi_vs_col(branch, "percent.hsp", **kwargs)
 
 
-@requires("normalize")
-@plot_r
+@plot_r(requires="normalize")
 def plot_perc_mito_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_perc_mito_per_cell_vln_r")
 
 
-@requires("normalize")
-@plot_r
+@plot_r(requires="normalize")
 def plot_umis_vs_perc_mito_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_mito_scat")
 
 
-@requires("normalize")
-@plot_r
+@plot_r(requires="normalize")
 def plot_perc_ribo_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_perc_ribo_per_cell_vln_r")
 
 
-@requires("normalize")
-@plot_r
+@plot_r(requires="normalize")
 def plot_umis_vs_perc_ribo_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_umis_vs_perc_ribo_scat")
 
 
-@requires("normalize")
-@plot_r
+@plot_r(requires="normalize")
 def plot_perc_hsp_per_cell_vln_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_perc_hsp_per_cell_vln_r")
 
