@@ -1,3 +1,11 @@
+library(future)
+library(parallel)
+library(cellforestR)
+library(Seurat)
+
+options(future.globals.maxSize = 8000 * 1024^2)
+plan("multiprocess", workers = detectCores() - 1)
+
 args <- commandArgs(trailingOnly = TRUE)
 
 input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
@@ -7,12 +15,8 @@ min_genes <- as.numeric(args[4])
 max_genes <- as.numeric(args[5])
 min_cells <- as.numeric(args[6])
 perc_mito_cutoff <- as.numeric(args[7])
-r_functions_filepath <- args[8]
-
-verbose <- as.logical(args[9])
-nfeatures <- as.numeric(args[10])
-
-source(r_functions_filepath)
+verbose <- as.logical(args[8])
+nfeatures <- as.numeric(args[9])
 
 
 print("creating Seurat object"); print(date())

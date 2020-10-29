@@ -16,8 +16,8 @@ groupby <- args[9]
 
 n_cpus <- as.numeric(args[10])
 plan("multiprocess", workers = n_cpus)
-r_functions_filepath <- args[11]
-source(r_functions_filepath)
+#r_functions_filepath <- args[11]
+#source(r_functions_filepath)
 library("cellforestR")
 
 

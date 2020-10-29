@@ -110,6 +110,9 @@ class Counts(csr_matrix):
 
     def vstack(self, others: Union["Counts", Iterable["Counts"]]):
         others = others if isinstance(others, (list, tuple)) else [others]
+        widths = set([self._matrix.shape[1]] + [x._matrix.shape[1] for x in others])
+        if len(widths) > 1:
+            raise ValueError(f"Attempting to vstack matrices with variable widths {widths}")
         matrix = vstack([self._matrix, *[x._matrix for x in others]])
         cell_ids = pd.concat([self.cell_ids, *[x.cell_ids for x in others]]).reset_index(drop=True)
         features = self.features
@@ -283,7 +286,7 @@ class Counts(csr_matrix):
         matrix_agg_len = self._matrix.get_shape()[axis]
         if labels is None:
             labels = ["sample_id"] * matrix_agg_len
-        elif isinstance(labels, str):
+        elif isinstance(labels, (str, int, float)):
             labels = [labels] * matrix_agg_len
         elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(

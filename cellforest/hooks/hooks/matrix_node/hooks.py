@@ -3,7 +3,7 @@ from dataforest.hooks import hook
 from cellforest.utils.r.Convert import Convert
 
 
-@hook(attrs=["matrix_layer"])
+@hook("matrix_layer")
 def hook_unify_matrix_node(dp):
     """
     If node has counts matrix output, ensure that all desired formats are
@@ -12,6 +12,7 @@ def hook_unify_matrix_node(dp):
     Note: only Counts pickle and Seurat rds currently implemented
     """
     # TODO: currently hardcoded to pickle and rds, but fix this later
+
     if dp.matrix_layer:
         pickle_path = dp.branch[dp.name].path_map["rna"]
         rds_path = dp.branch[dp.name].path_map["rna_r"]

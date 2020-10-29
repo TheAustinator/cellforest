@@ -1,3 +1,11 @@
+library(future)
+library(parallel)
+library(cellforestR)
+library(Seurat)
+
+options(future.globals.maxSize = 8000 * 1024^2)
+plan("multiprocess", workers = detectCores() - 1)
+
 args <- commandArgs(trailingOnly = TRUE)
 
 input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
@@ -7,8 +15,8 @@ output_loadings_path <- args[4]
 output_stdev_path <- args[5]
 npcs <- as.numeric(args[6])
 
-r_functions_filepath <- args[7]
-source(r_functions_filepath)
+#r_functions_filepath <- args[7]
+#source(r_functions_filepath)
 
 print("creating Seurat object"); print(date())
 srat <- readRDS(input_rds_path)

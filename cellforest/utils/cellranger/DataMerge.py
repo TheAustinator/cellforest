@@ -1,6 +1,7 @@
+import gc
 import os
 
-import pandas as pd
+from joblib import Parallel, delayed
 
 from cellforest import Counts
 
@@ -9,12 +10,22 @@ class DataMerge:
     @staticmethod
     def merge_assay(paths, mode, metadata=None, save_dir=None):
         method = getattr(DataMerge, f"_merge_{mode}")
-        return method(paths, metadata, save_dir)
+        id_col = "entity_id" if "entity_id" in metadata else "lane_id"
+        ret = method(paths, metadata, save_dir, id_col)
+        gc.collect()
+        return ret
 
     @staticmethod
-    def _merge_rna(paths, metadata, save_dir, id_col="sample_id"):
+    def _merge_rna(paths, metadata, save_dir, id_col="lane_id"):
         """"""
-        rna_list = [Counts.from_cellranger(dir_) for dir_ in paths]
+        pool = Parallel(n_jobs=-2)
+        # TODO: significant memory leakage -- maybe make an optional kwarg
+        rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
+        widths = list(map(lambda x: x.shape[1], rna_list))
+        if len(set(widths)) > 1:
+            raise ValueError(
+                f"Can't merge matrices with mixed shapes: {set(widths)}. Details: {list(zip(paths, widths))}"
+            )
         rna = Counts.concatenate(rna_list)
         meta = None
         if metadata is not None:
@@ -25,7 +36,10 @@ class DataMerge:
             if id_col in metadata:
                 rna.index = rna.index.str.slice(0, -1) + meta[id_col]
         if rna.index.duplicated().any():
-            raise ValueError("cell identifiers must be unique. Consider using metadata with `entity_id` column")
+            raise ValueError(
+                "cell identifiers must be unique. Consider using metadata with `lane_id` column or specify a custom "
+                "`id_col"
+            )
         if meta is not None:
             meta.index = rna.cell_ids
         else:

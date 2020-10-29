@@ -31,6 +31,7 @@ plot_kwargs_defaults:
     wide: [1600, 800]
   filename_ext: png
 
+#
 plot_map:
   root:
     _UMIS_PER_CELL_HIST_: ~
@@ -38,29 +39,30 @@ plot_map:
   normalize:
     _GENES_PER_CELL_HIST_:
       plot_kwargs:
-        stratify:  # 2 plots created
-          - sample_id
+        stratify:    # 2 plots created
+          - donor
           - default
         bins: 50
     _UMIS_PER_CELL_HIST_:
       # plot_method and filename(s) can be inferred from key if not provided explicitly
       plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
       filename:  # optional, will overwrite inferred name
-        - umis_per_cell_hist-plot_size:800+800-stratify:sample  # 1st plot
-        - umis_per_cell_hist-plot_size:800+800-stratify:none  # 2nd plot
-        - umis_per_cell_hist-plot_size:800+800-stratify:cell  # 3rd plot
+        - umis_per_cell_hist-plot_size:500+500-stratify:donor+cell_types
+        - umis_per_cell_hist-plot_size:500+500-stratify:donor
+        - umis_per_cell_hist-plot_size:500+500-stratify:default
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample_id  # 1st plot
-          - lane  # 2nd plot
-          - default  # 3rd plot
+          - - donor
+            - cell_types
+          - donor
+          - default
         plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
         bins: 50
     _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
     _PERC_MITO_PER_CELL_VLN_:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample_id
+          - donor
           - default
         alpha: 0.4
     _PERC_MITO_PER_CELL_HIST_: ~
@@ -70,11 +72,11 @@ plot_map:
     _PERC_RIBO_PER_CELL_VLN:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
         stratify:
-          - sample_id
+          - donor
           - default
     _UMIS_VS_PERC_RIBO_SCAT:
       plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
-        stratify: sample_id
+        stratify: donor
     _PERC_HSP_PER_CELL_VLN: ~
 #    _HIGHEST_EXPRS_DENS_:
 #      plot_kwargs:  # will map 1-to-1 (not all possible combinations)
@@ -90,7 +92,7 @@ plot_map:
     _PCA_EMBEDDINGS_SCAT_:
       plot_kwargs:
         stratify:
-          - sample_id
+          - donor
           - nFeature_RNA
         plot_size: large
         npcs: 7
@@ -98,7 +100,7 @@ plot_map:
     _UMAP_EMBEDDINGS_SCAT_:
       plot_kwargs:
         stratify:
-          - sample_id
+          - donor
           - nFeature_RNA
         plot_size: large
     _CELL_CYCLE_SCORING_SCAT_: ~
@@ -205,6 +207,11 @@ hook_sources:
   - cellforest.hooks
 plot_sources:
   - cellforest.plot
+r_plot_sources:
+  - cellforest.plot.r
+# This should move to cellforestR
+#r_functions_sources:
+#  - cellforest.processes.scripts.functions
 
 temp_meta_filename: temp_meta.tsv
 

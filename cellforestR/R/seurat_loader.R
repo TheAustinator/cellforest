@@ -30,12 +30,22 @@ UMAP_EMBED_KEY = "umap"
 #' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")  # given that processes have been run
 #'
 #' DimPlot(seurat_obj, reduction = "umap")
-cellforest_load <- function(root_dir, branch_spec, process) {
+cellforest_load <- function(root_dir, branch_spec, process, subset = NULL, filter_ = NULL) {
   cellforest <- import("cellforest")
   cf_branch <- cellforest$load(root_dir, branch_spec = branch_spec)
   cf_branch$goto_process(process)
   seurat_obj <- get_seurat_object(cf_branch)
-
+  # TODO: use Kristin's idea of adding a new column e.g. MYFLAG and using that
+  #if (!is.null(subset) && !is.na(subset)) {
+  #  temp_env <- new.env()
+  #
+  #  eval(parse(text = subset), envir = temp_env)
+  #  AddMetaData()
+  #  seurat_obj <- subset(seurat_obj, subset = subset[1] == subset[2])
+  #}
+  #if (!is.null(filter_) && !is.na(filter_)) {
+  #  seurat_obj <- subset(seurat_obj, subset = filter_[1] != filter_[2])
+  #}
   return(seurat_obj)
 }
 
@@ -69,12 +79,15 @@ get_seurat_object <- function(cf_branch) {
   current_process <- cf_branch$current_process
   current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
-  seurat_object <- readRDS(file = rds_path)
-  DefaultAssay(seurat_object) <- "RNA"
+  seurat_obj <- readRDS(file = rds_path)
+  DefaultAssay(seurat_obj) <- "RNA"
 
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
   if (current_process == "root") {
-    return(seurat_object)
+    meta_path <- paste0(dirname(rds_path), "/meta.tsv")
+    meta <- read.table(meta_path, sep = "\t", header = TRUE, row.names = 1, quote="")
+    seurat_obj <- AddMetaData(seurat_obj, meta)
+    return(seurat_obj)
   }
 
   spec <- cf_branch$spec
@@ -87,27 +100,27 @@ get_seurat_object <- function(cf_branch) {
     for (process_name in processes_to_load) {
       process_path_map <- cf_branch[process_name]$path_map
       meta <- cf_branch$meta
-      cols <- setdiff(names(meta), names(seurat_object[[]]))
+      cols <- setdiff(names(meta), names(seurat_obj[[]]))
       if (length(cols) > 0) {
-        seurat_object <- AddMetaData(seurat_object, meta[cols])
+        seurat_obj <- AddMetaData(seurat_obj, meta[cols])
       }
 
       process <- cf_branch[process_name]$process
       if (process == "reduce") {
-        seurat_object <- add_dim_reduc_embed(
-          seurat_object,
+        seurat_obj <- add_dim_reduc_embed(
+          seurat_obj,
           process_path_map,
         )
       }
       if (process == "cluster") {
-        Idents(seurat_object) <- seurat_object[["cluster_id"]]
+        Idents(seurat_obj) <- seurat_obj[["cluster_id"]]
       }
       # TO-DO: Add loading for new processes
     }
   }
   print(toString(glue("Seurat object created at process '{current_process}'")))
 
-  return(seurat_object)
+  return(seurat_obj)
 }
 
 add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pca", "umap")) {

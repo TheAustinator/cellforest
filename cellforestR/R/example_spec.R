@@ -39,7 +39,7 @@ py_run_string('example_spec_py = [
           "min_genes": 5,
           "max_genes": 5000,
           "min_cells": 5,
-          "nfeatures": 30,
+          "nfeatures": 3,
           "perc_mito_cutoff": 20,
           "method": "seurat_default",
       },

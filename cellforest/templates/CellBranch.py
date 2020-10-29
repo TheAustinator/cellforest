@@ -1,4 +1,3 @@
-import os
 from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Union, List, Tuple
@@ -120,29 +119,6 @@ class CellBranch(CellBase, DataBranch):
     @property
     def crispr(self):
         raise NotImplementedError()
-
-    def groupby(self, by: Union[str, list, set, tuple], **kwargs) -> Tuple[str, "CellBranch"]:
-        """
-        Operates like a pandas group_labels, but does not return a GroupBy object,
-        and yields (name, DataBranch), where each DataBranch is subset according to `by`,
-        which corresponds to columns of `self.meta`.
-        This is useful for batching analysis across various conditions, where
-        each run requires an DataBranch.
-        Args:
-            by: variables over which to group (like pandas)
-            **kwargs: for pandas group_labels on `self.meta`
-
-        Yields:
-            name: values for DataBranch `subset` according to keys specified in `by`
-            branch: new DataBranch which inherits `self.spec` with additional `subset`s
-                from `by`
-        """
-        if isinstance(by, (tuple, set)):
-            by = list(by)
-        for (name, df) in self.meta.groupby(by, **kwargs):
-            branch = self.copy()
-            branch._meta = df
-            yield name, branch
 
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         base_kwargs = self._get_copy_base_kwargs()

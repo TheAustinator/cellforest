@@ -1,3 +1,5 @@
+library(cellforestR)
+
 args <- commandArgs(trailingOnly <- TRUE)
 print(args)
 tenx_directory_path <- commandArgs(trailingOnly = TRUE)[1]
@@ -14,10 +16,10 @@ output_loadings_path <- args[11]
 num_pcs <- args[12]
 resolution <- as.numeric(args[13])
 
-r_functions_filepath <- args[14]
-source(r_functions_filepath)
+#r_functions_filepath <- args[14]
+#source(r_functions_filepath)
 
-seurat_object <- create_seurat_object(tenx_directory_path, seurat_metadata_path, min_cells)
+seurat_object <- srat_from_tenx(tenx_directory_path, seurat_metadata_path, min_cells)
 
 seurat_object <- filter_cells(seurat_object, min_detected_genes, max_detected_genes, percent_mito_cutoff)
 seurat_object <- run_sctransform(seurat_object, corrected_umi_output_path, pearson_residual_file_path)

@@ -34,7 +34,7 @@ pip install cellforest
 **Install Accompanying R Package**
 ```bash
 git clone https://github.com/TheAustinator/cellforest.git
-R -e "install.packages('cellforest/cellforestR', repos=NULL, type='source')"
+R -e "devtools::install('~/code/cellforest/cellforestR', dependencies = TRUE)"
 ```
 **Import**
 ```python

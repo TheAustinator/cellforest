@@ -18,6 +18,7 @@ Collate:
     'example_spec.R'
     'helper_functions.R'
     'seurat_loader.R'
+    'seurat_utils.R'
 Depends:
 	R (>= 3.4.0)
 Imports:
