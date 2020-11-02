@@ -19,6 +19,7 @@ class CellBase(DataBase):
         input_paths: Optional[List[Union[str, Path]]] = None,
         metadata_read_kwargs: Optional[dict] = None,
         mode: Optional[str] = None,
+        parallel: bool = True,
     ):
         """
         Combine files from multiple cellranger output directories into a single
@@ -43,9 +44,9 @@ class CellBase(DataBase):
                 )
             for assay in assays:
                 paths = metadata[f"{prefix}{assay}"].tolist()
-                DataMerge.merge_assay(paths, assay, metadata, save_dir=root)
+                DataMerge.merge_assay(paths, assay, metadata, save_dir=root, parallel=parallel)
         else:
-            DataMerge.merge_assay(input_paths, mode, save_dir=root)
+            DataMerge.merge_assay(input_paths, mode, save_dir=root, parallel=parallel)
         return dict()
 
     @staticmethod

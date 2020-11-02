@@ -628,5 +628,11 @@ class Counts(csr_matrix):
             wrapped_method = Counts.wrap_super(super_method)
             setattr(Counts, name, wrapped_method)
 
+    def __eq__(self, other):
+        eq_features = self.features.equals(other.features)
+        eq_cell_ids = self.cell_ids.equals(other.cell_ids)
+        eq_sum = self.sum() == other.sum()
+        return eq_features and eq_cell_ids and eq_sum
+
 
 Counts.decorate(Counts._SUPER_METHODS)

@@ -29,7 +29,7 @@ setup(
     # TODO: this works in "all", but not in `install_reqs` -- fix
     install_requires=requirements,
     extras_require={"all": requirements, "test": test_requirements, "dev": dev_requirements,},
-    package_data={"cellforest": ["config/default_config.yaml"]},
+    package_data={"cellforest": ["config/default_config.yaml", "config/no_plot_config.yaml"]},
     include_package_data=True,
     manifest="MANIFEST.in",
     classifiers=[

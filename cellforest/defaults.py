@@ -50,7 +50,7 @@ class defaults(metaclass=DefaultsMeta):
 
 
 def build_const_container(container_name: str, const_dict: dict):
-    container_meta = type(f"{container_name}Meta", {"__init__": _container_meta_init})
+    container_meta = type(f"{container_name}Meta", (), {"__init__": _container_meta_init})
     for k, v in const_dict.items():
         setattr(container_meta, k, v)
     # container =

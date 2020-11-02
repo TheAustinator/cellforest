@@ -8,19 +8,22 @@ from cellforest import Counts
 
 class DataMerge:
     @staticmethod
-    def merge_assay(paths, mode, metadata=None, save_dir=None):
+    def merge_assay(paths, mode, metadata=None, save_dir=None, parallel=True):
         method = getattr(DataMerge, f"_merge_{mode}")
-        id_col = "entity_id" if "entity_id" in metadata else "lane_id"
-        ret = method(paths, metadata, save_dir, id_col)
+        id_col = "entity_id" if metadata and "entity_id" in metadata else "lane_id"
+        ret = method(paths, metadata, save_dir, id_col, parallel)
         gc.collect()
         return ret
 
     @staticmethod
-    def _merge_rna(paths, metadata, save_dir, id_col="lane_id"):
+    def _merge_rna(paths, metadata, save_dir, id_col="lane_id", parallel=True):
         """"""
         pool = Parallel(n_jobs=-2)
         # TODO: significant memory leakage -- maybe make an optional kwarg
-        rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
+        if parallel:
+            rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
+        else:
+            rna_list = [Counts.from_cellranger(path) for path in paths]
         widths = list(map(lambda x: x.shape[1], rna_list))
         if len(set(widths)) > 1:
             raise ValueError(
