@@ -1,6 +1,9 @@
-from typing import Optional
+import math
+from typing import Optional, Literal
 
 from dataforest.plot import plot_py, plot_r
+import matplotlib.pyplot as plt
+import numpy as np
 from seaborn import barplot, violinplot
 
 from cellforest import CellBranch
@@ -62,6 +65,29 @@ def plot_frac_cells_recovered_bar(branch: "CellBranch", x: Optional[str] = None,
     return barplot(x=x, y="frac_recovered", hue=hue, data=df, **kwargs)
 
 
+@plot_py(forbid=["facet", "stratify"])
+def plot_hist_features(branch: "CellBranch", features: list, ncol: int = 3, ax_size=5, sep: Literal["stratify", "facet"] = "facet", **kwargs):
+    # TODO: add facet_vars to plotting decorator to allow facet by cols rather than rows, and use that for grid
+    rna_features = list(set(features).difference(branch.meta.columns))
+    if rna_features:
+        branch = branch.copy()
+        branch.meta[rna_features] = branch.rna[:, rna_features].todense()
+    ncol = min(len(features), ncol)
+    nrow = math.ceil(len(features) / ncol)
+    fig, ax_arr = plt.subplots(nrow, ncol)
+    if not isinstance(ax_arr, np.ndarray):
+        ax_arr = np.array([[ax_arr]])
+    if ax_arr.ndim < 2:
+        np.expand_dims(ax_arr, axis=0)
+    ax_list = ax_arr.flatten()
+    kwargs.pop("ax", None)
+    fig.set_size_inches(1.1 * ncol * ax_size, nrow * ax_size)  # 1.1 for color bar
+    for i, feat in enumerate(features):
+        ax = ax_list[i]
+        ax.set_title(feat)
+        _plot_feature_hist(branch.meta[feat], ax=ax, **kwargs)
+
+
 @plot_r
 def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, "plot_highest_exprs_dens")
@@ -70,3 +96,7 @@ def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **k
 @plot_r
 def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
     run_r_script_logged(branch, r_script, args, branch.current_process)
+
+
+def _plot_feature_hist(feature_arr, ax, **kwargs):
+    return ax.hist(feature_arr, **kwargs)

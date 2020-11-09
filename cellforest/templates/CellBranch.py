@@ -127,7 +127,7 @@ class CellBranch(CellBase, DataBranch):
         kwargs = {k: deepcopy(v) for k, v in kwargs.items()}
         if reset:
             kwargs = base_kwargs
-        return self.__class__(**kwargs)
+        return super().copy(**kwargs)
 
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from branch_spec"""

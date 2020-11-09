@@ -2,6 +2,7 @@ import gc
 import os
 
 from joblib import Parallel, delayed
+import pandas as pd
 
 from cellforest import Counts
 
@@ -10,7 +11,7 @@ class DataMerge:
     @staticmethod
     def merge_assay(paths, mode, metadata=None, save_dir=None, parallel=True):
         method = getattr(DataMerge, f"_merge_{mode}")
-        id_col = "entity_id" if metadata and "entity_id" in metadata else "lane_id"
+        id_col = "entity_id" if isinstance(metadata, pd.DataFrame) and "entity_id" in metadata else "lane_id"
         ret = method(paths, metadata, save_dir, id_col, parallel)
         gc.collect()
         return ret
@@ -18,9 +19,9 @@ class DataMerge:
     @staticmethod
     def _merge_rna(paths, metadata, save_dir, id_col="lane_id", parallel=True):
         """"""
-        pool = Parallel(n_jobs=-2)
         # TODO: significant memory leakage -- maybe make an optional kwarg
         if parallel:
+            pool = Parallel(n_jobs=-2)
             rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
         else:
             rna_list = [Counts.from_cellranger(path) for path in paths]
@@ -43,12 +44,15 @@ class DataMerge:
                 "cell identifiers must be unique. Consider using metadata with `lane_id` column or specify a custom "
                 "`id_col"
             )
-        if meta is not None:
-            meta.index = rna.cell_ids
+        if meta is None:
+            meta = pd.DataFrame(index=rna.cell_ids)
+            meta.index.name = None
         else:
-            meta = rna.cell_ids
+            meta = pd.DataFrame(meta)
+            meta.index = rna.cell_ids
         if save_dir:
             os.makedirs(save_dir, exist_ok=True)
+
             meta.to_csv(save_dir / "meta.tsv", sep="\t")
             # TODO: move create_rds val to config
             rna.save(save_dir / "rna.pickle", save_rds=True)

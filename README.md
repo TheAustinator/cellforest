@@ -28,14 +28,13 @@ ce<p align="center"><img width=80% src="https://raw.githubusercontent.com/theaus
 
 ## Usage
 **Install**
-```python
+```bash
 pip install cellforest
 ```
 **Install Accompanying R Package**
 ```bash
 git clone https://github.com/TheAustinator/cellforest.git
-R -e "devtools::install('~/code/cellforest/cellforestR', dependencies = TRUE)"
-```
+!R -e "library('devtools'); library('parallel'); install('~/code/cellforest/cellforestR', dependencies = TRUE, Ncpus = detectCores())"```
 **Import**
 ```python
 from cellforest import CellBranch

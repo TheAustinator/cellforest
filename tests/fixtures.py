@@ -8,6 +8,7 @@ import pytest
 
 import cellforest as cf
 from cellforest import useconfig
+from tests.utils.check_files import check_root_files
 from tests.utils.get_test_data import get_test_data
 
 # TODO: remove plots from config for all tests except plotting tests
@@ -107,24 +108,25 @@ def counts_path(root_path):
 
 @useconfig("no_plot_config")
 def test_from_input_dirs(root_path, sample_paths):
-    branch = cf.from_input_dirs(root_path, sample_paths, mode="rna")
-    _ = branch.meta
-    _ = branch.rna
+    branch = cf.from_input_dirs(root_path, sample_paths, mode="rna", parallel=False)    # parallel false for pytest
+    assert "AAACATACAACCAC-1" in branch.meta.index
+    assert branch.rna.shape[0] > 1 and branch.rna.shape[1] > 1
     return sample_paths
 
 
 @pytest.fixture
-def test_from_input_dirs_fix():
-    return test_from_input_dirs()
+def test_from_input_dirs_fix(root_path, sample_paths):
+    return test_from_input_dirs(root_path, sample_paths)
 
 
 @pytest.fixture
 @useconfig("no_plot_config")
 def build_root(root_path, sample_metadata):
-    branch = cf.from_sample_metadata(root_path, sample_metadata)
-    _ = branch.meta
-    _ = branch.rna
+    branch = cf.from_sample_metadata(root_path, sample_metadata, parallel=False)
+    assert "AAACATACAACCAC-sample_1" in branch.meta.index
+    assert branch.rna.shape[1] > 1
     assert len(branch.meta.columns) > 0
+    check_root_files(branch)
     return branch
 
 
@@ -202,7 +204,7 @@ def branch_spec_diffexp(branch_spec_cluster):
     spec_run_markers = {
         "_PROCESS_": "diffexp",
         "_PARAMS_": {"logfc_thresh": 0.0001, "test": "wilcox"},
-        "_PARTITION_": ["sample_id"],
+        "_PARTITION_": ["entity_id"],
     }
     spec.append(spec_run_markers)
     return spec
@@ -234,42 +236,37 @@ def processes_of_norm_reduce_spec(branch_spec_reduce):
 
 
 @pytest.fixture
-@useconfig("no_plot_config")
 def test_norm(root_path, branch_spec_norm, build_root):
     branch = cf.load(root_path, branch_spec_norm)
-    branch.process.normalize()
+    branch.process.normalize(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 
 @pytest.fixture
-@useconfig("no_plot_config")
 def test_reduce(root_path, branch_spec_reduce, test_norm):
-    branch = cf.load(root_path, branch_spec_reduce)
-    branch.process.reduce()
+    branch = cf.load(root_path, branch_spec=branch_spec_reduce)
+    branch.process.reduce(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 
 @pytest.fixture
-@useconfig("no_plot_config")
 def test_cluster(root_path, branch_spec_cluster, test_reduce):
     branch = cf.load(root_path, branch_spec_cluster)
-    branch.process.cluster()
+    branch.process.cluster(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 
 @pytest.fixture
-@useconfig("no_plot_config")
 def test_markers(root_path, branch_spec_markers, test_cluster):
     branch = cf.load(root_path, branch_spec_markers)
-    branch.process.markers()
+    branch.process.markers(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 
 @pytest.fixture
-@useconfig("no_plot_config")
 def test_diffexp(root_path, branch_spec_diffexp, test_cluster):
     branch = cf.load(root_path, branch_spec_diffexp)
-    branch.process.diffexp()
+    branch.process.diffexp(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 

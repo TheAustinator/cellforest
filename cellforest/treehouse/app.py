@@ -3,8 +3,10 @@ from typing import TYPE_CHECKING
 from dataforest.treehouse.components.scatter import Scatter, DropDownColumn, SliderColumn, DropDownOptionsStore, \
     ColumnAdder, ScatterAnnotator
 from jupyter_dash import JupyterDash
+import pandas as pd
 
 from cellforest.treehouse.Model import CellModel
+from cellforest.treehouse.components import GeneData
 
 if TYPE_CHECKING:
     from dataforest.core.DataTree import DataTree
@@ -13,22 +15,37 @@ if TYPE_CHECKING:
 STYLESHEET = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
 
-def run(tree: "DataTree") -> JupyterDash:
-    JupyterDash.infer_jupyter_proxy_config()
-    app = JupyterDash(__name__, external_stylesheets=STYLESHEET)
-    model = CellModel(tree)
-    scatter = Scatter(app)
-    dim_dropdowns = DropDownColumn(app, data=dict(
-        title_list=model.DIMENSIONS,
-        options=model.col_options
-    ))
-    sliders = SliderColumn(data={"slider_params": model.MARKER_ARGS_PARAMS})
-    col_adder = ColumnAdder()
-    annotator = ScatterAnnotator(data={"options": model.col_options})
-    colname_store = DropDownOptionsStore()
+class TreeHouse:
+    def __init__(self, tree: "DataTree"):
+        self.tree = tree
+        JupyterDash.infer_jupyter_proxy_config()
+        self.app = JupyterDash(__name__, external_stylesheets=STYLESHEET)
+        self.server = self.app.server
+        self.model = CellModel(tree)
+        self.scatter = Scatter(self.app, data={"model": self.model})
+        self.dim_dropdowns = DropDownColumn(self.app, data=dict(
+            title_list=self.model.DIMENSIONS,
+            options=self.model.col_options
+        ))
+        self.sliders = SliderColumn(data={"slider_params": self.model.MARKER_ARGS_PARAMS})
+        self.col_adder = ColumnAdder()
+        self.annotator = ScatterAnnotator(data={"model": self.model, "options": self.model.col_options})
+        self.colname_store = DropDownOptionsStore()
+        self.gene_data = GeneData(self.app, data={"model": self.model})
 
-    colname_store.callbacks(annotator, subscribers=[*dim_dropdowns.contents, annotator.dropdown])
-    annotator.callbacks(scatter, col_adder)
-    scatter.callbacks(dim_dropdowns, sliders)
+        self.colname_store.callbacks(master=self.annotator, subscribers=[*self.dim_dropdowns.contents, self.annotator.dropdown])
+        self.annotator.callbacks(self.scatter, self.col_adder)
+        self.scatter.callbacks(self.dim_dropdowns, self.sliders)
+        self.gene_data.callbacks(self.scatter)
 
-    return app
+    @property
+    def top_genes(self):
+        return self.model.top_genes
+
+    @property
+    def diff_genes(self):
+        return self.model.diff_genes
+
+    @property
+    def selected_cells(self):
+        return pd.Series(getattr(self.scatter, "selected_indices", None))

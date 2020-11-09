@@ -10,7 +10,7 @@ def get_example_spec():
                 "perc_mito_cutoff": 20,
                 "method": "seurat_default",
             },
-            "_SUBSET_": {"sample_id": "sample_1"},
+            "_SUBSET_": {"entity_id": "sample_1"},
         },
         {
             "_PROCESS_": "reduce",

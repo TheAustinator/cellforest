@@ -14,4 +14,4 @@ from_sample_metadata = CellInterface.from_sample_metadata
 from_input_dirs = CellInterface.from_input_dirs
 load = CellInterface.load
 
-update_config(Path(__file__).parent / "config/default_config.yaml")
+update_config(Path(__file__).parent / "config/no_plot_config.yaml")

@@ -17,9 +17,6 @@ def plot_perc_ribo_per_cell_hist(branch: "CellBranch", **kwargs):
 
 @plot_py(requires="normalize")
 def plot_perc_hsp_per_cell_hist(branch: "CellBranch", **kwargs):
-    import ipdb
-
-    ipdb.set_trace()
     _hist_col(branch, "percent.hsp", **kwargs)
 
 
