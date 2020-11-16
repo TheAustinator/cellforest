@@ -7,7 +7,7 @@ example_spec_r <- type.convert(list(
   list(
     "_PROCESS_" = "normalize",
     "_PARAMS_" = list(
-      "min_genes" = 4,
+      "min_genes" = 5,
       "max_genes" = 5000,
       "min_cells" = 5,
       "nfeatures" = 30,
@@ -15,7 +15,7 @@ example_spec_r <- type.convert(list(
       "method" = "seurat_default"
     ),
     "_SUBSET_" = list(
-      "sample" = "sample_1"
+      "entity_id" = "sample_1"
     )
   ),
 
@@ -39,11 +39,11 @@ py_run_string('example_spec_py = [
           "min_genes": 5,
           "max_genes": 5000,
           "min_cells": 5,
-          "nfeatures": 30,
+          "nfeatures": 3,
           "perc_mito_cutoff": 20,
           "method": "seurat_default",
       },
-      "_SUBSET_": {"sample": "sample_1"},
+      "_SUBSET_": {"entity_id": "sample_1"},
   },
   {
       "_PROCESS_": "reduce",

@@ -5,43 +5,138 @@ file_map:
   normalize:
     corrected_umi: corrected_umi.mtx    # from sctransform
     pearson_residual: pearson_residuals.tsv    # from sctransform
+    qc_metrics: qc_metrics.tsv
   reduce:
     pca_embeddings: pca_embeddings.tsv
     pca_loadings: pca_loadings.tsv
+    pca_stdev: pca_stdev.tsv
     umap_embeddings: umap_embeddings.tsv
   cluster:
     clusters: clusters.tsv
   diffexp_bulk:
     diffexp_bulk_result: diffexp.tsv
   diffexp:
-    diffexp: diffexp.tsv
+    diffexp_result: diffexp.tsv
   markers:
     markers: markers.tsv
 
 
-# plot method names from plot_sources (no need to include plots output by processes)
-plot_methods:
-  root:
-    - plot_test
-  test_process:
-    - plot_test
-# files for plotting
+plot_kwargs_defaults:
+  stratify:
+    default: None
+    cluster: cluster_id
+  plot_size:  # width x height in px
+    default: [800, 800]
+    large: [1600, 1600]
+    wide: [1600, 800]
+  filename_ext: png
+
+#
 plot_map:
   root:
-    plot_test: test_plot.png
-  test_process:
-    plot_test: test_plot.png
+    _UMIS_PER_CELL_HIST_: ~
+    _UMIS_PER_BARCODE_RANK_CURV_: ~
+  normalize:
+    _GENES_PER_CELL_HIST_:
+      plot_kwargs:
+        stratify:
+          - donor
+          - default
+    _UMIS_PER_CELL_HIST_:
+      # plot_method and filename(s) can be inferred from key if not provided explicitly
+      plot_method: plot_umis_per_cell_hist  # optional, will overwrite inferred plot_method
+      filename:  # optional, will overwrite inferred name
+        - umis_per_cell_hist-plot_size:500+500-stratify:donor+cell_types
+        - umis_per_cell_hist-plot_size:500+500-stratify:donor
+        - umis_per_cell_hist-plot_size:500+500-stratify:default
+      plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+        stratify:
+          - - donor
+            - cell_types
+          - donor
+          - default
+        plot_size: default  # infers size from `plot_kwargs["stratify"]` and becomes ["default", "default", "default"]
+    _UMIS_VS_GENES_SCAT_: ~  # equivalent to saying `plot_kwargs: {stratify: default, plot_size: default}`
+    _PERC_MITO_PER_CELL_VLN_:
+      plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+        stratify:
+          - donor
+          - default
+    _PERC_MITO_PER_CELL_HIST_: ~
+    _UMIS_VS_PERC_MITO_SCAT_: ~
+    _PERC_RIBO_PER_CELL_VLN:
+      plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+        stratify:
+          - donor
+          - default
+    _UMIS_VS_PERC_RIBO_SCAT:
+      plot_kwargs:  # optional, if not defined then will set all kwargs to "default" from `plot_kwargs_defaults`
+        stratify: donor
+    _PERC_HSP_PER_CELL_VLN: ~
+#    _HIGHEST_EXPRS_DENS_:
+#      plot_kwargs:  # will map 1-to-1 (not all possible combinations)
+#        stratify:
+#          - sample
+#          - nFeature_RNA
+#        plot_size: large
+  reduce:
+    _PCA_ELBOW_CURV_: ~
+    _PCA_LOADINGS_SCAT_:
+      plot_kwargs:
+        plot_size: large
+    _PCA_EMBEDDINGS_SCAT_:
+      plot_kwargs:
+        stratify:
+          - donor
+          - nFeature_RNA
+        plot_size: large
+        npcs: 7
+        alpha: 0.4
+    _UMAP_EMBEDDINGS_SCAT_:
+      plot_kwargs:
+        stratify:
+          - donor
+          - nFeature_RNA
+        plot_size: large
+    _CELL_CYCLE_SCORING_SCAT_: ~
+  cluster:
+    _GENES_PER_CELL_HIST_:
+      plot_kwargs:
+        stratify: cluster
+    _UMIS_PER_CELL_HIST_:
+      plot_kwargs:
+        stratify: cluster
+    _UMIS_VS_GENES_SCAT_:
+      plot_kwargs:
+        stratify: cluster
+        alpha: 0.2
+    _PERC_MITO_PER_CELL_VLN_:
+      plot_kwargs:
+        stratify: cluster
+        plot_size: wide
+    _UMIS_VS_PERC_MITO_SCAT_:
+      plot_kwargs:
+        stratify: cluster
+    _PERC_RIBO_PER_CELL_VLN:
+      plot_kwargs:
+        stratify: cluster
+        plot_size: wide
+    _UMIS_VS_PERC_RIBO_SCAT:
+      plot_kwargs:
+        stratify: cluster
+    _PERC_HSP_PER_CELL_VLN:
+      plot_kwargs:
+        stratify: cluster
+        plot_size: wide
+#    _HIGHEST_EXPRS_DENS_:
+#      plot_kwargs:
+#        stratify: cluster
+#        plot_size: large
+  markers:
+    _MARKER_GENES_PER_CLUSTER_BAR_:
+      plot_kwargs:
+        plot_size: wide
 
-
-# plots across runs parameters (e.g. elbow)
-#meta_plot_path:
-#  root:
-#  normalize:
-#  reduce:
-#  cluster:
-#  diffexp_bulk:
-#  diffexp:
-#  markers:
 
 layers:
   matrix:
@@ -84,8 +179,8 @@ setup_hooks:
   - hook_comparative
   - hook_store_temp_meta
 clean_hooks:
-  - hook_generate_plots
   - hook_unify_matrix_node
+  - hook_generate_plots
   - hook_clear_metadata_cache
   - hook_clean_temp_meta
   - hook_clean_unversioned
@@ -94,6 +189,7 @@ clean_hooks:
 dataprocess_default_attrs:
   temp_meta: true
   matrix_layer: false
+  plots: true
 
 process_sources:
   - cellforest.processes
@@ -102,6 +198,11 @@ hook_sources:
   - cellforest.hooks
 plot_sources:
   - cellforest.plot
+r_plot_sources:
+  - cellforest.plot.r
+# This should move to cellforestR
+#r_functions_sources:
+#  - cellforest.processes.scripts.functions
 
 temp_meta_filename: temp_meta.tsv
 

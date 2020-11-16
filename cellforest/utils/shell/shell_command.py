@@ -1,12 +1,14 @@
 import logging
 import os
 import shlex
+from pathlib import Path
 from subprocess import check_call
+from typing import Union
 
 from cellforest import get_current_config
 
 
-def process_shell_command(command_string: str, logs_dir: str, logfile_prefix: str):
+def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfile_prefix: str):
     os.makedirs(logs_dir, exist_ok=True)
     out_path = os.path.join(logs_dir, f"{logfile_prefix}.out")
     err_path = os.path.join(logs_dir, f"{logfile_prefix}.err")

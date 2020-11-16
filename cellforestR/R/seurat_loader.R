@@ -27,15 +27,25 @@ UMAP_EMBED_KEY = "umap"
 #' library(cellforestR)
 #'
 #' root_dir <- "tests/data/example_usage/root"
-#' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")
+#' seurat_obj <- cellforest_load(root_dir, example_spec_r, "reduce")  # given that processes have been run
 #'
 #' DimPlot(seurat_obj, reduction = "umap")
-cellforest_load <- function(root_dir, branch_spec, process) {
+cellforest_load <- function(root_dir, branch_spec, process, subset = NULL, filter_ = NULL) {
   cellforest <- import("cellforest")
   cf_branch <- cellforest$load(root_dir, branch_spec = branch_spec)
   cf_branch$goto_process(process)
   seurat_obj <- get_seurat_object(cf_branch)
-
+  # TODO: use Kristin's idea of adding a new column e.g. MYFLAG and using that
+  #if (!is.null(subset) && !is.na(subset)) {
+  #  temp_env <- new.env()
+  #
+  #  eval(parse(text = subset), envir = temp_env)
+  #  AddMetaData()
+  #  seurat_obj <- subset(seurat_obj, subset = subset[1] == subset[2])
+  #}
+  #if (!is.null(filter_) && !is.na(filter_)) {
+  #  seurat_obj <- subset(seurat_obj, subset = filter_[1] != filter_[2])
+  #}
   return(seurat_obj)
 }
 
@@ -69,37 +79,48 @@ get_seurat_object <- function(cf_branch) {
   current_process <- cf_branch$current_process
   current_path_map <- cf_branch[current_process]$path_map
   rds_path <- toString(current_path_map$rna_r)
-  seurat_object <- readRDS(file = rds_path)
+  seurat_obj <- readRDS(file = rds_path)
+  DefaultAssay(seurat_obj) <- "RNA"
+
   print(toString(glue("Creating Seurat object at process '{current_process}'")))
+  if (current_process == "root") {
+    meta_path <- paste0(dirname(rds_path), "/meta.tsv")
+    meta <- read.table(meta_path, sep = "\t", header = TRUE, row.names = 1, quote="")
+    seurat_obj <- AddMetaData(seurat_obj, meta)
+    return(seurat_obj)
+  }
+
   spec <- cf_branch$spec
   rds_process <- basename(dirname(dirname(rds_path)))
-  precursors <- spec$get_precursors_lookup(incl_current = TRUE)[[current_process]]
+  precursors <- spec$get_precursors_lookup(incl_root = TRUE, incl_current = TRUE)[[current_process]]
   processes_to_load <- precursors[-(1:match(rds_process, precursors))]
+
   # check if rds is located in the same folder as metadata (if not -> needs update)
   if (!is.null(processes_to_load)) {
     for (process_name in processes_to_load) {
       process_path_map <- cf_branch[process_name]$path_map
       meta <- cf_branch$meta
-      cols <- setdiff(names(meta), names(seurat_object[[]]))
+      cols <- setdiff(names(meta), names(seurat_obj[[]]))
       if (length(cols) > 0) {
-        seurat_object <- AddMetaData(seurat_object, meta[cols])
+        seurat_obj <- AddMetaData(seurat_obj, meta[cols])
       }
+
       process <- cf_branch[process_name]$process
       if (process == "reduce") {
-        seurat_object <- add_dim_reduc_embed(
-          seurat_object,
+        seurat_obj <- add_dim_reduc_embed(
+          seurat_obj,
           process_path_map,
         )
       }
       if (process == "cluster") {
-        Idents(seurat_object) <- seurat_object[["cluster_id"]]
+        Idents(seurat_obj) <- seurat_obj[["cluster_id"]]
       }
       # TO-DO: Add loading for new processes
     }
   }
   print(toString(glue("Seurat object created at process '{current_process}'")))
 
-  return(seurat_object)
+  return(seurat_obj)
 }
 
 add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pca", "umap")) {
@@ -129,12 +150,16 @@ add_dim_reduc_embed <- function(seurat_object, path_map, dim_reduc_funcs = c("pc
 add_pca_embed <- function(seurat_object, path_map) {
   input_embeddings_path <- toString(path_map$pca_embeddings)  # TO-DO: In the future, fetch from meta
   input_loadings_path <- toString(path_map$pca_loadings)
+  input_stdev_path <- toString(path_map$pca_stdev)
+
   input_embeddings <- data.matrix(read.table(input_embeddings_path, sep = "\t", header = TRUE, row.names = 1))
   input_loadings <- data.matrix(read.table(input_loadings_path, sep = "\t", header = TRUE, row.names = 1))
+  input_stdev <- as.list(read.table(input_stdev_path, sep = "\t", header = TRUE, row.names = 1))$x  # TODO-QC: is there a better way to get a list?
 
   seurat_object[[PCA_EMBED_KEY]] <- CreateDimReducObject(
     embeddings = input_embeddings,
     loadings = input_loadings,
+    stdev = input_stdev,
     key = "PC_",
     assay = DefaultAssay(seurat_object)
   )

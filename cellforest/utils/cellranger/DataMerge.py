@@ -1,5 +1,7 @@
+import gc
 import os
 
+from joblib import Parallel, delayed
 import pandas as pd
 
 from cellforest import Counts
@@ -7,14 +9,27 @@ from cellforest import Counts
 
 class DataMerge:
     @staticmethod
-    def merge_assay(paths, mode, metadata=None, save_dir=None):
+    def merge_assay(paths, mode, metadata=None, save_dir=None, parallel=True):
         method = getattr(DataMerge, f"_merge_{mode}")
-        return method(paths, metadata, save_dir)
+        id_col = "entity_id" if isinstance(metadata, pd.DataFrame) and "entity_id" in metadata else "lane_id"
+        ret = method(paths, metadata, save_dir, id_col, parallel)
+        gc.collect()
+        return ret
 
     @staticmethod
-    def _merge_rna(paths, metadata, save_dir, id_col="sample_id"):
+    def _merge_rna(paths, metadata, save_dir, id_col="lane_id", parallel=True):
         """"""
-        rna_list = [Counts.from_cellranger(dir_) for dir_ in paths]
+        # TODO: significant memory leakage -- maybe make an optional kwarg
+        if parallel:
+            pool = Parallel(n_jobs=-2)
+            rna_list = pool(delayed(Counts.from_cellranger)(path) for path in paths)
+        else:
+            rna_list = [Counts.from_cellranger(path) for path in paths]
+        widths = list(map(lambda x: x.shape[1], rna_list))
+        if len(set(widths)) > 1:
+            raise ValueError(
+                f"Can't merge matrices with mixed shapes: {set(widths)}. Details: {list(zip(paths, widths))}"
+            )
         rna = Counts.concatenate(rna_list)
         meta = None
         if metadata is not None:
@@ -25,16 +40,22 @@ class DataMerge:
             if id_col in metadata:
                 rna.index = rna.index.str.slice(0, -1) + meta[id_col]
         if rna.index.duplicated().any():
-            raise ValueError("cell identifiers must be unique. Consider using metadata with `entity_id` column")
-        if meta is not None:
-            meta.index = rna.cell_ids
+            raise ValueError(
+                "cell identifiers must be unique. Consider using metadata with `lane_id` column or specify a custom "
+                "`id_col"
+            )
+        if meta is None:
+            meta = pd.DataFrame(index=rna.cell_ids)
+            meta.index.name = None
         else:
-            meta = rna.cell_ids
+            meta = pd.DataFrame(meta)
+            meta.index = rna.cell_ids
         if save_dir:
             os.makedirs(save_dir, exist_ok=True)
+
             meta.to_csv(save_dir / "meta.tsv", sep="\t")
             # TODO: move create_rds val to config
-            rna.save(save_dir / "rna.pickle", create_rds=True)
+            rna.save(save_dir / "rna.pickle", save_rds=True)
         return rna, meta
 
     @staticmethod

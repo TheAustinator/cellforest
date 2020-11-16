@@ -1,11 +1,12 @@
 library(future)
 library(dplyr)
 library(Seurat)
+library(cellforestR)
 plan("multiprocess", workers = 6)
 
 args = commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 input_rds_path <- args[2]
 output_diffexp_path = args[3]
 test <- args[4]
@@ -14,8 +15,8 @@ ident2 <- args[6]
 groupby <- args[7]
 logfc_thresh <- as.numeric(args[8])
 
-r_functions_filepath <- args[9]
-source(r_functions_filepath)
+#r_functions_filepath <- args[9]
+#source(r_functions_filepath)
 
 filter_outputs <- metadata_filter(input_metadata_path, input_rds_path)
 metadata <- filter_outputs$metadata

@@ -3,8 +3,9 @@ from pathlib import Path
 from dataforest.hooks import dataprocess
 
 from cellforest.processes.processes.reduce.umap import run_umap
-from cellforest.utils.r.run_r_script import run_process_r_script
-from cellforest.processes import R_FUNCTIONS_FILEPATH
+from cellforest.utils.r.run_r_script import run_r_script_logged
+
+# from cellforest.processes import R_FUNCTIONS_FILEPATH
 
 R_PCA_SCRIPT = Path(__file__).parent / "pca.R"
 
@@ -18,17 +19,19 @@ def reduce(branch: "CellBranch", run_name: str):
     input_rds_path = process_run.path_map_prior["rna_r"]
     output_embeddings_path = process_run.path_map["pca_embeddings"]
     output_loadings_path = process_run.path_map["pca_loadings"]
+    output_stdev_path = process_run.path_map["pca_stdev"]
     npcs = params["pca_npcs"]
-    r_functions_filepath = R_FUNCTIONS_FILEPATH
+    # r_functions_filepath = R_FUNCTIONS_FILEPATH
     arg_list = [
         input_metadata_path,
         input_rds_path,
         output_embeddings_path,
         output_loadings_path,
+        output_stdev_path,
         npcs,
-        r_functions_filepath,
+        # r_functions_filepath,
     ]
-    run_process_r_script(branch, R_PCA_SCRIPT, arg_list, run_name)
+    run_r_script_logged(branch, R_PCA_SCRIPT, arg_list, run_name)
     meta = run_umap(
         output_embeddings_path,
         n_neighbors=params["umap_n_neighbors"],

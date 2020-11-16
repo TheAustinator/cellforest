@@ -4,7 +4,7 @@ library(Seurat)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 output_diffexp_path <- args[2]
 root_dir <- args[3]
 spec_str <- args[4]
@@ -16,8 +16,8 @@ groupby <- args[9]
 
 n_cpus <- as.numeric(args[10])
 plan("multiprocess", workers = n_cpus)
-r_functions_filepath <- args[11]
-source(r_functions_filepath)
+#r_functions_filepath <- args[11]
+#source(r_functions_filepath)
 library("cellforestR")
 
 

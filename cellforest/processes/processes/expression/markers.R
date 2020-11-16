@@ -1,22 +1,21 @@
 library(future)
 library(dplyr)
+library(parallel)
+library(Seurat)
+library(cellforestR)
 
 options(future.globals.maxSize = 8000 * 1024^2)
+plan("multiprocess", workers = detectCores() - 1)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 output_markers_dir <- args[2]
 root_dir <- args[3]
 spec_str <- args[4]
 logfc_thresh <- as.numeric(args[5])
 test <- args[6]
 
-n_cpus <- as.numeric(args[7])
-plan("multiprocess", workers = n_cpus)
-r_functions_filepath <- args[8]
-source(r_functions_filepath)
-library("cellforestR")
 
 print("loading metadata"); print(date())
 meta <- read.table(input_metadata_path, sep = "\t", header = TRUE, row.names = 1, quote="")

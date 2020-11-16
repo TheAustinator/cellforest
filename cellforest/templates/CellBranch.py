@@ -3,6 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Union, List, Tuple
 
+from anndata import AnnData
 from dataforest.core.DataBranch import DataBranch
 from dataforest.core.BranchSpec import BranchSpec
 from dataforest.utils.utils import label_df_partitions
@@ -76,7 +77,7 @@ class CellBranch(CellBase, DataBranch):
         around `scipy.sparse.coo_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
-        if self._rna is None or not self._rna.index.equals(self.meta.index):
+        if self._rna is None or not set(self._rna.index) == set(self.meta.index):
             if self.current_process is not None:
                 path_map = self[self.current_process].path_map
                 counts_path = path_map["rna"]
@@ -89,7 +90,7 @@ class CellBranch(CellBase, DataBranch):
                     f"CellBranch.from_input_dirs. Not found: {counts_path}"
                 )
             self._rna = Counts.load(counts_path)
-        if not self._rna.index.equals(self.meta.index):
+        if not set(self._rna.index) == set(self.meta.index):
             self._rna = self._rna[self.meta.index]
         return self._rna
 
@@ -121,28 +122,8 @@ class CellBranch(CellBase, DataBranch):
     def crispr(self):
         raise NotImplementedError()
 
-    def groupby(self, by: Union[str, list, set, tuple], **kwargs) -> Tuple[str, "CellBranch"]:
-        """
-        Operates like a pandas group_labels, but does not return a GroupBy object,
-        and yields (name, DataBranch), where each DataBranch is subset according to `by`,
-        which corresponds to columns of `self.meta`.
-        This is useful for batching analysis across various conditions, where
-        each run requires an DataBranch.
-        Args:
-            by: variables over which to group (like pandas)
-            **kwargs: for pandas group_labels on `self.meta`
-
-        Yields:
-            name: values for DataBranch `subset` according to keys specified in `by`
-            branch: new DataBranch which inherits `self.spec` with additional `subset`s
-                from `by`
-        """
-        if isinstance(by, (tuple, set)):
-            by = list(by)
-        for (name, df) in self.meta.groupby(by, **kwargs):
-            branch = self.copy()
-            branch._meta = df
-            yield name, branch
+    def to_anndata(self):
+        return AnnData(X=self.rna._matrix, obs=self.meta, var=self.rna.features.set_index("genes"))
 
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         base_kwargs = self._get_copy_base_kwargs()
@@ -150,7 +131,7 @@ class CellBranch(CellBase, DataBranch):
         kwargs = {k: deepcopy(v) for k, v in kwargs.items()}
         if reset:
             kwargs = base_kwargs
-        return self.__class__(**kwargs)
+        return super().copy(**kwargs)
 
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from branch_spec"""

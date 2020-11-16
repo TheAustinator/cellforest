@@ -5,7 +5,7 @@ from dataforest.hooks import hook, dataprocess
 from cellforest.templates.WriterMethodsSC import WriterMethodsSC
 
 
-@hook(attrs=["temp_meta"])
+@hook("temp_meta")
 def hook_store_temp_meta(dp: dataprocess):
     """
     Stores a temporary metadata file for the current process run, which will be
@@ -17,11 +17,11 @@ def hook_store_temp_meta(dp: dataprocess):
         precursors = dp.branch.spec.get_precursors_lookup()[process_name]
         precursor = precursors[-1] if precursors else None
         temp_meta = dp.branch[dp.name].branch._get_meta(precursor)
-        temp_meta = dp.branch._apply_data_ops(dp.name, temp_meta)
+        temp_meta = dp.branch._apply_data_ops_auto(dp.name, temp_meta)
         WriterMethodsSC.tsv(dp._metadata_filepath, temp_meta, header=True)
 
 
-@hook(attrs=["temp_meta"])
+@hook("temp_meta")
 def hook_clean_temp_meta(dp: dataprocess):
     """Removes temporary metadata file for the current process run"""
     if dp.temp_meta:

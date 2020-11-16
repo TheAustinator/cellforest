@@ -13,20 +13,20 @@ def tree_spec():
             "_PARAMS_": [
                 {
                     "min_genes": 5,
-                    "max_genes": {"_SWEEP_": {"min": 2000, "max": 3000, "step": 1000}},
+                    "max_genes": 5000,
                     "min_cells": 5,
-                    "nfeatures": {"_SWEEP_": {"min": 2, "max": 3, "base": 2}},
+                    "nfeatures": {"_SWEEP_": {"min": 50, "max": 100, "step": 50}},
                     "perc_mito_cutoff": 20,
                     "method": "seurat_default",
                 },
                 {"min_genes": 5, "max_genes": 5000, "min_cells": 5, "perc_mito_cutoff": 20, "method": "sctransform"},
             ],
-            "_SUBSET_": {"sample_id": {"_SWEEP_": ["sample_1", "sample_2"]}},
+            "_SUBSET_": {"entity_id": {"_SWEEP_": ["sample_1", "sample_2"]}},
         },
         {
             "_PROCESS_": "reduce",
             "_PARAMS_": {
-                "pca_npcs": 16,
+                "pca_npcs": 3,
                 "umap_n_neighbors": 3,
                 "umap_min_dist": 0.1,
                 "umap_n_components": 2,
@@ -42,7 +42,7 @@ def tree_spec_reduce_update():
     spec = {
         "_PROCESS_": "reduce",
         "_PARAMS_": {
-            "pca_npcs": {"_SWEEP_": {"min": 4, "max": 5, "base": 2}},
+            "pca_npcs": 3,
             "umap_n_neighbors": {"_SWEEP_": {"min": 2, "max": 3, "step": 1}},
             "umap_min_dist": 0.1,
             "umap_n_components": 2,
@@ -64,7 +64,7 @@ def tree_spec_norm_update():
             "perc_mito_cutoff": 20,
             "method": "seurat_default",
         },
-        "_SUBSET_": {"sample_id": "sample_1"},
+        "_SUBSET_": {"entity_id": "sample_1"},
     }
     return spec
 

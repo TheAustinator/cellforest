@@ -3,14 +3,15 @@ from pathlib import Path
 from dataforest.hooks import dataprocess
 
 # TODO: what to do about core/utility methods? core module? move to utils?
-from cellforest.utils.r.run_r_script import run_process_r_script
-from cellforest.processes import R_FUNCTIONS_FILEPATH
+from cellforest.utils.r.run_r_script import run_r_script_logged
+
+# from cellforest.processes import R_FUNCTIONS_FILEPATH
 
 R_SCTRANSFORM_SCRIPT = Path(__file__).parent / "sctransform.R"
 R_SEURAT_DEFAULT_NORM_SCRIPT = Path(__file__).parent / "seurat_default_normalize.R"
 
 
-@dataprocess(matrix_layer=True, output="rds")
+@dataprocess(matrix_layer=True, output="rds", plots=True)
 def normalize(branch: "CellBranch", run_name: str):
     """
     Performs:
@@ -47,7 +48,7 @@ def normalize(branch: "CellBranch", run_name: str):
         max_genes,
         min_cells,
         perc_mito_cutoff,
-        R_FUNCTIONS_FILEPATH,
+        # R_FUNCTIONS_FILEPATH,
     ]
     if method == "sctransform":
         output_corrected_umi_path = process_run.path_map["corrected_umi"]
@@ -62,4 +63,4 @@ def normalize(branch: "CellBranch", run_name: str):
         r_normalize_script = R_SEURAT_DEFAULT_NORM_SCRIPT
     else:
         raise ValueError(f"Invalid normalization method: {method}. Use 'sctransform' or 'seurat_default'")
-    run_process_r_script(branch, r_normalize_script, arg_list, run_name)
+    run_r_script_logged(branch, r_normalize_script, arg_list, run_name)

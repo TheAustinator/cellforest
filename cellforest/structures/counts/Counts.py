@@ -1,14 +1,15 @@
 import pickle
-from collections import Counter
 from functools import wraps
 from pathlib import Path
-from typing import Union, Iterable, Optional, Callable, List, get_type_hints
+from typing import Union, Iterable, Optional, Callable, List, get_type_hints, Tuple
 
+from anndata import AnnData
 from matplotlib.axes import Axes
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.axes._subplots import Axes
+
+# from matplotlib.axes._subplots import Axes
 from scipy.sparse import csr_matrix, hstack, vstack
 from scipy.sparse.base import spmatrix
 
@@ -61,7 +62,10 @@ class Counts(csr_matrix):
         self._matrix = csr_matrix(matrix)
         self.chemistry = "v3" if len(features.columns) == 3 else "v2"
         self.features = features.iloc[:, :2].copy()
-        self.features.columns = self._FEATURES_COLUMNS
+        if self.features.shape[1] == 1:
+            self.features.columns = [self._FEATURES_COLUMNS[1]]
+        else:
+            self.features.columns = self._FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
         self._ids = self._index_col_swap(cell_ids)
 
@@ -109,6 +113,9 @@ class Counts(csr_matrix):
 
     def vstack(self, others: Union["Counts", Iterable["Counts"]]):
         others = others if isinstance(others, (list, tuple)) else [others]
+        widths = set([self._matrix.shape[1]] + [x._matrix.shape[1] for x in others])
+        if len(widths) > 1:
+            raise ValueError(f"Attempting to vstack matrices with variable widths {widths}")
         matrix = vstack([self._matrix, *[x._matrix for x in others]])
         cell_ids = pd.concat([self.cell_ids, *[x.cell_ids for x in others]]).reset_index(drop=True)
         features = self.features
@@ -128,6 +135,7 @@ class Counts(csr_matrix):
         labels: Optional[Union[pd.Series, list]] = None,
         group_labels: Optional[Union[str, pd.Series, list]] = None,
         ax: Optional[Axes] = None,
+        legend_title: str = "label",
         **kwargs,
     ) -> Axes:
         """
@@ -182,17 +190,10 @@ class Counts(csr_matrix):
             # TODO: kwargs customization for individual strata
             ax.hist(rna_agg, label=label, **kwargs)
 
-        x_obj = "transcript" if cells_axis else "cell"
-        x_metric = "fraction" if kwargs.get("density", None) else "count"
-        x_label = f"{x_obj} {x_metric}"
-        y_obj = "cell" if cells_axis else "genes"
-        y_metric = "fraction" if "frac" in agg else "count"
-        y_label = f"{y_obj} {y_metric}"
-        title = f'{x_label} {"per cell" if cells_axis else "per gene"}'
-        ax.set_title(f"{agg} of {title}")
+        x_label, y_label = self._get_axis_labels(agg, axis)
         ax.set_xlabel(x_label)
         ax.set_ylabel(y_label)
-        ax.legend()
+        ax.legend(title=legend_title)
 
         return ax
 
@@ -202,17 +203,26 @@ class Counts(csr_matrix):
         agg_y: str = "var",
         axis: Union[str, int] = 0,
         labels: Optional[Union[pd.Series, list]] = None,
+        group_labels: Optional[Union[str, pd.Series, list]] = None,
         ax: Optional[Axes] = None,
+        legend_title: str = "label",
         **kwargs,
     ) -> plt.axes:
         """
         Plots scatterplot along specified axes, optionally, stratified by label
         Args:
-            agg_x: aggregation function for x-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
-            agg_y: aggregation function for y-axis (e.g. sum, min, mean, var, etc.); all options: `self._SUPPORTED_AGG_FUNCS`
-            axis: axis along which to create scatterplot, with `agg` applied to other axis
-            labels: list or pd.Series of cell or gene category labels by which to stratify plot
+            agg_x: aggregation function for x-axis (e.g. sum, min, mean, var,
+                etc.); all options: `self._SUPPORTED_AGG_FUNCS`
+            agg_y: aggregation function for x-axis (same options)
+            axis: axis along which to create scatterplot, with `agg` applied to
+                other axis
+            labels: list or pd.Series of cell or gene category labels by which
+                to stratify plot
+            group_labels: labels when aggregation and stratification occur
+                along the same axis. Stratification occurs first, then
+                aggregation within each label
             ax: pyplot subplot or axes object which defines the plot
+            legend_title: title in legend box
             kwargs: keyword arguments for plt.scatter()
 
         Returns:
@@ -230,7 +240,14 @@ class Counts(csr_matrix):
             >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
             >>> plt.show()
         """
-
+        if labels is not None and group_labels is not None:
+            raise ValueError("Specify either `labels` or `group_labels`, not both")
+        if group_labels is not None:
+            for label in sorted(list(set(group_labels))):
+                selector = group_labels == label
+                counts_group = self[:, selector] if axis == 0 else self[selector]
+                counts_group.scatter(agg_x, agg_y, axis, None, None, ax, label=label, **kwargs)
+            return plt.gca()
         axis = self._get_numeric_axis(axis)
         if "label" in kwargs:
             labels = kwargs.pop("label")
@@ -242,7 +259,7 @@ class Counts(csr_matrix):
         )  # convert to compressed sparse column/row for fast arithmetics
 
         ax = ax or plt.gca()  # use defined or get current axes
-        for label in set(labels):
+        for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
             matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
             rna_agg_x = self._agg_apply(matrix_slice, agg=agg_x, axis=axis)
@@ -250,19 +267,18 @@ class Counts(csr_matrix):
             # TODO: kwargs customization for individual strata
             ax.scatter(rna_agg_x, rna_agg_y, label=label, **kwargs)
 
-        ax_label = "transcript count" if cells_axis else "cell count"
-        title = ax_label + " " + ("per cell" if cells_axis else "per gene")
-        ax.set_title(f"{agg_y} vs {agg_x} of {title}")
-        ax.set_xlabel(f"{agg_x} of {ax_label}")
-        ax.set_ylabel(f"{agg_y} of {ax_label}")
-        ax.legend()
+        x_label, _ = self._get_axis_labels(agg_x, axis)
+        y_label, _ = self._get_axis_labels(agg_y, axis)
+        ax.set_xlabel(x_label)
+        ax.set_ylabel(y_label)
+        ax.legend(title=legend_title)
 
         return ax
 
     def _get_numeric_axis(self, axis) -> int:
         """Get binary value for axis or check if it's out of range"""
         if axis in self._SUPPORTED_AGG_AXES:
-            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert to 0 and 1
+            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert cells -> 0 and genes -> 1
         else:
             raise ValueError(f"axis cannot be {axis}, must be in {self._SUPPORTED_AGG_AXES}")
 
@@ -272,10 +288,12 @@ class Counts(csr_matrix):
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
         if labels is None:
-            labels = ["sample_id"] * matrix_agg_len
-        elif isinstance(labels, str):
+            labels = ["unlabeled"] * matrix_agg_len
+        elif isinstance(labels, tuple) and len(labels) < 100:
+            labels = " ".join(labels)
+        if isinstance(labels, (str, int, float)):
             labels = [labels] * matrix_agg_len
-        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
                 f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )
@@ -311,20 +329,40 @@ class Counts(csr_matrix):
         return rna_agg
 
     @staticmethod
-    def _get_agg_label(agg) -> str:
+    def _get_axis_labels(agg: str, axis: int) -> Tuple[str, str]:
         """Human language names of axis labels"""
-        # TODO: use this function to have prettier plot labeling
-        mapping = {
-            "sum": "",
-            "mean": "mean",
-            "std": "standard deviation of",
-            "var": "variance of",
-            "min": "minimum of",
-            "max": "maximum of",
-        }
+        if axis == 0:  # aggregate by cells
+            mapping = {
+                "sum": "total UMI in a cell",
+                "mean": "mean UMI per gene",
+                "std": "std of UMI per gene",
+                "nonzero": "genes expressed",
+                "nonzero_frac": "fraction genes expressed",
+                "var": "var of UMI per gene",
+                "min": "min UMI per gene",
+                "max": "max UMI per gene",
+                "other_axis": "cells",
+            }
+        elif axis == 1:  # aggregate by genes
+            mapping = {
+                "sum": "total UMI of a gene",
+                "mean": "mean UMI per cell",  # mean UMI of this gene in all cells
+                "std": "std of UMI per cell",  # standard deviation of UMI of this gene in all cells
+                "nonzero": "cells expressing",
+                "nonzero_frac": "fraction cell expressing",
+                "var": "var of UMI per cell",  # variance of UMI of this gene in all cells
+                "min": "min UMI per cell",  # minimum UMI of this gene across all cells
+                "max": "max UMI per cell",  # maximum UMI of this gene across all cells
+                "other_axis": "genes",
+            }
+        else:
+            raise ValueError(f"axis cannot be {axis}, must be 0 or 1.")
+        # TODO: account for this:
+        # x_metric = "fraction" if kwargs.get("density", None) else "count"
         agg_name = mapping[agg]
+        other_axis = mapping["other_axis"]
 
-        return agg_name
+        return agg_name, other_axis
 
     def drop(self, indices, axis=0):
         """
@@ -397,12 +435,19 @@ class Counts(csr_matrix):
             store = pickle.load(f)
         return cls(store.matrix, store.cell_ids, store.features)
 
-    def save(self, filepath: Union[str, Path], create_rds: bool = False):
+    def save(
+        self,
+        filepath: Union[str, Path],
+        save_pickle: bool = True,
+        save_rds: bool = False,
+        save_h5ad: bool = False,
+        save_loom: bool = False,
+    ):
         """
         Save as pickle.
         Intermediate data store object used to maintain future compatibility
         """
-        self._save(filepath, self._matrix, self.cell_ids, self.features, create_rds)
+        self._save(filepath, self._matrix, self.cell_ids, self.features, save_pickle, save_rds, save_h5ad, save_loom)
 
     def copy(self) -> "Counts":
         return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
@@ -453,7 +498,10 @@ class Counts(csr_matrix):
             features = self.features[key]
         else:
             genes = pd.DataFrame(self.genes.reindex(key)).reset_index(drop=True)
-            ensgs = pd.DataFrame(self.ensgs.reindex(key)).reset_index(drop=True)
+            try:
+                ensgs = pd.DataFrame(self.ensgs.reindex(key)).reset_index(drop=True)
+            except KeyError:
+                ensgs = list()
             if len(ensgs) > len(genes):
                 features = self.features[self.features.ensgs.isin(key)]
             else:
@@ -496,6 +544,9 @@ class Counts(csr_matrix):
                     df_temp = df.reset_index()
                     key_rows = df_temp[df_temp[df_temp.columns[0]].isin(key)]
                 else:
+                    if isinstance(df, pd.Series) and not set(key).issubset(df.unique()):
+                        # TODO: this error gets a bit obscured by others
+                        raise KeyError(f"Keys {key} not all in index {df.index}")
                     key_rows = df.reindex(key)
                 key = key_rows.dropna()["i"].astype(int).tolist()
         elif isinstance(key, str):
@@ -530,12 +581,26 @@ class Counts(csr_matrix):
         matrix: csr_matrix,
         cell_ids: pd.DataFrame,
         features: pd.DataFrame,
-        create_rds: bool = False,
+        save_pickle: bool = False,
+        save_rds: bool = False,
+        save_h5ad: bool = False,
+        save_loom: bool = False,
+        meta: Optional[pd.DataFrame] = None,
     ):
         filepath = Path(filepath)
-        build_counts_store(matrix.tocoo(), cell_ids, features, save_path=filepath)
-        if create_rds:
+        if save_pickle:
+            build_counts_store(matrix.tocoo(), cell_ids, features, save_path=filepath)
+        if save_rds:
             Convert.pickle_to_rds_dir(filepath.parent)
+        if save_h5ad or save_loom:
+            cell_ids = meta if meta is not None else pd.DataFrame(cell_ids).set_index(0)
+            cell_ids.index.name = "index"
+            features = features.rename(columns={"ensgs": "gene_ids", "genes": "index"}).set_index("index")
+            adata = AnnData(matrix.tocsr(), cell_ids, features)
+            if save_h5ad:
+                adata.write_h5ad(filepath.parent / "rna.h5ad")
+            if save_loom:
+                adata.write_loom(filepath.parent / "rna.loom")
 
     @staticmethod
     def _convert_to_series(df: pd.DataFrame) -> pd.DataFrame:
@@ -573,6 +638,33 @@ class Counts(csr_matrix):
             super_method = getattr(csr_matrix, name)
             wrapped_method = Counts.wrap_super(super_method)
             setattr(Counts, name, wrapped_method)
+
+    def __eq__(self, other):
+        # TODO: maybe should use something else here and do element wise. This is used in DistributedContainer
+        eq_features = self.features.equals(other.features)
+        eq_cell_ids = self.cell_ids.equals(other.cell_ids)
+        eq_sum = self.sum() == other.sum()
+        return eq_features and eq_cell_ids and eq_sum
+
+    def __ge__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix >= other
+
+    def __gt__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix > other
+
+    def __le__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix <= other
+
+    def __lt__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix < other
 
 
 Counts.decorate(Counts._SUPER_METHODS)

@@ -2,7 +2,7 @@ library(Matrix)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-rds_path <- args[1]
+rds_path <- commandArgs(trailingOnly = TRUE)[1]
 output_matrix_path <- args[2]
 output_cell_ids_path <- args[3]
 output_genes_path <- args[4]

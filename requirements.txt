@@ -1,10 +1,14 @@
+anndata
 dataforest
+IPython
+joblib
 matplotlib
 numba
 numpy
 pandas
 path
-pathlib
 pyyaml
 scipy
+seaborn
+typeguard
 umap-learn

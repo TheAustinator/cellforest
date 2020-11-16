@@ -1,6 +1,14 @@
+library(future)
+library(parallel)
+library(cellforestR)
+library(Seurat)
+
+options(future.globals.maxSize = 8000 * 1024^2)
+plan("multiprocess", workers = detectCores() - 1)
+
 args <- commandArgs(trailingOnly = TRUE)
 
-input_metadata_path <- args[1]
+input_metadata_path <- commandArgs(trailingOnly = TRUE)[1]
 output_clusters_path <- args[2]
 root_dir <- args[3]
 spec_str <- args[4]
@@ -8,10 +16,10 @@ num_pcs <- as.numeric(args[5])
 resolution <- as.numeric(args[6])
 eps <- as.numeric(args[7])
 
-r_functions_filepath <- args[8]
-print("eps"); print(eps)
-print("functions"); print(r_functions_filepath)
-source(r_functions_filepath)
+#r_functions_filepath <- args[8]
+#print("eps"); print(eps)
+#print("functions"); print(r_functions_filepath)
+#source(r_functions_filepath)
 library(cellforestR)
 
 print("loading metadata"); print(date())
