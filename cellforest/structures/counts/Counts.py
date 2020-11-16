@@ -288,10 +288,12 @@ class Counts(csr_matrix):
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
         if labels is None:
-            labels = ["entity_id"] * matrix_agg_len
-        elif isinstance(labels, (str, int, float)):
+            labels = ["unlabeled"] * matrix_agg_len
+        elif isinstance(labels, tuple) and len(labels) < 100:
+            labels = " ".join(labels)
+        if isinstance(labels, (str, int, float)):
             labels = [labels] * matrix_agg_len
-        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
                 f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )

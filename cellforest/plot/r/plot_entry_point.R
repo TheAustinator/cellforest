@@ -30,7 +30,7 @@ print("root_dir"); print(root_dir)
 print("spec_str"); print(spec_str)
 print("current_process"); print(current_process)
 print("subset"); print(subset)
-seurat_obj <- cellforest_load(root_dir, spec_str, current_process, subset)
+seurat_obj <- cellforest_load(root_dir, spec_str, current_process)   # subset
 
 
 # Following keyword arguments are avalable for usage in plotting functions

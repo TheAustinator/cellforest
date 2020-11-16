@@ -22,6 +22,9 @@ def plot_umap_features(branch: "CellBranch", features: List, ncol: int = 3, ax_s
     rna_features = list(set(features).difference(branch.meta.columns))
     if rna_features:
         branch = branch.copy()
+        missing = set(rna_features).difference(branch.rna.genes.values)
+        if missing:
+            raise ValueError(f"Genes not found: {missing}")
         branch.meta[rna_features] = branch.rna[:, rna_features].todense()
     ncol = min(len(features), ncol)
     nrow = math.ceil(len(features) / ncol)
