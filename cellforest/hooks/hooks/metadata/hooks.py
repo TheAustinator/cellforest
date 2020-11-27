@@ -17,7 +17,7 @@ def hook_store_temp_meta(dp: dataprocess):
         precursors = dp.branch.spec.get_precursors_lookup()[process_name]
         precursor = precursors[-1] if precursors else None
         temp_meta = dp.branch[dp.name].branch._get_meta(precursor)
-        temp_meta = dp.branch._apply_data_ops(dp.name, temp_meta)
+        temp_meta = dp.branch._apply_data_ops_auto(dp.name, temp_meta)
         WriterMethodsSC.tsv(dp._metadata_filepath, temp_meta, header=True)
 
 

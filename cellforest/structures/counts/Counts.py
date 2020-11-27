@@ -62,7 +62,10 @@ class Counts(csr_matrix):
         self._matrix = csr_matrix(matrix)
         self.chemistry = "v3" if len(features.columns) == 3 else "v2"
         self.features = features.iloc[:, :2].copy()
-        self.features.columns = self._FEATURES_COLUMNS
+        if self.features.shape[1] == 1:
+            self.features.columns = [self._FEATURES_COLUMNS[1]]
+        else:
+            self.features.columns = self._FEATURES_COLUMNS
         self._idx = self._convert_to_series(cell_ids)
         self._ids = self._index_col_swap(cell_ids)
 
@@ -285,10 +288,12 @@ class Counts(csr_matrix):
         """Check if labels for aggregation are of correct length or return singular label (one sample)"""
         matrix_agg_len = self._matrix.get_shape()[axis]
         if labels is None:
-            labels = ["sample_id"] * matrix_agg_len
-        elif isinstance(labels, (str, int, float)):
+            labels = ["unlabeled"] * matrix_agg_len
+        elif isinstance(labels, tuple) and len(labels) < 100:
+            labels = " ".join(labels)
+        if isinstance(labels, (str, int, float)):
             labels = [labels] * matrix_agg_len
-        elif len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
             raise ValueError(
                 f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )
@@ -493,7 +498,10 @@ class Counts(csr_matrix):
             features = self.features[key]
         else:
             genes = pd.DataFrame(self.genes.reindex(key)).reset_index(drop=True)
-            ensgs = pd.DataFrame(self.ensgs.reindex(key)).reset_index(drop=True)
+            try:
+                ensgs = pd.DataFrame(self.ensgs.reindex(key)).reset_index(drop=True)
+            except KeyError:
+                ensgs = list()
             if len(ensgs) > len(genes):
                 features = self.features[self.features.ensgs.isin(key)]
             else:
@@ -536,6 +544,9 @@ class Counts(csr_matrix):
                     df_temp = df.reset_index()
                     key_rows = df_temp[df_temp[df_temp.columns[0]].isin(key)]
                 else:
+                    if isinstance(df, pd.Series) and not set(key).issubset(df.unique()):
+                        # TODO: this error gets a bit obscured by others
+                        raise KeyError(f"Keys {key} not all in index {df.index}")
                     key_rows = df.reindex(key)
                 key = key_rows.dropna()["i"].astype(int).tolist()
         elif isinstance(key, str):
@@ -627,6 +638,33 @@ class Counts(csr_matrix):
             super_method = getattr(csr_matrix, name)
             wrapped_method = Counts.wrap_super(super_method)
             setattr(Counts, name, wrapped_method)
+
+    def __eq__(self, other):
+        # TODO: maybe should use something else here and do element wise. This is used in DistributedContainer
+        eq_features = self.features.equals(other.features)
+        eq_cell_ids = self.cell_ids.equals(other.cell_ids)
+        eq_sum = self.sum() == other.sum()
+        return eq_features and eq_cell_ids and eq_sum
+
+    def __ge__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix >= other
+
+    def __gt__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix > other
+
+    def __le__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix <= other
+
+    def __lt__(self, other):
+        if isinstance(other, self.__class__):
+            other = other._matrix
+        return self._matrix < other
 
 
 Counts.decorate(Counts._SUPER_METHODS)

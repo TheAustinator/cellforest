@@ -1,7 +1,6 @@
 import pytest
 
 import cellforest as cf
-from cellforest import CellBranch, Counts, useconfig
 from tests.fixtures import *
 import tests
 from tests.test_init import build_root
@@ -10,23 +9,11 @@ from tests.test_data_ops import test_subset_fix
 # TODO: add output file checks
 
 
-@pytest.fixture
-@useconfig("no_plot_config")
-def test_norm_fix(root_path, build_root, branch_spec_norm):
-    import ipdb
-
-    ipdb.set_trace()
-    branch = CellBranch(root=root_path, branch_spec=branch_spec_norm)
-    branch.process.normalize()
-    return branch
-
-
-@useconfig("no_plot_config")
-def test_norm_reduce(root_path, build_root, branch_spec_norm_reduce, test_norm_fix):
-    branch = CellBranch(root=root_path, branch_spec=branch_spec_norm_reduce)
-    branch.process.reduce()
-    return branch
-
+# @pytest.fixture
+# def test_norm_fix(root_path, build_root, branch_spec_norm):
+#     branch = cf.load(root_path, branch_spec=branch_spec_norm)
+#     branch.process.normalize(stop_on_error=True, stop_on_hook_error=True)
+#     return branch
 
 # TO-DO: Uncomment when sctransform is implemented
 # def test_norm_sctransform(root_path, build_root, norm_sctransform_spec):
@@ -37,9 +24,9 @@ def test_norm_reduce(root_path, build_root, branch_spec_norm_reduce, test_norm_f
 
 @useconfig("no_plot_config")
 def test_process_chain(root_path, build_root, process_chain_spec):
-    branch = CellBranch(root=root_path, branch_spec=process_chain_spec)
-    branch.process.normalize()
-    branch.process.test_process()
+    branch = cf.load(root_path, branch_spec=process_chain_spec)
+    branch.process.normalize(stop_on_error=True, stop_on_hook_error=True)
+    branch.process.test_process(stop_on_error=True, stop_on_hook_error=True)
     return branch
 
 
@@ -61,7 +48,7 @@ def test_logging(test_norm):
 @useconfig("no_plot_config")
 def test_normalize_branch_goto(test_subset_fix):
     branch = test_subset_fix
-    rna = Counts.load(branch["normalize"].path_map["rna"])
+    rna = cf.Counts.load(branch["normalize"].path_map["rna"])
     branch.goto_process("root")
     assert len(branch.meta) == 600
     assert len(branch.rna) == 600
@@ -89,11 +76,10 @@ def test_fresh_normalize_reduce():
     pass
 
 
-@useconfig("no_plot_config")
 def test_marker_process(test_markers):
-    pass
+    branch = test_markers
+    assert (branch["markers"].path / "markers.tsv").exists()
 
 
-@useconfig("no_plot_config")
 def test_diffexp_process(test_diffexp):
     pass

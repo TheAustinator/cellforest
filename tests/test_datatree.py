@@ -21,7 +21,7 @@ def tree_spec():
                 },
                 {"min_genes": 5, "max_genes": 5000, "min_cells": 5, "perc_mito_cutoff": 20, "method": "sctransform"},
             ],
-            "_SUBSET_": {"sample_id": {"_SWEEP_": ["sample_1", "sample_2"]}},
+            "_SUBSET_": {"entity_id": {"_SWEEP_": ["sample_1", "sample_2"]}},
         },
         {
             "_PROCESS_": "reduce",
@@ -64,7 +64,7 @@ def tree_spec_norm_update():
             "perc_mito_cutoff": 20,
             "method": "seurat_default",
         },
-        "_SUBSET_": {"sample_id": "sample_1"},
+        "_SUBSET_": {"entity_id": "sample_1"},
     }
     return spec
 

@@ -12,7 +12,7 @@ from cellforest.utils import compress_move
 DATA_URL = "https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz"
 
 
-def get_test_data():
+def get_test_data(keep_raw=False):
     """
     Get sample data from 10X for testing. The data comes in the format of v2
     chemistry, and a v3 version is artificially created, as well as v3 .gz
@@ -20,16 +20,16 @@ def get_test_data():
     Returns:
 
     """
-    _get_test_data_slice(300, 150)  # small: (300, 150), full: (2699, 32737)
+    _get_test_data_slice(300, 150, keep_raw)   # small: (300, 150), full: (2699, 32737)
 
 
-def _get_test_data_slice(n_cells, n_genes):
+def _get_test_data_slice(n_cells, n_genes, keep_raw=False):
     # create sample metadata
     data_dir = Path(__file__).parent.parent / "data"
     os.makedirs(data_dir, exist_ok=True)
     subdirs = ["v3_gz/sample_1", "v3_gz/sample_2"]
     sample_metadata = pd.DataFrame(
-        {"sample_id": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
+        {"entity_id": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
     )
     sample_metadata.to_csv(data_dir / "sample_metadata.tsv", sep="\t", index=False)
 
@@ -71,7 +71,8 @@ def _get_test_data_slice(n_cells, n_genes):
     compress_move(files, dst_2_v3, dst_2_gz)
 
     # remove downloads
-    shutil.rmtree(data_dir / "filtered_gene_bc_matrices",)
+    if not keep_raw:
+        shutil.rmtree(data_dir / "filtered_gene_bc_matrices",)
     os.remove(data_dir / "pbmc3k_filtered_gene_bc_matrices.tar.gz")
 
 

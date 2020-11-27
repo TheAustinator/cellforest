@@ -3,9 +3,9 @@ from collections import Iterable, Sized
 from typing import List
 
 from dataforest.plot import plot_py, plot_r
-
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import numpy as np
 
 from cellforest import CellBranch
 from cellforest.utils.r.run_r_script import run_r_script_logged
@@ -22,10 +22,17 @@ def plot_umap_features(branch: "CellBranch", features: List, ncol: int = 3, ax_s
     rna_features = list(set(features).difference(branch.meta.columns))
     if rna_features:
         branch = branch.copy()
+        missing = set(rna_features).difference(branch.rna.genes.values)
+        if missing:
+            raise ValueError(f"Genes not found: {missing}")
         branch.meta[rna_features] = branch.rna[:, rna_features].todense()
     ncol = min(len(features), ncol)
     nrow = math.ceil(len(features) / ncol)
     fig, ax_arr = plt.subplots(nrow, ncol)
+    if not isinstance(ax_arr, np.ndarray):
+        ax_arr = np.array([[ax_arr]])
+    if ax_arr.ndim < 2:
+        np.expand_dims(ax_arr, axis=0)
     ax_list = ax_arr.flatten()
     kwargs.pop("ax", None)
     fig.set_size_inches(1.1 * ncol * ax_size, nrow * ax_size)  # 1.1 for color bar

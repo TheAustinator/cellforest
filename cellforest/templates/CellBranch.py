@@ -2,6 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Optional, Union, List, Tuple
 
+from anndata import AnnData
 from dataforest.core.DataBranch import DataBranch
 from dataforest.core.BranchSpec import BranchSpec
 from dataforest.utils.utils import label_df_partitions
@@ -75,7 +76,7 @@ class CellBranch(CellBase, DataBranch):
         around `scipy.sparse.coo_matrix`, which allows for slicing with
         `cell_id`s and `gene_name`s.
         """
-        if self._rna is None or not self._rna.index.equals(self.meta.index):
+        if self._rna is None or not set(self._rna.index) == set(self.meta.index):
             if self.current_process is not None:
                 path_map = self[self.current_process].path_map
                 counts_path = path_map["rna"]
@@ -88,7 +89,7 @@ class CellBranch(CellBase, DataBranch):
                     f"CellBranch.from_input_dirs. Not found: {counts_path}"
                 )
             self._rna = Counts.load(counts_path)
-        if not self._rna.index.equals(self.meta.index):
+        if not set(self._rna.index) == set(self.meta.index):
             self._rna = self._rna[self.meta.index]
         return self._rna
 
@@ -120,13 +121,16 @@ class CellBranch(CellBase, DataBranch):
     def crispr(self):
         raise NotImplementedError()
 
+    def to_anndata(self):
+        return AnnData(X=self.rna._matrix, obs=self.meta, var=self.rna.features.set_index("genes"))
+
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         base_kwargs = self._get_copy_base_kwargs()
         kwargs = {**base_kwargs, **kwargs}
         kwargs = {k: deepcopy(v) for k, v in kwargs.items()}
         if reset:
             kwargs = base_kwargs
-        return self.__class__(**kwargs)
+        return super().copy(**kwargs)
 
     def set_partition(self, process_name: Optional[str] = None, encodings=True):
         """Add columns to metadata to indicate partition from branch_spec"""

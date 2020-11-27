@@ -1,6 +1,7 @@
 anndata
 dataforest
 IPython
+joblib
 matplotlib
 numba
 numpy
