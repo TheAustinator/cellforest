@@ -20,7 +20,7 @@ def get_test_data(keep_raw=False):
     Returns:
 
     """
-    _get_test_data_slice(300, 150, keep_raw)  # 2000, 1500
+    _get_test_data_slice(300, 150, keep_raw)   # small: (300, 150), full: (2699, 32737)
 
 
 def _get_test_data_slice(n_cells, n_genes, keep_raw=False):
@@ -103,4 +103,4 @@ def get_test_data_full():
 
 
 if __name__ == "__main__":
-    get_test_data()
+    get_test_data_full()
