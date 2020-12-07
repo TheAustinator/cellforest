@@ -38,7 +38,7 @@ class DataMerge:
             cells_per_matrix = [counts.shape[0] for counts in rna_list]
             meta = metadata.loc[metadata.index.repeat(cells_per_matrix)].reset_index(drop=True)
             if id_col in metadata:
-                rna.index = rna.index.str.slice(0, -1) + meta[id_col]
+                rna.index = rna.index.str.slice(0, -1) + meta[id_col].astype(str)
         if rna.index.duplicated().any():
             raise ValueError(
                 "cell identifiers must be unique. Consider using metadata with `lane_id` column or specify a custom "
