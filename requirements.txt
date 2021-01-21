@@ -8,6 +8,7 @@ numpy
 pandas
 path
 pyyaml
+scanpy
 scipy
 seaborn
 typeguard

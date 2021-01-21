@@ -121,8 +121,9 @@ class CellBranch(CellBase, DataBranch):
     def crispr(self):
         raise NotImplementedError()
 
-    def to_anndata(self):
-        return AnnData(X=self.rna._matrix, obs=self.meta, var=self.rna.features.set_index("genes"))
+    def to_anndata(self, dense=False):
+        X = self.rna._matrix if not dense else self.rna._matrix.toarray()
+        return AnnData(X=X, obs=self.meta, var=self.rna.features.set_index("genes"))
 
     def copy(self, reset: bool = False, **kwargs) -> "CellBranch":
         base_kwargs = self._get_copy_base_kwargs()

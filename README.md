@@ -129,3 +129,14 @@ plot_map:
 4. As soon as you initialize a branch (`branch = cellforest.from_sample_metadata(root_dir, meta, branch_spec=branch_spec)`) or run a process (e.g., `branch.process.normalize()`), specified plots will be generated immediately after process finishes running.
 5. For advanced plotting specifications, refer to [Parametrizing QC plotting](cellforest/README.md#ii-parametrizing-qc-plots)
 
+# Troubleshooting
+**errors with cellforestR or with processes which contain R**
+- Possible indicators -- mention of miniconda in error message
+- Solution -- ensure global environment variable `RETICULATE_PYTHON` is set to your python path (e.g. `/usr/bin/python3`)
+    - In R, can set via
+        ```R
+        Sys.setenv(RETICULATE_PYTHON = "/usr/bin/python3")
+        system("echo $RETICULATE_PYTHON")
+        library(reticulate)
+        ```
+    - In shell, can be set via `export RETICULATE_PYTHON=/usr/bin/python3` (may require RStudio restart if using)

@@ -54,7 +54,7 @@ cellforest_load <- function(root_dir, branch_spec, process, subset = NULL, filte
 #' @description Loads RDS from most recent layer (including current layer).
 #' If RDS comes from parental folder, append embeddings from the current layer.
 #'
-#' @importFrom Seurat CreateDimReducObject AddMetaData
+#' @importFrom Seurat CreateDimReducObject AddMetaData DefaultAssay
 #' @importFrom glue glue
 #'
 #' @param cf_branch CellForest branch at selected process

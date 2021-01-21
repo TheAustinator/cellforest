@@ -17,6 +17,11 @@ class DataMerge:
         return ret
 
     @staticmethod
+    def to_anndata():
+        # TODO: want to be able to do this without building root
+        pass
+
+    @staticmethod
     def _merge_rna(paths, metadata, save_dir, id_col="lane_id", parallel=True):
         """"""
         # TODO: significant memory leakage -- maybe make an optional kwarg
