@@ -10,8 +10,8 @@ def volcano(
     y="-logp",
     c="mean_expr_clip",
     group=None,
-    pval_thresh=0.5,
-    logfc_thresh=0.25,
+    pval_thresh=None,
+    logfc_thresh=None,
     mean_expr_thresh=None,
     frac_expr_thresh=None,
     xlim=None,
@@ -28,10 +28,12 @@ def volcano(
         else:
             color = dff[c]
         plt.scatter(dff[x], dff[y], c=color, s=s, alpha=alpha, **kwargs)
-        logp_thresh = -np.log10(pval_thresh)
-        plt.axvline(logfc_thresh, **LINE)
-        plt.axvline(-logfc_thresh, **LINE)
-        plt.axhline(logp_thresh, **LINE)
+        if pval_thresh:
+            logp_thresh = -np.log10(pval_thresh)
+            plt.axhline(logp_thresh, **LINE)
+        if logfc_thresh:
+            plt.axvline(logfc_thresh, **LINE)
+            plt.axvline(-logfc_thresh, **LINE)
         if xlim:
             plt.xlim(*xlim)
         if ylim:
@@ -39,5 +41,6 @@ def volcano(
         plt.title(name)
         plt.ylabel("-logp")
         plt.xlabel("logfc")
+        plt.colorbar()
         print(name)
         plt.show()

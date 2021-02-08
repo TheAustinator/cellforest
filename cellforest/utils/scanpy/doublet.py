@@ -64,9 +64,9 @@ def lane_doublet_rates(ad, root_path=None, est_per_1k=0.008):
         _ad = ad[(ad.obs["sample"] == sample) & (ad.obs["cell_types"] == cell_types)]
         # _ad.obs["dub_find_pred"] = _ad.obs["dub_find_pred"].replace({"Singlet": False, "Doublet": True})
         est = est_per_1k * len(_ad) / 1000
-        solo_pred = _ad.obs["solo_pred"].sum() / len(_ad)
-        solo_dub = _ad.obs["solo_dub"].sum() / len(_ad)
-        dub_find_pred = _ad.obs["dub_find_pred"].sum() / len(_ad)
+        solo_pred = (_ad.obs["solo_pred"] == "True").sum() / len(_ad)
+        solo_dub = (_ad.obs["solo_dub"] == "True").sum() / len(_ad)
+        dub_find_pred = (_ad.obs["dub_find_pred"] == "True").sum() / len(_ad)
         # scrublet_pred = _ad.obs["scrublet_pred"].sum() / len(_ad)
         row = {
             "label": label,
@@ -94,11 +94,11 @@ def remove_doublets(
         ad = _add_dub_methods(ad, root_path)
     # TODO: options to remove using others besides solo
     if dub_find:
-        ad = ad[~ad.obs["dub_find_pred"].astype(bool)]
+        ad = ad[~(ad.obs["dub_find_pred"] == "True")]
     if solo_dub:
-        ad = ad[~ad.obs["solo_dub"].astype(bool)]
+        ad = ad[~(ad.obs["solo_dub"] == "True")]
     if solo_pred:
-        ad = ad[~ad.obs["solo_pred"].astype(bool)]
+        ad = ad[~(ad.obs["solo_pred"] == "True")]
     # if remove_scrublet:
     #     ad = ad[~ad.obs["solo_pred"]]
     return ad

@@ -47,3 +47,20 @@ def get_genes_clustered(adt, markers):
     clusters = marker_clusters.unique()
     genes = list(adt.obs_names[adt.obs["leiden"].isin(clusters)])
     return genes
+
+
+def filter_markers(df, logfc=0, pval_adj=1, mean_expr=0, frac_expr=0, filter_prefixes=(), group=None):
+    df = df[
+        (df["logfc"].abs() > logfc)
+        & (df["pval_adj"] < pval_adj)
+        & (df["mean_expr"] > mean_expr)
+        & (df["frac_expr"] > frac_expr)
+    ]
+    if group:
+        df = df[df["group"] == group]
+    df = df[~df["gene"].str.startswith(filter_prefixes)]
+    return df
+
+
+def rank_markers(df):
+    return df["logfc"] * -np.log10(df["pval_adj"])
