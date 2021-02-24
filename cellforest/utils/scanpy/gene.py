@@ -3,6 +3,7 @@ from typing import List
 from anndata import AnnData
 import numpy as np
 import scanpy as sc
+from sklearn.preprocessing import normalize, scale
 
 from cellforest.utils.scanpy.generic import _generic_preprocess
 
@@ -18,6 +19,12 @@ def agg_gene_prefix(ad: AnnData, prefix_list: List[str], new_obs_colname: str, d
     ad.obs[new_obs_colname] = ad[:, var_names].X.sum(axis=1)
     if drop:
         ad = drop_gene_prefix(ad, prefix_list)
+    return ad
+
+
+def add_prefix_fracs(ad, prefix_list):
+    for prefix in prefix_list:
+        ad.obs[prefix] = ad[:, ad.var.index.str.startswith(prefix)].X.mean(axis=1) / ad.X.mean(axis=1)
     return ad
 
 
@@ -64,3 +71,17 @@ def filter_markers(df, logfc=0, pval_adj=1, mean_expr=0, frac_expr=0, filter_pre
 
 def rank_markers(df):
     return df["logfc"] * -np.log10(df["pval_adj"])
+
+
+def get_feature(ad, f, std_scale=False, norm=False):
+    if not isinstance(f, str):
+        return np.vstack(list(map(lambda _f: get_feature(ad, _f), f))).T
+    if f in ad.obs.columns:
+        arr = ad.obs[f]
+    else:
+        arr = ad[:, f].X.toarray().T[0]
+    if std_scale:
+        arr = scale(arr.T).T
+    if norm:
+        arr = normalize(arr.T).T
+    return arr

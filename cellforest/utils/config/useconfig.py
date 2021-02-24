@@ -1,7 +1,6 @@
 from functools import wraps
 from typing import AnyStr, Dict, Union, Callable, Any
 
-import pytest
 from dataforest import get_current_config
 from decorator import decorator
 

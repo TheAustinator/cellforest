@@ -19,12 +19,25 @@ def preprocess(
     return ad
 
 
-@sub_kwargs("hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs")
-def reduce(ad: AnnData, n_comps: int = 15, hvg_kwargs=None, pca_kwargs=None, neighbors_kwargs=None, umap_kwargs=None):
+@sub_kwargs("hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs", "tsne_kwargs")
+def reduce(
+    ad: AnnData,
+    n_comps: int = 15,
+    hvg_kwargs=None,
+    pca_kwargs=None,
+    neighbors_kwargs=None,
+    umap_kwargs=None,
+    tsne_kwargs=None,
+    umap=True,
+    tsne=False,
+):
     sc.pp.highly_variable_genes(ad, batch_key="sample", **hvg_kwargs)
     sc.pp.pca(ad, n_comps=n_comps, **pca_kwargs)
     sc.pp.neighbors(ad, **neighbors_kwargs)
-    sc.tl.umap(ad, **umap_kwargs)
+    if umap:
+        sc.tl.umap(ad, **umap_kwargs)
+    if tsne:
+        sc.tl.tsne(ad, **tsne_kwargs)
     return ad
 
 

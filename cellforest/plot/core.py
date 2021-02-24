@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Literal, Union, List
+from typing import Optional, Union, List
 
 from dataforest.plot import plot_py, plot_r
 from dataforest.utils import listify
@@ -69,13 +69,21 @@ def plot_frac_cells_recovered_bar(branch: "CellBranch", x: Optional[str] = None,
 
 @plot_py(forbid=["facet", "stratify"])
 def plot_hist_features(
-    branch: "CellBranch",
-    features: list,
-    ncol: int = 3,
-    ax_size=5,
-    sep: Literal["stratify", "facet"] = "facet",
-    **kwargs,
+    branch: "CellBranch", features: list, ncol: int = 3, ax_size=5, sep: str = "facet", **kwargs,
 ):
+    """
+
+    Args:
+        branch:
+        features:
+        ncol:
+        ax_size:
+        sep: Literal["stratify", "facet"]
+        **kwargs:
+
+    Returns:
+
+    """
     # TODO: add facet_vars to plotting decorator to allow facet by cols rather than rows, and use that for grid
     rna_features = list(set(features).difference(branch.meta.columns))
     if rna_features:

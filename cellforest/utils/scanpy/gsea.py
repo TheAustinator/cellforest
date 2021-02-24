@@ -32,17 +32,40 @@ r_gsea <- function(genes, ranks, gmt_path) {
 """
 
 
-def gsea(df, gmt_path):
+def add_ranks(df, rank_max_fc=0.5):
+    def _update_saturated_ranks(df_sub, extrema):
+        scale_factor = 1 + rank_max_fc * df_sub["logfc"].abs() / (df_sub["logfc"].max() - df_sub["logfc"].min())
+        df_sub["rank"] = extrema
+        df_sub["rank"] *= scale_factor
+        return df_sub
+
     df["rank"] = rank_markers(df)
-    df.sort_values(["rank", "logfc"], inplace=True)
     sorted_ranks = sorted(df["rank"].unique())
     rank_min = sorted_ranks[1]
     rank_max = sorted_ranks[-2]
-    df.loc[df["rank"] == np.inf, "rank"] = rank_max
-    df.loc[df["rank"] == -np.inf, "rank"] = rank_min
+    max_selector = df["rank"] == np.inf
+    min_selector = df["rank"] == -np.inf
+    df.loc[max_selector] = _update_saturated_ranks(df.loc[max_selector], rank_max)
+    df.loc[min_selector] = _update_saturated_ranks(df.loc[min_selector], rank_min)
+    df.sort_values(["rank", "logfc"], inplace=True)
     genes = df["gene"].tolist()
     ranks = df["rank"].tolist()
+    return genes, ranks
+
+
+def gsea(df, gmt_path, rank_max_fc=0.5):
+    """
+
+    Args:
+        df:
+        gmt_path:
+        rank_max_fc: modulates dynamic range of ranking metric for values where logp=inf
+
+    Returns:
+
+    """
     r_gsea = robjects.r(R_GSEA_STR)
+    genes, ranks = add_ranks(df, rank_max_fc)
     r_gsea(genes, ranks, str(gmt_path))
     df_fgsea = pd.read_csv("fgsea_test.csv", index_col=0)
     df_fgsea.set_index("pathway", inplace=True)
