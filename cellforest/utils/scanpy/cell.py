@@ -10,30 +10,56 @@ from cellforest.utils.scanpy.generic import _generic_preprocess
 
 
 # maybe increase `min_cells
-def preprocess(ad: AnnData, min_cells: int = 10, min_genes: int = 200, max_genes: int = 2500, max_pct_mito: int = 30):
+def preprocess(
+    ad: AnnData, min_cells: int = None, min_genes: int = None, max_genes: int = None, max_pct_mito: int = None
+):
     ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
     ad.raw = ad
     sc.pp.log1p(ad)
     return ad
 
 
-@sub_kwargs("hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs")
-def reduce(ad: AnnData, n_comps: int = 15, hvg_kwargs=None, pca_kwargs=None, neighbors_kwargs=None, umap_kwargs=None):
+@sub_kwargs("hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs", "tsne_kwargs")
+def reduce(
+    ad: AnnData,
+    n_comps: int = 15,
+    hvg_kwargs=None,
+    pca_kwargs=None,
+    neighbors_kwargs=None,
+    umap_kwargs=None,
+    tsne_kwargs=None,
+    umap=True,
+    tsne=False,
+):
     sc.pp.highly_variable_genes(ad, batch_key="sample", **hvg_kwargs)
     sc.pp.pca(ad, n_comps=n_comps, **pca_kwargs)
     sc.pp.neighbors(ad, **neighbors_kwargs)
-    sc.tl.umap(ad, **umap_kwargs)
+    if umap:
+        sc.tl.umap(ad, **umap_kwargs)
+    if tsne:
+        sc.tl.tsne(ad, **tsne_kwargs)
     return ad
 
 
-def cluster(ad: AnnData, resolution: float = 0.1, n_genes: int = 20, fontsize: int = 8, ax=None):
+def cluster(ad: AnnData, resolution: float = 0.1, **markers_kwargs):
     sc.tl.leiden(ad, resolution=resolution)
-    markers(ad, "leiden", n_genes, fontsize, ax)
+    markers(ad, "leiden", **markers_kwargs)
     return ad
 
 
-def markers(ad: AnnData, key="leiden", n_genes: int = 20, fontsize: int = 8, ax=None):
-    sc.pl.umap(ad, color=key)
+def markers(
+    ad: AnnData, key="leiden", n_genes: int = 20, filter_var_prefix=(), obs_facet=None, fontsize: int = 8, ax=None,
+):
+    if filter_var_prefix:
+        ad = ad[:, ~ad.var_names.str.startswith(filter_var_prefix)]
+        del ad.raw
+    if obs_facet:
+        for val, _obs in ad.obs.groupby(obs_facet):
+            print(val)
+            _ad = ad[ad.obs_names.isin(_obs.index)]
+            sc.pl.umap(_ad, color=key)
+    else:
+        sc.pl.umap(ad, color=key)
     sc.tl.rank_genes_groups(ad, groupby=key)
     sc.pl.rank_genes_groups(ad, n_genes=n_genes, fontsize=fontsize, ax=ax)
     return ad
@@ -46,6 +72,17 @@ def process(ad: AnnData):
 
 
 def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None):
+    """
+
+    Args:
+        ad:
+        mean_expr_clip:
+        group:
+
+    Returns:
+
+    """
+
     def get_col(col):
         return np.array(ad.uns["rank_genes_groups"][col].tolist())
 
@@ -60,11 +97,12 @@ def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None):
     group_var = ad.uns["rank_genes_groups"]["params"]["groupby"]
 
     def _add_group(_group, _dff):
-        try:
-            mean_expr = ad[ad.obs[group_var] == _group, _dff["gene"]].X.mean(axis=0)
-        except Exception as e:
-            print(ad[ad.obs[group_var] == _group, _dff["gene"]].X.shape)
-            raise e
+        selector = ad.obs[group_var] == _group
+        if selector.sum() == 0:
+            raise ValueError(
+                f"specified `group`: {group}   not in column :{group_var}  . Choose from {ad.obs[group_var].unique()}"
+            )
+        mean_expr = ad[ad.obs[group_var] == _group, _dff["gene"]].X.mean(axis=0)
         frac_expr = (ad[ad.obs[group_var] == _group, _dff["gene"]].X > 0).mean(axis=0)
         df.loc[_dff.index, "mean_expr"] = mean_expr.T
         df.loc[_dff.index, "frac_expr"] = frac_expr.T

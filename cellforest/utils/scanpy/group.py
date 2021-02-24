@@ -2,12 +2,16 @@ from anndata import AnnData
 from typing import Dict, Callable, Iterable
 
 
-def adata_groupby(ad: AnnData, obs_cols: Iterable):
-    ad_dict = dict()
+def groupby(ad: AnnData, obs_cols: Iterable):
     grp = ad.obs.groupby(obs_cols)
     for name, obs_sub in grp:
         selector = ad.obs_names.isin(obs_sub.index)
-        ad_sub = ad[selector]
+        yield name, ad[selector]
+
+
+def groupby_dict(ad: AnnData, obs_cols: Iterable):
+    ad_dict = dict()
+    for name, ad_sub, in groupby(ad, obs_cols):
         ad_dict[name] = ad_sub
     return ad_dict
 

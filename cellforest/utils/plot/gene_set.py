@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Dict, Set, Union, Literal, List
+from typing import Optional, Dict, Set, Union, List
 
 import pandas as pd
 from dataforest.utils import listify
@@ -12,7 +12,7 @@ def gene_set_bar(
     genes: Set[str],
     gene_set_dict: Optional[Dict[str, Set[str]]] = None,
     gene_set_gmt_path: Optional[Union[str, Path]] = None,
-    metric: Union[List[str], Literal["genes", "gene_set", "iou", "all"]] = "all",
+    metric: Union[str, List[str]] = "all",
     min_frac: float = 0.05,
     xtick_label_rot: int = 90,
     **kwargs,
