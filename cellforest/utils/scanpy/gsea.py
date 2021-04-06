@@ -1,9 +1,17 @@
+from typing import Union, AnyStr, List, Dict, Optional, Callable
+
+from anndata import AnnData
+from dataforest.utils.analysis import set as set_metrics
+from dataforest.utils.analysis.pairwise import pairwise_metric
+from joblib import Parallel, delayed
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from rpy2 import robjects
 
+from cellforest.utils import parse_gene_set_gmt
 from cellforest.utils.scanpy.gene import rank_markers
+from cellforest.utils.scanpy.manifold import pc_load_df
 
 R_GSEA_STR = """
 r_gsea <- function(genes, ranks, gmt_path) {
@@ -53,19 +61,26 @@ def add_ranks(df, rank_max_fc=0.5):
     return genes, ranks
 
 
-def gsea(df, gmt_path, rank_max_fc=0.5):
+def gsea(df, gmt_path, ranked=False, rank_max_fc=0.5):
     """
 
     Args:
         df:
         gmt_path:
+        ranked: whether genes are already ranked. If so, expected to be ordered with
+            a column, "ranked", which contains some sort of cardinal or ordinal score.
+            Otherwise, expecting "logfc" and "pval_adj" columns for ranking.
         rank_max_fc: modulates dynamic range of ranking metric for values where logp=inf
 
     Returns:
 
     """
     r_gsea = robjects.r(R_GSEA_STR)
-    genes, ranks = add_ranks(df, rank_max_fc)
+    if ranked:
+        genes = df.index.tolist()
+        ranks = df["rank"].tolist()
+    else:
+        genes, ranks = add_ranks(df, rank_max_fc)
     r_gsea(genes, ranks, str(gmt_path))
     df_fgsea = pd.read_csv("fgsea_test.csv", index_col=0)
     df_fgsea.set_index("pathway", inplace=True)
@@ -83,3 +98,39 @@ def gsea(df, gmt_path, rank_max_fc=0.5):
     # clustermap(corr)
     # plt.scatter(df_gsea["stats.stat.mean"], df_gsea["NES"], s=1, alpha=0.1)
     # plt.scatter(df_gsea["greater.q.val"], df_gsea["padj"], s=1, alpha=0.1)
+
+
+def pc_gsea(
+    ad: AnnData, gmt_path: AnyStr, pval: float = 0.01, return_df=True, parallel=False,
+) -> Union[Dict[str, List[str]], pd.DataFrame]:
+    pc_df = pc_load_df(ad)
+
+    def _get_top_gene_sets(series: pd.Series):
+        _df_gsea = gsea(pd.DataFrame({"rank": series}), gmt_path, ranked=True)
+        top_gs = _df_gsea[_df_gsea["padj"] < pval].sort_values("NES", ascending=False).index.tolist()
+        return top_gs
+
+    if parallel:
+        raise NotImplementedError("Parallel doesn't work with rpy2 b/c stateful")
+        # top_gs_list = Parallel(n_jobs=-1)(delayed(_get_top_gene_sets)(pc_df[col]) for col in pc_df)
+    else:
+        top_gs_list = [_get_top_gene_sets(pc_df[col]) for col in pc_df]
+    pc_gs = dict(zip(pc_df.columns.tolist(), top_gs_list))
+    if return_df:
+        max_len = max(map(len, pc_gs.values()))
+        pc_gs = {k: v + (max_len - len(v)) * [""] for k, v in pc_gs.items()}
+        pc_gs = pd.DataFrame(pc_gs)
+    return pc_gs
+
+
+def gene_set_pair_metric(
+    gmt: Union[dict, AnyStr], gene_sets: Optional[List[str]] = None, metric: Union[AnyStr, Callable] = "iou"
+):
+    if not isinstance(gmt, dict):
+        gmt = parse_gene_set_gmt(gmt)
+    if gene_sets:
+        gmt = {k: v for k, v in gmt.items() if k in gene_sets}
+    if isinstance(metric, str):
+        metric = getattr(set_metrics, metric)
+    df = pairwise_metric(gmt, metric)
+    return df

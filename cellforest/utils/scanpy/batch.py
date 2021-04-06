@@ -2,12 +2,13 @@ import scanpy as sc
 from cellforest.utils.scanpy.cell import reduce
 
 
-def show_harmony(ad, show_orig=True, color="sample"):
+def show_harmony(ad, show_orig=True, color="sample", reduce_kwargs=None, **kwargs):
+    reduce_kwargs = reduce_kwargs if reduce_kwargs else dict()
     ad = ad.copy()
     if show_orig:
         sc.pl.umap(ad, color=color)
-    sc.external.pp.harmony_integrate(ad, key="sample")
-    ad = reduce(ad, neighbors_kwargs={"use_rep": "X_pca_harmony"})
+    sc.external.pp.harmony_integrate(ad, key="sample", **kwargs)
+    ad = reduce(ad, neighbors_kwargs={"use_rep": "X_pca_harmony"}, **reduce_kwargs)
     sc.pl.umap(ad, color=color)
     return ad
 

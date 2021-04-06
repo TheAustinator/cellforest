@@ -13,8 +13,10 @@ from cellforest.utils.scanpy.generic import _generic_preprocess
 def preprocess(
     ad: AnnData, min_cells: int = None, min_genes: int = None, max_genes: int = None, max_pct_mito: int = None
 ):
+    # if "raw" not in ad.layers:
+    ad.layers["raw"] = ad.X.copy()
+    ad.raw = ad.copy()
     ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
-    ad.raw = ad
     sc.pp.log1p(ad)
     return ad
 
@@ -62,6 +64,7 @@ def markers(
         sc.pl.umap(ad, color=key)
     sc.tl.rank_genes_groups(ad, groupby=key)
     sc.pl.rank_genes_groups(ad, n_genes=n_genes, fontsize=fontsize, ax=ax)
+    get_markers_df(ad)
     return ad
 
 
@@ -71,7 +74,7 @@ def process(ad: AnnData):
     return ad
 
 
-def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None):
+def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key="markers"):
     """
 
     Args:
@@ -116,4 +119,6 @@ def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None):
     df["-logp"] = -df["pval_adj"].apply(np.log10)
     floor = df["-logp"][df["-logp"].abs() != np.inf].min()
     df["-logp"] = df["-logp"].replace({-np.inf: floor})
+    if uns_key:
+        ad.uns[uns_key] = df
     return df
