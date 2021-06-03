@@ -26,7 +26,7 @@ def agg_gene_prefix(ad: AnnData, prefix_list: List[str], new_obs_colname: str, d
 def add_prefix_fracs(ad, prefix_list, raw=True):
     prefix_list = [prefix_list,] if isinstance(prefix_list, (str, int)) else prefix_list
     for prefix in prefix_list:
-        ad_tot = ad.raw if raw else ad
+        ad_tot = ad.raw if raw and ad.raw else ad
         ad_sub = ad[:, ad.var.index.str.startswith(prefix)]
         X_tot = ad_tot.X
         X_sub = ad_sub.X
@@ -49,10 +49,16 @@ def process_transpose(
     return ad
 
 
-def get_genes_clustered(adt, markers):
-    sc.tl.umap(adt, min_dist=0.00001, spread=1)
-    sc.tl.leiden(adt, resolution=5)
-    sc.pl.umap(adt, color="leiden")
+def cluster(adt, min_dist=0.00001, spread=1, resolution=5, plot=True):
+    # TODO: change to take in original anndata, transpose, then add these annotations to var
+    sc.tl.umap(adt, min_dist=min_dist, spread=spread)
+    sc.tl.leiden(adt, resolution=resolution)
+    if plot:
+        sc.pl.umap(adt, color="leiden")
+
+
+def query_module(adt, markers):
+    markers = [markers,] if isinstance(markers, str) else markers
     marker_clusters = adt.obs[adt.obs_names.isin(markers)]["leiden"]
     print(marker_clusters)
     marker_umap_coords = np.array(adt[adt.obs_names.isin(markers)].obsm["X_umap"])
@@ -75,11 +81,7 @@ def filter_markers(df, logfc=0, pval_adj=1, mean_expr=0, frac_expr=0, filter_pre
     return df
 
 
-def rank_markers(df):
-    return df["logfc"] * -np.log10(df["pval_adj"])
-
-
-def get_features(ad, f, f_obsm=None, n_obsm=None, std_scale=False, norm=False):
+def get_features(ad, f, f_obsm=None, n_obsm=None, ignore_missing: bool = False, std_scale=False, norm=False):
     if f is None:
         return pd.DataFrame()
     ad = ad.copy()
@@ -90,12 +92,16 @@ def get_features(ad, f, f_obsm=None, n_obsm=None, std_scale=False, norm=False):
     f_obs = [x for x in f if x in ad.obs.columns]
     f_var = [x for x in f if x in ad.var_names]
     f_mis = set(f).difference(set(f_obs).union(f_var))
-    if f_mis:
-        raise ValueError(f"Missing features: {f_mis}")
+    if f_mis and not ignore_missing:
+        print(ignore_missing)
+        raise ValueError(f"Missing features: {f_mis}. Set `ignore_missing` to ignore.")
     obs = ad.obs[f_obs]
     var = ad[:, f_var].X.toarray() if f_var else []
     var = pd.DataFrame(var, columns=f_var, index=ad.obs.index)
     df = pd.concat([obs, var], axis=1)
+    if ignore_missing:
+        f = [x for x in f if x in df]
+    df = df[f]
     return df
 
 

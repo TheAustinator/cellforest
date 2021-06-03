@@ -8,7 +8,7 @@ from cellforest.utils.scanpy.cell import reduce
 from cellforest.utils.scanpy.group import groupby_dict
 
 
-def pc_load_df(ad: AnnData, n_pcs=None, drop_zero=True):
+def pc_load_df(ad: AnnData, n_pcs=None, drop_zero=False) -> pd.DataFrame:
     X = ad.varm["PCs"]
     n_pcs = n_pcs if n_pcs else X.shape[1]
     X = X[:, :n_pcs]
@@ -40,3 +40,9 @@ def pc_load_df_grp(
         ad_d, lambda key, _ad: pc_load_df(_ad, n_pcs, drop_zero=False).add_prefix(f"{key}_"), pass_keys=True
     )
     return pd.concat(list(pc_df_dict.values()), axis=1)
+
+
+def add_embedding_obs(ad, n=None, embedding_key="X_pca"):
+    X = ad.obsm[embedding_key]
+    n = n if n else X.shape[1]
+    ad.obs[[f"{embedding_key}_{i}" for i in range(n)]] = X[:, 0:n]

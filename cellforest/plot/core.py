@@ -98,7 +98,7 @@ def plot_hist_features(
         np.expand_dims(ax_arr, axis=0)
     ax_list = ax_arr.flatten()
     kwargs.pop("ax", None)
-    fig.set_size_inches(1.1 * ncol * ax_size, nrow * ax_size)  # 1.1 for color bar
+    fig.set_size_inches(1.1 * ncol * ax_size, nrow * ax_size)  # 1.1 for key bar
     for i, feat in enumerate(features):
         ax = ax_list[i]
         ax.set_title(feat)
