@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist
 from scipy.stats import pearsonr
 from sklearn.preprocessing import scale
 
-from cellforest.utils.scanpy.gene import get_feature
+from cellforest.utils.scanpy.gene import get_features
 from cellforest.utils.scanpy.group import groupby
 
 
@@ -14,7 +14,7 @@ def corr_matrix(ad, features):
     pearson_r = lambda x, y: pearsonr(x, y)[0]
     pearson_p = lambda x, y: pearsonr(x, y)[1]
 
-    feature_dict = {f: get_feature(ad, f) for f in features}
+    feature_dict = {f: get_features(ad, f) for f in features}
     matrix_r = pairwise_metric(feature_dict, pearson_r)
     matrix_p = pairwise_metric(feature_dict, pearson_p)
     matrix_r = matrix_r.loc[features, features]

@@ -16,8 +16,10 @@ def groupby_dict(ad: AnnData, obs_cols: Iterable):
     return ad_dict
 
 
-def values_apply(d: Dict[str, AnnData], func: Callable, **kwargs):
+def values_apply(d: Dict[str, AnnData], func: Callable, print_keys: bool = False, **kwargs):
     output = dict()
     for k, v in d.items():
+        if print_keys:
+            print(k)
         output[k] = func(v, **kwargs)
     return output
