@@ -51,8 +51,8 @@ def reduce(
     return ad
 
 
-def cluster(ad: AnnData, resolution: float = 0.1, do_markers=True, **markers_kwargs):
-    sc.tl.leiden(ad, resolution=resolution)
+def cluster(ad: AnnData, resolution: float = 0.1, do_markers=True, key_added="leiden", **markers_kwargs):
+    sc.tl.leiden(ad, resolution=resolution, key_added=key_added)
     if do_markers:
         markers(ad, "leiden", **markers_kwargs)
     return ad
