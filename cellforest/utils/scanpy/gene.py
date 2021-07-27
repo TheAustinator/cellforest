@@ -10,13 +10,15 @@ from cellforest.utils.scanpy.generic import _generic_preprocess
 
 
 def drop_gene_prefix(ad: AnnData, prefix_list: List[str]):
-    var_names = ad.var_names[~ad.var_names.str.startswith(prefix_list)]
+    prefixes = "|".join(map(lambda s: f"^{s}", prefix_list))
+    var_names = ad.var_names[~ad.var_names.str.contains(prefixes)]
     ad = ad[:, var_names]
     return ad
 
 
-def agg_gene_prefix(ad: AnnData, prefix_list: List[str], new_obs_colname: str, drop: bool = True):
-    var_names = ad.var_names[ad.var_names.str.startswith(prefix_list)]
+def agg_gene_prefix(ad: AnnData, prefix_list: List[str], new_obs_colname: str, drop: bool = False):
+    prefixes = "|".join(map(lambda s: f"^{s}", prefix_list))
+    var_names = ad.var_names[ad.var_names.str.contains(prefixes)]
     ad.obs[new_obs_colname] = ad[:, var_names].X.sum(axis=1)
     if drop:
         ad = drop_gene_prefix(ad, prefix_list)

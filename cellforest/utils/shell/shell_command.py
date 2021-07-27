@@ -1,3 +1,5 @@
+import gc
+
 import logging
 import os
 import shlex
@@ -27,6 +29,7 @@ def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfi
         if ret_code != 0:
             raise ChildProcessError(f"Error: ret_code {ret_code} raised by command_string: {command_string}")
     logger.info(f"Finished")
+    gc.collect()
 
 
 def shell_command(command_string: str):

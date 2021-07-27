@@ -1,7 +1,18 @@
+from pathlib import Path
+
+from anndata import AnnData
 from frozendict import frozendict
 import numpy as np
 import pandas as pd
+
 import seaborn as sns
+
+from cellforest.api.r import ad_to_r
+from cellforest.utils import r
+from cellforest.utils.shell.shell_command import process_shell_command
+
+_R_UTILS_DIR = Path(r.__file__).parent
+_R_MAST_DISK = str(_R_UTILS_DIR / "_mast_disk.R")
 
 
 def col_corr(df, col, pivot="donor"):
@@ -30,3 +41,24 @@ def get_de_stats(df, metric_dict=frozendict({"": np.mean, "_var": np.var}), grp=
     df["score"] = df["logfc"] * df["-logp"]
     df = df.sort_values(["score", "logfc"], ascending=False)
     return df
+
+
+def mast(ad: AnnData, formula: str, disk: bool = True, log_dir: str = "/tmp"):
+    if disk:
+        return _mast_disk(ad, formula, log_dir)
+    else:
+        return _mast_mem(ad, formula)
+
+
+def _mast_disk(ad: AnnData, formula: str, log_dir: str = "/tmp"):
+    ad_to_r(ad, "/tmp/ad_sce.rds", format="sce")
+    cmd_str = f"Rscript {_R_MAST_DISK} {formula}"
+    process_shell_command(cmd_str, log_dir, "mast")
+    df = pd.read_csv("/tmp/df_zlm.csv")
+    return df
+
+
+def _mast_mem(
+    ad: AnnData, formula: str,
+):
+    raise NotImplementedError("MAST in memory not yet supported.")
