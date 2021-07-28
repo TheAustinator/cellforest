@@ -5,21 +5,22 @@ library(parallel)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-FORMULA <- args[1]
-N_CORES <- as.integer(args[2])
+RUN_ID <- args[1]
+FORMULA <- args[2]
+CORES <- as.integer(args[3])
 
-if (N_CORES == -1) {
-  options(mc.cores = detectCores() - 1)
-} else {
-  options(mc.cores = N_CORES)
+print(paste0("MAST: run_id=",  RUN_ID, "; formula: ", FORMULA, "; cores=", CORES))
+
+if (CORES == 0) {
+  CORES <- detectCores() - 1
 }
+options(mc.cores = CORES)
 
-
-sce <- readRDS("/tmp/ad_sce.rds")
+sce <- readRDS(paste0("/tmp/cf_ad_sce_", RUN_ID, ".rds"))
 gc()
 sca <- SceToSingleCellAssay(sce)
 gc()
 zlm_res <- zlm( as.formula(FORMULA), sca, parallel=TRUE)
 gc()
 df <- summary(zlm_res)$datatable
-write.csv(df, "/tmp/df_zlm.csv")
+write.csv(df, paste0("/tmp/cf_df_zlm_", RUN_ID, ".csv"))
