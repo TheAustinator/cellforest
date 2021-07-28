@@ -1,6 +1,6 @@
 import gc
-
 import logging
+import os
 from pathlib import Path
 from typing import Optional, Dict, Union, Literal
 
@@ -44,8 +44,14 @@ def ad_to_r(ad: AnnData, filepath: AnyPath, format: Literal["seurat", "sce"] = "
     except Exception as e:
         try:
             robjects.r("gc()")
-        except:
+        except Exception:
             pass
         gc.collect()
         raise e
     gc.collect()
+
+
+def clear_tmp(path: str = "/tmp", pattern: str = "./cf_*"):
+    paths = [p for p in Path(path).glob(pattern)]
+    for p in paths:
+        os.remove(p)
