@@ -27,7 +27,10 @@ def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfi
         command_string += f" > {out_path} 2> {err_path}"
         ret_code = os.system(command_string)
         if ret_code != 0:
-            raise ChildProcessError(f"Error: ret_code {ret_code} raised by command_string: {command_string}")
+            raise ChildProcessError(
+                f"Error: ret_code {ret_code} raised by command_string: {command_string}. Check R logs at {out_path} and "
+                f"{err_path}"
+            )
     logger.info(f"Finished")
     gc.collect()
 
