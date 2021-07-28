@@ -3,10 +3,17 @@ library(Matrix)
 library(scater)
 library(parallel)
 
-options(mc.cores = detectCores() - 1)
 args <- commandArgs(trailingOnly = TRUE)
 
 FORMULA <- args[1]
+N_CORES <- as.integer(args[2])
+
+if (N_CORES == -1) {
+  options(mc.cores = detectCores() - 1)
+} else {
+  options(mc.cores = N_CORES)
+}
+
 
 sce <- readRDS("/tmp/ad_sce.rds")
 gc()

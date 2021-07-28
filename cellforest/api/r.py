@@ -40,7 +40,12 @@ def ad_to_r(ad: AnnData, filepath: AnyPath, format: Literal["seurat", "sce"] = "
         if format == "seurat":
             robjects.r("ad_r <- Seurat::as.Seurat(ad_r)")
         robjects.r(f"saveRDS(ad_r, file='{filepath}')")
+        robjects.r("gc()")
     except Exception as e:
+        try:
+            robjects.r("gc()")
+        except:
+            pass
         gc.collect()
         raise e
     gc.collect()
