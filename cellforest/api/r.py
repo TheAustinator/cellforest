@@ -38,11 +38,15 @@ def ad_to_r(ad: AnnData, filepath: AnyPath, format: Literal["seurat", "sce"] = "
     robjects.r.assign("ad_r", ad_r)
     try:
         if format == "seurat":
+            if "logcounts" not in ad.layers:
+                raise ValueError('Seurat conversion requires "logcounts"')
             robjects.r("ad_r <- Seurat::as.Seurat(ad_r)")
         robjects.r(f"saveRDS(ad_r, file='{filepath}')")
+        robjects.r("rm(ad_r)")
         robjects.r("gc()")
     except Exception as e:
         try:
+            robjects.r("rm(ad_r)")
             robjects.r("gc()")
         except Exception:
             pass
