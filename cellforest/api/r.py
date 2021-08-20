@@ -41,6 +41,8 @@ def ad_to_r(ad: AnnData, filepath: AnyPath, format: Literal["seurat", "sce"] = "
             if "logcounts" not in ad.layers:
                 raise ValueError('Seurat conversion requires "logcounts"')
             robjects.r("ad_r <- Seurat::as.Seurat(ad_r)")
+            robjects.r("ad_r@assays$RNA <- ad_r@assays$originalexp")
+            robjects.r("ad_r@assays$originalexp <- NULL")
         robjects.r(f"saveRDS(ad_r, file='{filepath}')")
         robjects.r("rm(ad_r)")
         robjects.r("gc()")

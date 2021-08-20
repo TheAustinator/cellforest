@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from shutil import move
 from typing import AnyStr, Optional
 
 import matplotlib.pyplot as plt
@@ -17,7 +18,7 @@ def est_ambient_rna(input_dir_10x: AnyStr, output_dir: AnyStr, input_path_cluste
     output_dir = Path(output_dir)
     proc_dir = output_dir / "process_files"
     os.makedirs(proc_dir, exist_ok=True)
-    input_path_clusters = input_path_clusters if input_path_clusters else ""
+    input_path_clusters = input_path_clusters if input_path_clusters else "None"
     output_path_dx_est = str(proc_dir / "decontx_est.csv")
     output_path_dx_h5 = str(output_dir / "decontx_counts.h5")
     output_path_sx_est = str(proc_dir / "soupx_est.csv")
@@ -27,14 +28,13 @@ def est_ambient_rna(input_dir_10x: AnyStr, output_dir: AnyStr, input_path_cluste
         input_dir_10x,
         input_path_clusters,
         output_path_dx_est,
-        output_path_dx_h5,
         output_path_sx_est,
         output_path_sx_prof,
-        output_path_sx_h5,
     ]
     command_string = f"Rscript {_R_RUN_AMBIENT_RNA} {' '.join(map(str, arg_list))}"
     process_shell_command(command_string=command_string, logs_dir=proc_dir, logfile_prefix="est_ambient_rna")
-
+    move("/data/decontx_counts.h5", output_path_dx_h5)
+    move("/data/soupx_counts.h5", output_path_sx_h5)
     dx_est = pd.read_csv(output_path_dx_est, index_col=0).set_index("Barcode").drop(columns="Sample")
     dx_est.columns = dx_est.columns.str.lower()
     soupx_ran = all([os.path.exists(p) for p in [output_path_sx_prof, output_path_sx_est]])
