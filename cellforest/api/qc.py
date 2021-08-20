@@ -12,6 +12,7 @@ from scipy.stats import pearsonr
 
 from cellforest.api.io import read_10x
 from cellforest.utils.scanpy.ambient import est_ambient_rna
+from cellforest.utils.scanpy.doublet import dub_finder_disk
 
 
 def pseudo_bulk(ad: AnnData) -> np.ndarray:

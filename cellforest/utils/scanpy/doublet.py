@@ -1,10 +1,15 @@
 import logging
+import os
 from pathlib import Path
 
+from anndata import AnnData
 import numpy as np
 import pandas as pd
 import scanpy as sc
 
+from cellforest.utils import r
+from cellforest.api.r import AnyPath
+from cellforest.utils.shell.shell_command import process_shell_command
 
 SOLO_COLS = ["solo_pred", "solo_dub", "solo_score"]
 DUB_FIND_COLS = ["dub_find_pred"]
@@ -15,6 +20,34 @@ DOUBLET_LABELS = {
     "solo_dub": True,
     "dub_find_pred": "Doublet",
 }
+_R_UTILS_DIR = Path(r.__file__).parent
+_R_RUN_DUB_FINDER = str(_R_UTILS_DIR / "run_dub_finder.R")
+
+
+def dub_finder(
+    ad: "AnnData", output_path: AnyPath, dub_rate_per_1k: float = 0.008, n_pcs: int = 15, n_features: int = 2000
+):
+    # use seurat converter to temp, then convert
+    raise NotImplementedError()
+
+
+def dub_finder_disk(
+    srat_path: AnyPath, output_dir: AnyPath, dub_rate_per_1k: float = 0.008, n_pcs: int = 15, n_features: int = 2000
+):
+    output_dir = Path(output_dir)
+    proc_dir = output_dir / "process_files"
+    output_path = output_dir / "dub_finder.csv"
+    os.makedirs(proc_dir, exist_ok=True)
+    arg_list = [
+        srat_path,
+        output_path,
+        dub_rate_per_1k,
+        n_pcs,
+        n_features,
+    ]
+    command_string = f"Rscript {_R_RUN_DUB_FINDER} {' '.join(map(str, arg_list))}"
+    process_shell_command(command_string=command_string, logs_dir=proc_dir, logfile_prefix="dub_finder")
+    return pd.read_csv(output_path, index_col=0)
 
 
 def add_solo(ad, root_path):
