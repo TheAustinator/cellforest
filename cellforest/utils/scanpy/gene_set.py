@@ -7,7 +7,7 @@ from dataforest.utils.analysis.set import iom, iou
 import pandas as pd
 
 from cellforest.utils import parse_gene_set_gmt
-from cellforest.utils.scanpy.plot import umap
+from cellforest.utils.scanpy.plot import embedding
 
 
 def query_gene_sets(genes: Union[str, List[str]], gmt: Union[AnyStr, Dict[str, str]], iom_min: float = 1.0):
@@ -44,7 +44,7 @@ def add_sigs(
             _gene_sets.append(set_name)
             add_gene_set(ad, genes, set_name, plot=False, **kwargs)
     if plot:
-        umap(ad, color=_gene_sets, vmax_frac=vmax_frac)
+        embedding(ad, color=_gene_sets, vmax_frac=vmax_frac)
 
 
 def add_gene_set(ad, genes, name, binary=False, gene_norm=False, plot=True, verbose=True):
@@ -64,7 +64,7 @@ def add_gene_set(ad, genes, name, binary=False, gene_norm=False, plot=True, verb
         X = X / X.sum(axis=0)
     ad.obs[name] = X.sum(axis=1)
     if plot:
-        umap(ad, color=name, vmax_frac=0.9)
+        embedding(ad, color=name, vmax_frac=0.9)
 
 
 def gene_sets_union(gs_names: List[str], gmt: Union[str, Dict[str, Set[str]]]) -> Set[str]:

@@ -20,7 +20,7 @@ def get_test_data(keep_raw=False):
     Returns:
 
     """
-    _get_test_data_slice(300, 150, keep_raw)   # small: (300, 150), full: (2699, 32737)
+    _get_test_data_slice(300, 150, keep_raw)  # small: (300, 150), full: (2699, 32737)
 
 
 def _get_test_data_slice(n_cells, n_genes, keep_raw=False):
@@ -29,7 +29,10 @@ def _get_test_data_slice(n_cells, n_genes, keep_raw=False):
     os.makedirs(data_dir, exist_ok=True)
     subdirs = ["v3_gz/sample_1", "v3_gz/sample_2"]
     sample_metadata = pd.DataFrame(
-        {"entity_id": ["sample_1", "sample_2"], "path_rna": [str(data_dir / x) for x in subdirs]}
+        {
+            "entity_id": ["sample_1", "sample_2"],
+            "path_rna": [str(data_dir / x) for x in subdirs],
+        }
     )
     sample_metadata.to_csv(data_dir / "sample_metadata.tsv", sep="\t", index=False)
 

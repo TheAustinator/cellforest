@@ -56,12 +56,14 @@ def flow_1(spec: List[Dict[str:Any]]):
     """
 
     Args:
-        spec: [{"name": "diffexp_1", "ad": my_anndata, "key": "my_obs_col", "val": "my_obs_col_val"}, ...]
+        spec: [{"name": "diffexp_1", "ad": my_anndata, "keys": "my_obs_col", "val": "my_obs_col_val"}, ...]
 
     Returns:
 
     """
-    map_list_dict_key(spec, "ad", markers, return_updated=False, key_kwargs={"key": "key"})
+    map_list_dict_key(
+        spec, "ad", markers, return_updated=False, key_kwargs={"keys": "keys"}
+    )
     # group anndata by donor
     map_list_dict_key(spec, "ad", lambda ad: groupby_dict(ad, "donor"), new_key="ad_d")
     # TODO: broken
@@ -70,4 +72,6 @@ def flow_1(spec: List[Dict[str:Any]]):
     filter_de = lambda de, val: de[de["group"] == val]
     map_list_dict_key(spec, "de", filter_de, key_kwargs={"val": "val"})
     map_list_dict_key(spec, "de", volcano)
-    map_list_dict_key(spec, "de", volcano, xlim=(-10, 10), pval_thresh=0.1, logfc_thresh=0.5)
+    map_list_dict_key(
+        spec, "de", volcano, xlim=(-10, 10), pval_thresh=0.1, logfc_thresh=0.5
+    )

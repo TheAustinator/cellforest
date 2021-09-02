@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from anndata import AnnData
 import numpy as np
@@ -16,10 +16,23 @@ def drop_gene_prefix(ad: AnnData, prefix_list: List[str]):
     return ad
 
 
-def agg_gene_prefix(ad: AnnData, prefix_list: List[str], new_obs_colname: str, drop: bool = False):
+def agg_gene_prefix(
+    ad: AnnData,
+    prefix_list: List[str],
+    new_obs_colname: str,
+    layer: Optional[str] = "raw",
+    as_frac: bool = True,
+    drop: bool = False,
+):
+    prefix_list = [prefix_list,] if isinstance(prefix_list, str) else prefix_list
     prefixes = "|".join(map(lambda s: f"^{s}", prefix_list))
     var_names = ad.var_names[ad.var_names.str.contains(prefixes)]
-    ad.obs[new_obs_colname] = ad[:, var_names].X.sum(axis=1)
+    mat = ad[:, var_names].X if not layer else ad[:, var_names].layers[layer]
+    vals = mat.sum(axis=1)
+    if as_frac:
+        mat_all = ad.X if not layer else ad.layers[layer]
+        vals /= mat_all.sum(axis=1)
+    ad.obs[new_obs_colname] = vals
     if drop:
         ad = drop_gene_prefix(ad, prefix_list)
     return ad

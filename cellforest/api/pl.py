@@ -1,2 +1,2 @@
 from cellforest.utils.plot.diffexp import volcano
-from cellforest.utils.scanpy.plot import umap, marker_matrix
+from cellforest.utils.scanpy.plot import embedding, marker_matrix

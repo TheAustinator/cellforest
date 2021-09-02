@@ -58,7 +58,7 @@ def _mast_disk(ad: AnnData, formula: str, cores: int, log_dir: str = "/tmp", kee
     run_id = str(uuid.uuid4())[:4]
     sce_path = f"/tmp/cf_ad_sce_{run_id}.rds"
     formula = '"' + formula.replace(" ", "") + '"'
-    ad_to_r(ad, sce_path, format="sce")
+    ad_to_r(ad, sce_path, format_="sce")
     cmd_str = f"Rscript {_R_MAST_DISK} {run_id} {formula} {cores}"
     logging.info(f"Running MAST with run ID: {run_id}")
     logging.info(f"com")
