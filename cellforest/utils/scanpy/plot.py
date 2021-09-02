@@ -43,7 +43,9 @@ TEMPLATE_ATTRS_DEFAULT = (
 # "title", "_left_title", "_right_title"
 
 
-def _prep_axes(ax: Axes, rm_ticks: bool, rm_ax_labels: bool, tick_params: Optional[dict] = None):
+def _prep_axes(
+    ax: Axes, rm_ticks: bool, rm_ax_labels: bool, tick_params: Optional[dict] = None
+):
     if rm_ticks:
         ax.set_xticks([])
         ax.set_yticks([])
@@ -54,7 +56,9 @@ def _prep_axes(ax: Axes, rm_ticks: bool, rm_ax_labels: bool, tick_params: Option
     plt.tick_params(**tick_params)
 
 
-def _get_kde_arr(feat: Union[np.ndarray, spmatrix], kde: Union[bool, np.ndarray, float]) -> np.ndarray:
+def _get_kde_arr(
+    feat: Union[np.ndarray, spmatrix], kde: Union[bool, np.ndarray, float]
+) -> np.ndarray:
     if isinstance(kde, bool):
         return np.array([kde] * feat.shape[1]).flatten()
     if isinstance(kde, float):
@@ -121,10 +125,15 @@ def _get_fig(
         ax_arr = ax_arr.flatten()
     elif isinstance(ax_arr, Axes):
         ax_arr = np.array([ax_arr])
-    tick_prep_gen = map(lambda ax: _prep_axes(ax, rm_ticks, rm_ax_labels, tick_params), ax_arr)
+    tick_prep_gen = map(
+        lambda ax: _prep_axes(ax, rm_ticks, rm_ax_labels, tick_params), ax_arr
+    )
     deque(tick_prep_gen, maxlen=0)
     if titles is not None:
-        title_gen = map(lambda i, ax: ax.set_title(titles[i]), *zip(*enumerate(ax_arr[: len(titles)])))
+        title_gen = map(
+            lambda i, ax: ax.set_title(titles[i]),
+            *zip(*enumerate(ax_arr[: len(titles)])),
+        )
         deque(title_gen, maxlen=0)
     return fig, ax_arr
 
@@ -168,7 +177,9 @@ def plot_gene_specificity(
             (ax1, ax2) = ax_list[i : i + 2]
             _remove_ax_extras(ax1)
             _remove_ax_extras(ax2)
-            umap_kde_scatter(ad, title=title, var=g, ax_scat=ax1, ax_dens=ax2, show=False, **_kwargs)
+            umap_kde_scatter(
+                ad, title=title, var=g, ax_scat=ax1, ax_dens=ax2, show=False, **_kwargs
+            )
         if save_dir:
             path = Path(save_dir) / f"{save_prefix}{g}.png"
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -194,8 +205,10 @@ def plot_gene_specificity(
                     raise e
 
 
-def umap(
+def embedding(
     adata,
+    basis: Union[str, List[str]] = "X_umap",
+    *,
     color=None,
     color_obsm=None,
     n_obsm=None,
@@ -204,8 +217,8 @@ def umap(
     vmax_frac=0.9,
     vmin_frac_nonzero=False,
     vmax_frac_nonzero=True,
-    raw=True,
-    layer="norm",
+    raw=False,
+    layer="raw",
     kde: Union[bool, float] = 0.1,
     ax: Optional[Axes] = None,
     show: bool = False,
@@ -216,6 +229,7 @@ def umap(
     """
     Wrapper for scanpy umap plot with additional functionality
     Args:
+        basis:
         adata:
         color:
         color_obsm:
@@ -231,6 +245,30 @@ def umap(
             switch from scatter to kde for better visibility
         kwargs:
     """
+    if not isinstance(basis, str):
+        return [
+            embedding(
+                adata,
+                b,
+                color=color,
+                color_obsm=color_obsm,
+                n_obsm=n_obsm,
+                group=group,
+                vmin_frac=vmin_frac,
+                vmax_frac=vmax_frac,
+                vmin_frac_nonzero=vmin_frac_nonzero,
+                vmax_frac_nonzero=vmax_frac_nonzero,
+                raw=raw,
+                layer=layer,
+                kde=kde,
+                ax=ax,
+                show=show,
+                return_fig=return_fig,
+                ignore_missing=ignore_missing,
+                **kwargs,
+            )
+            for b in basis
+        ]
     feat = None
     color = list() if color is None else color
     color = [color,] if isinstance(color, str) else color
@@ -242,6 +280,9 @@ def umap(
 
     def _get_v(v_frac, _feat, nonzero):
         """get vmin or vmax based on percentile"""
+        dups = set(_feat.columns[_feat.columns.duplicated()].tolist())
+        if dups:
+            raise ValueError(f"Must provide unique values. Duplicated: {dups}")
         if isinstance(v_frac, Num):
             v_frac = np.repeat(v_frac, len(color))
         v_frac = np.array(v_frac)
@@ -265,30 +306,44 @@ def umap(
             adata.X = adata.layers[layer]
         else:
             default = "raw" if raw else "X"
-            logging.warning(f"layer: {layer} not present in layers. Defaulting to {default}")
+            logging.warning(
+                f"layer: {layer} not present in layers. Defaulting to {default}"
+            )
     if (color or color_obsm) and (vmin_frac or vmax_frac):
         color_obsm = _force_iter(color_obsm) if color_obsm else []
-        for obsm_key in color_obsm:
-            color += adata.obs.columns[adata.obs.columns.str.startswith(obsm_key)].tolist()
-        adata = add_obsm(adata, color_obsm + ["X_umap"], n_obsm, copy=True)
-        feat = get_features(adata, color, color_obsm, n_obsm, ignore_missing=ignore_missing)
+        for basis in color_obsm:
+            color += adata.obs.columns[adata.obs.columns.str.startswith(basis)].tolist()
+        adata = add_obsm(adata, color_obsm + [basis], n_obsm, copy=True)
+        feat = get_features(
+            adata, color, color_obsm, n_obsm, ignore_missing=ignore_missing
+        )
         if vmin_frac is not None:
             kwargs["vmin"] = _get_v(vmin_frac, feat, vmin_frac_nonzero)
         if vmax_frac is not None:
             kwargs["vmax"] = _get_v(vmax_frac, feat, vmax_frac_nonzero)
     if kde is False:
-        return sc.pl.umap(adata, color=color, **kwargs)
-    feat = feat if feat is not None else get_features(adata, color, color_obsm, n_obsm, ignore_missing=ignore_missing)
+        return sc.pl.embedding(adata, basis, color=color, **kwargs)
+    feat = (
+        feat
+        if feat is not None
+        else get_features(
+            adata, color, color_obsm, n_obsm, ignore_missing=ignore_missing
+        )
+    )
     kde_arr = _get_kde_arr(feat, kde)
     if not kde_arr.any():
-        return None, sc.pl.umap(adata, color=color, ax=ax, **kwargs)
+        return None, sc.pl.embedding(adata, basis, color=color, ax=ax, **kwargs)
     if not len(color) == len(kde_arr):
         print(kde_arr.flatten().shape)
-        raise ValueError(f"Length mismatch between `key` ({len(color)}) and `kde_arr` ({len(kde_arr)})")
+        raise ValueError(
+            f"Length mismatch between `keys` ({len(color)}) and `kde_arr` ({len(kde_arr)})"
+        )
     feat = feat.toarray() if isinstance(feat, spmatrix) else feat
     df = pd.DataFrame(feat, columns=color)
-    obs_names = ["X_umap_0", "X_umap_1"]
-    df_umap = get_features(adata, obs_names, f_obsm="X_umap", ignore_missing=ignore_missing)
+    obs_names = [f"{basis}_0", f"{basis}_1"]
+    df_umap = get_features(
+        adata, obs_names, f_obsm=basis, ignore_missing=ignore_missing
+    )
     df_grp = get_features(adata, group, ignore_missing=ignore_missing)
     df = pd.concat([df, df_umap, df_grp], axis=1)
     if not ax:
@@ -305,15 +360,15 @@ def umap(
                 if isinstance(v_val, (list, tuple, np.ndarray)):
                     v_val = v_val[i]
                 _kwargs[v_name] = v_val
-            sc.pl.umap(adata, color=x, ax=_ax, **_kwargs, show=False)
+            sc.pl.embedding(adata, basis, color=x, ax=_ax, **_kwargs, show=False)
         else:
             # if not ax_template:
             #     ax_template = copy(_single_kde(df, group=group, ax=ax, **kwargs))
             # else:
             #     _ax_copy_template(ax, ax_template)
             # ax.update_from(ax_template)
-            _single_kde(df, group=group, ax=_ax, **kwargs)
-            _single_sparse_scatter(df, color=color[i], ax=_ax, **kwargs)
+            _single_kde(df, group=group, ax=_ax, obsm_key=basis, **kwargs)
+            _single_sparse_scatter(df, color=color[i], ax=_ax, obsm_key=basis, **kwargs)
             _ax.set_title(kwargs.get("title", color[i]))
     if show:
         plt.show()
@@ -329,6 +384,7 @@ def _single_kde(
     figsize=(12, 5),
     ax: Optional[Axes] = None,
     kde_kwargs=None,
+    obsm_key: str = "X_umap",
     **kwargs,
 ):
 
@@ -338,8 +394,8 @@ def _single_kde(
         fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax = sns.kdeplot(
         data=df,
-        x="X_umap_0",
-        y="X_umap_1",
+        x=f"{obsm_key}_0",
+        y=f"{obsm_key}_1",
         hue=group,
         alpha=kde_alpha,
         levels=kde_levels,
@@ -351,19 +407,28 @@ def _single_kde(
 
 
 def _single_sparse_scatter(
-    df, color=None, cmap="flare", scat_alpha=0.5, dot_scale=1, ax: Optional[Axes] = None, scat_kwargs=None, **kwargs
+    df,
+    color=None,
+    cmap="flare",
+    scat_alpha=0.5,
+    dot_scale=1,
+    s: Optional[float] = None,
+    ax: Optional[Axes] = None,
+    obsm_key: str = "X_umap",
+    scat_kwargs=None,
+    **kwargs,
 ):
     scat_kwargs = _replace_none(scat_kwargs, dict)
     df_g = df[df[color] > 0]
     norm = plt.Normalize(0, df_g[color].max())
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
-    s = dot_scale * 10 / np.log(len(df_g) / 1000 + 2)
+    s = s if s else dot_scale * 10 / np.log(len(df_g) / 1000 + 2)
     if isinstance(cmap, str):
         cmap = sns.color_palette(cmap, as_cmap=True)
     sns.scatterplot(
-        x="X_umap_0",
-        y="X_umap_1",
+        x=f"{obsm_key}_0",
+        y=f"{obsm_key}_1",
         hue=color,
         s=s,
         data=df_g,
@@ -457,7 +522,9 @@ def kdeplot(
 
     # Handle deprecation of `kernel`
     if kernel is not None:
-        msg = "Support for alternate kernels has been removed. " "Using Gaussian kernel."
+        msg = (
+            "Support for alternate kernels has been removed. " "Using Gaussian kernel."
+        )
         warnings.warn(msg, UserWarning)
 
     # Handle deprecation of shade_lowest
@@ -488,7 +555,9 @@ def kdeplot(
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - #
 
-    p = _DistributionPlotter(data=data, variables=_DistributionPlotter.get_semantics(locals()),)
+    p = _DistributionPlotter(
+        data=data, variables=_DistributionPlotter.get_semantics(locals()),
+    )
 
     p.map_hue(palette=palette, order=hue_order, norm=hue_norm)
 
@@ -506,7 +575,12 @@ def kdeplot(
 
     # Pack the kwargs for statistics.KDE
     estimate_kws = dict(
-        bw_method=bw_method, bw_adjust=bw_adjust, gridsize=gridsize, cut=cut, clip=clip, cumulative=cumulative,
+        bw_method=bw_method,
+        bw_adjust=bw_adjust,
+        gridsize=gridsize,
+        cut=cut,
+        clip=clip,
+        cumulative=cumulative,
     )
     p.plot_bivariate_density(
         common_norm=common_norm,
@@ -524,14 +598,14 @@ def kdeplot(
 
 
 def _default_color(method, hue, color, kws):
-    """FROM SEABORN. If needed, get a default key by using the matplotlib property cycle."""
+    """FROM SEABORN. If needed, get a default keys by using the matplotlib property cycle."""
     from matplotlib.colors import to_rgb
 
     if hue is not None:
         # This warning is probably user-friendly, but it's currently triggered
         # in a FacetGrid context and I don't want to mess with that logic right now
-        #  if key is not None:
-        #      msg = "`key` is ignored when `hue` is assigned."
+        #  if keys is not None:
+        #      msg = "`keys` is ignored when `hue` is assigned."
         #      warnings.warn(msg)
         return None
 
@@ -549,7 +623,8 @@ def _default_color(method, hue, color, kws):
         # Matplotlib will raise if the size of x/y don't match s/c,
         # and the latter might be in the kws dict
         scout_size = max(
-            np.atleast_1d(kws.get(key, [])).shape[0] for key in ["s", "c", "fc", "facecolor", "facecolors"]
+            np.atleast_1d(kws.get(key, [])).shape[0]
+            for key in ["s", "c", "fc", "facecolor", "facecolors"]
         )
         scout_x = scout_y = np.full(scout_size, np.nan)
 
@@ -558,8 +633,8 @@ def _default_color(method, hue, color, kws):
 
         if not len(facecolors):
             # Handle bug in matplotlib <= 3.2 (I think)
-            # This will limit the ability to use non key= kwargs to specify
-            # a key in versions of matplotlib with the bug, but trying to
+            # This will limit the ability to use non keys= kwargs to specify
+            # a keys in versions of matplotlib with the bug, but trying to
             # work out what the user wanted by re-implementing the broken logic
             # of inspecting the kwargs is probably too brittle.
             single_color = False
@@ -583,7 +658,7 @@ def _default_color(method, hue, color, kws):
 
         # There is a bug on matplotlib < 3.3 where fill_between with
         # datetime units and empty data will set incorrect autoscale limits
-        # To workaround it, we'll always return the first key in the cycle.
+        # To workaround it, we'll always return the first keys in the cycle.
         # https://github.com/matplotlib/matplotlib/issues/17586
         ax = method.__self__
         datetime_axis = any(
@@ -609,7 +684,7 @@ def _normalize_kwargs(kws, artist):
     from matplotlib.cbook import normalize_kwargs
 
     _alias_map = {
-        "key": ["c"],
+        "keys": ["c"],
         "linewidth": ["lw"],
         "linestyle": ["ls"],
         "facecolor": ["fc"],
@@ -627,19 +702,19 @@ def _normalize_kwargs(kws, artist):
 
 
 # def _umap_kde(
-#     ad: AnnData, key: Optional[Union[str, List[str]]], n_cols: int = 4, color_obsm=None, n_obsm=None,
+#     ad: AnnData, keys: Optional[Union[str, List[str]]], n_cols: int = 4, color_obsm=None, n_obsm=None,
 # ):
-#     if isinstance(key, str):
-#         key = [
-#             key,
+#     if isinstance(keys, str):
+#         keys = [
+#             keys,
 #         ]
-#     n_rows = ceil(len(key) / n_cols)
+#     n_rows = ceil(len(keys) / n_cols)
 #     figsize = (np.array(plt.rcParams["figure.figsize"]) * [n_rows, n_cols]).tolist()
 #     fig, ax_arr = plt.subplots(n_rows, n_cols, figsize=figsize)
 #     if isinstance(ax_arr, np.ndarray):
 #         ax_arr = ax_arr.flatten()
-#     feat = get_features(ad, key, color_obsm, n_obsm)
-#     df = pd.DataFrame(feat, columns=key)
+#     feat = get_features(ad, keys, color_obsm, n_obsm)
+#     df = pd.DataFrame(feat, columns=keys)
 #
 #     sns.kdeplot(
 #         data=df,
@@ -709,11 +784,28 @@ def umap_kde_scatter(
         s = dot_scale * 10 / np.log(len(df_g) / 1000 + 2)
         if isinstance(cmap, str):
             cmap = sns.color_palette(cmap, as_cmap=True)
-        sns.scatterplot(x="UMAP1", y="UMAP2", hue=g, s=s, data=df_g, cmap=cmap, alpha=scat_alpha, ax=ax2)
+        sns.scatterplot(
+            x="UMAP1",
+            y="UMAP2",
+            hue=g,
+            s=s,
+            data=df_g,
+            cmap=cmap,
+            alpha=scat_alpha,
+            ax=ax2,
+        )
         ax2.get_legend().remove()
         if show:
             ax2.figure.colorbar(sm)
-        umap(ad, color=g, vmin_frac=vmin_frac, vmax_frac=vmax_frac, ax=ax1, show=show, **scat_kwargs)
+        embedding(
+            ad,
+            color=g,
+            vmin_frac=vmin_frac,
+            vmax_frac=vmax_frac,
+            ax=ax1,
+            show=show,
+            **scat_kwargs,
+        )
         title = f"{title} {g}" if title is not None else g
         ax1.set_title(title)
         ax2.set_title(title)
@@ -721,10 +813,10 @@ def umap_kde_scatter(
             plt.show()
 
 
-def _get_ad_df(ad, var, obs):
+def _get_ad_df(ad, var, obs, obsm_key="X_umap"):
     var = list(_force_iter(var))
     obs = list(_force_iter(obs))
-    umap_arr = ad.obsm["X_umap"]
+    umap_arr = ad.obsm[obsm_key]
     var_arr = ad[:, var].X.toarray()
     obs_arr = ad.obs[obs].to_numpy()
     arr = [umap_arr, var_arr, obs_arr]
@@ -735,7 +827,9 @@ def _get_ad_df(ad, var, obs):
     return df
 
 
-def plot_gene_specificity(ad_list, genes, save_dir=None, save_prefix="", show=True, parallel=False, **kwargs):
+def plot_gene_specificity(
+    ad_list, genes, save_dir=None, save_prefix="", show=True, parallel=False, **kwargs
+):
     def _single_gene_plot(g):
         path = Path(save_dir) / f"{save_prefix}{g}.png"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -779,6 +873,7 @@ def umap_kde(
     ax_dens=None,
     kde_kwargs=None,
     scat_kwargs=None,
+    obsm_key="X_umap",
 ):
     def force_iter(x):
         if not isinstance(x, (list, set, tuple, np.ndarray, pd.Series)):
@@ -794,7 +889,7 @@ def umap_kde(
         obs.append(kde_hue)
     kde_kwargs = replace_none(kde_kwargs, dict)
     scat_kwargs = replace_none(scat_kwargs, dict)
-    umap_arr = ad.obsm["X_umap"]
+    umap_arr = ad.obsm[obsm_key]
     var_arr = ad[:, var].X.toarray()
     obs_arr = ad.obs[obs].to_numpy()
     arr = [umap_arr, var_arr, obs_arr]
@@ -807,7 +902,15 @@ def umap_kde(
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
         else:
             (ax1, ax2) = (ax_scat, ax_dens)
-        sns.kdeplot(data=df, x="UMAP1", y="UMAP2", hue=kde_hue, alpha=kde_alpha, levels=kde_levels, ax=ax2)
+        sns.kdeplot(
+            data=df,
+            x="UMAP1",
+            y="UMAP2",
+            hue=kde_hue,
+            alpha=kde_alpha,
+            levels=kde_levels,
+            ax=ax2,
+        )
         df_g = df[df[g] > 0]
         norm = plt.Normalize(0, df_g[g].max())
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -815,12 +918,21 @@ def umap_kde(
         s = dot_scale * 10 / np.log(len(df_g) / 1000 + 2)
         if isinstance(cmap, str):
             cmap = sns.color_palette(cmap, as_cmap=True)
-        sns.scatterplot(x="UMAP1", y="UMAP2", hue=g, s=s, data=df_g, cmap=cmap, alpha=scat_alpha, ax=ax2)
+        sns.scatterplot(
+            x="UMAP1",
+            y="UMAP2",
+            hue=g,
+            s=s,
+            data=df_g,
+            cmap=cmap,
+            alpha=scat_alpha,
+            ax=ax2,
+        )
         ax2.get_legend().remove()
         if show:
             ax2.figure.colorbar(sm)
         ax2.set_title(g)
-        sc.pl.umap(ad, color=g, ax=ax1, show=show)
+        sc.pl.embedding(ad, obsm_key, color=g, ax=ax1, show=show)
         if show:
             plt.show()
 

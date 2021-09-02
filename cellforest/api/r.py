@@ -31,13 +31,13 @@ def prep(ad: AnnData, layer_renames: Optional[Dict[str, str]] = None) -> AnnData
     return ad
 
 
-def ad_to_r(ad: AnnData, filepath: AnyPath, format: Literal["seurat", "sce"] = "sce"):
+def ad_to_r(ad: AnnData, filepath: AnyPath, format_: Literal["seurat", "sce"] = "sce"):
     ad = prep(ad)
     with localconverter(anndata2ri.converter):
         ad_r = anndata2ri.py2rpy(ad)
     robjects.r.assign("ad_r", ad_r)
     try:
-        if format == "seurat":
+        if format_ == "seurat":
             if "logcounts" not in ad.layers:
                 raise ValueError('Seurat conversion requires "logcounts"')
             robjects.r("ad_r <- Seurat::as.Seurat(ad_r)")

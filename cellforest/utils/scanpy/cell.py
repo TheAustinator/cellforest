@@ -15,9 +15,12 @@ MARKER_THRESH_DEFAULTS = {
 }
 
 
-# maybe increase `min_cells
 def preprocess(
-    ad: AnnData, min_cells: int = None, min_genes: int = None, max_genes: int = None, max_pct_mito: int = None
+    ad: AnnData,
+    min_cells: int = None,
+    min_genes: int = None,
+    max_genes: int = None,
+    max_pct_mito: int = None,
 ):
     # if "raw" not in ad.layers:
     ad.layers["raw"] = ad.X.copy()
@@ -29,7 +32,9 @@ def preprocess(
     return ad
 
 
-@sub_kwargs("hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs", "tsne_kwargs")
+@sub_kwargs(
+    "hvg_kwargs", "pca_kwargs", "neighbors_kwargs", "umap_kwargs", "tsne_kwargs"
+)
 def reduce(
     ad: AnnData,
     n_comps: int = 15,
@@ -51,17 +56,32 @@ def reduce(
     return ad
 
 
-def cluster(ad: AnnData, resolution: float = 0.1, do_markers=True, key_added="leiden", **markers_kwargs):
-    sc.tl.leiden(ad, resolution=resolution, key_added=key_added)
+def cluster(
+    ad: AnnData,
+    neighbors_key: str = None,
+    embeddings_key: str = "X_umap",
+    resolution: float = 0.1,
+    do_markers=True,
+    key_added=None,
+    **markers_kwargs,
+):
+    if neighbors_key and not key_added:
+        key_added = f"leiden_{neighbors_key}"
+    elif not key_added:
+        key_added = "leiden"
+    sc.tl.leiden(
+        ad, neighbors_key=neighbors_key, resolution=resolution, key_added=key_added
+    )
     if do_markers:
-        markers(ad, "leiden", **markers_kwargs)
-    return ad
+        markers(ad, key=key_added, embeddings_key=embeddings_key, **markers_kwargs)
 
 
 def markers(
     ad: AnnData,
-    key="leiden",
-    n_genes: int = 20,
+    key: str = "leiden",
+    embeddings_key: str = "X_umap",
+    layer: str = "log",
+    n_genes: int = 30,
     filter_var_prefix=(),
     obs_facet=None,
     fontsize: int = 8,
@@ -70,21 +90,19 @@ def markers(
 ):
     if filter_var_prefix:
         ad = ad[:, ~ad.var_names.str.startswith(filter_var_prefix)]
-        del ad.raw
     if obs_facet:
         for val, _obs in ad.obs.groupby(obs_facet):
             print(val)
             _ad = ad[ad.obs_names.isin(_obs.index)]
             if plot:
-                sc.pl.umap(_ad, color=key)
+                sc.pl.embedding(_ad, embeddings_key, color=key)
     else:
         if plot:
-            sc.pl.umap(ad, color=key)
-    sc.tl.rank_genes_groups(ad, groupby=key)
+            sc.pl.embedding(ad, embeddings_key, color=key)
+    sc.tl.rank_genes_groups(ad, groupby=key, layer=layer, use_raw=False)
     if plot:
         sc.pl.rank_genes_groups(ad, n_genes=n_genes, fontsize=fontsize, ax=ax)
     get_markers_df(ad)
-    return ad
 
 
 def marker_dict(
@@ -121,10 +139,16 @@ def marker_dict(
         }
         genes_dict[name] = markers_grp["gene"].tolist()
         stats_dict[name] = stats
-    prefix_filter = [prefix_filter,] if isinstance(prefix_filter, str) else prefix_filter
+    prefix_filter = (
+        [prefix_filter,] if isinstance(prefix_filter, str) else prefix_filter
+    )
     for k, gene_list in genes_dict.items():
         if prefix_filter is not None:
-            gene_list = [x for x in gene_list if not any([x.startswith(pre) for pre in prefix_filter])]
+            gene_list = [
+                x
+                for x in gene_list
+                if not any([x.startswith(pre) for pre in prefix_filter])
+            ]
         if max_n:
             gene_list = gene_list[: min(max_n, len(gene_list))]
         genes_dict[k] = gene_list
@@ -139,7 +163,9 @@ def process(ad: AnnData):
     return ad
 
 
-def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key="markers"):
+def get_markers_df(
+    ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key="markers"
+):
     """
 
     Args:
@@ -161,7 +187,10 @@ def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key
     groups = np.tile(labels, (size, 1)).flatten()
     col_dict["group"] = groups
     df = pd.DataFrame(col_dict)
-    df.rename(columns={"names": "gene", "pvals_adj": "pval_adj", "logfoldchanges": "logfc"}, inplace=True)
+    df.rename(
+        columns={"names": "gene", "pvals_adj": "pval_adj", "logfoldchanges": "logfc"},
+        inplace=True,
+    )
     group_var = ad.uns["rank_genes_groups"]["params"]["groupby"]
 
     def _add_group(_group, _dff):
@@ -180,7 +209,9 @@ def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key
             _add_group(group, dff)
     else:
         _add_group(group, df)
-    df["mean_expr_clip"] = df["mean_expr"].apply(lambda x: np.clip(x, 0, mean_expr_clip))
+    df["mean_expr_clip"] = df["mean_expr"].apply(
+        lambda x: np.clip(x, 0, mean_expr_clip)
+    )
     df["-logp"] = -df["pval_adj"].apply(np.log10)
     ceil = df["-logp"][df["-logp"].abs() != np.inf].max()
     df["-logp"] = df["-logp"].replace({np.inf: ceil})
@@ -189,3 +220,28 @@ def get_markers_df(ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key
     if uns_key:
         ad.uns[uns_key] = df
     return df
+
+
+def annotate(
+    ad: AnnData,
+    col: str,
+    basis_col: str,
+    val: Union[str, dict],
+    basis_vals: Optional[Union[str, List[str]]] = None,
+):
+    def _single_annotate(_ad: AnnData, _col: str, _basis_col: str, _val, _basis_vals):
+        _basis_vals = (
+            [_basis_vals,]
+            if isinstance(_basis_vals, (int, float, str))
+            else _basis_vals
+        )
+        ad.obs.loc[ad.obs[_basis_col].isin(_basis_vals), _col] = _val
+
+    if col in ad.obs.columns:
+        ad.obs[col] = ad.obs[col].astype(str)
+    if isinstance(val, dict):
+        for k, v in val.items():
+            _single_annotate(ad, col, basis_col, v, k)
+    else:
+        _single_annotate(ad, col, basis_col, val, basis_vals)
+    ad.obs[col] = ad.obs[col].astype("category")
