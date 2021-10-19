@@ -86,7 +86,8 @@ def markers(
     obs_facet=None,
     fontsize: int = 8,
     ax=None,
-    plot=True,
+    plot_clusters=True,
+    plot_markers=True,
 ):
     if filter_var_prefix:
         ad = ad[:, ~ad.var_names.str.startswith(filter_var_prefix)]
@@ -94,13 +95,13 @@ def markers(
         for val, _obs in ad.obs.groupby(obs_facet):
             print(val)
             _ad = ad[ad.obs_names.isin(_obs.index)]
-            if plot:
+            if plot_clusters:
                 sc.pl.embedding(_ad, embeddings_key, color=key)
     else:
-        if plot:
+        if plot_clusters:
             sc.pl.embedding(ad, embeddings_key, color=key)
     sc.tl.rank_genes_groups(ad, groupby=key, layer=layer, use_raw=False)
-    if plot:
+    if plot_markers:
         sc.pl.rank_genes_groups(ad, n_genes=n_genes, fontsize=fontsize, ax=ax)
     get_markers_df(ad)
 

@@ -22,5 +22,5 @@ sca <- SceToSingleCellAssay(sce)
 gc()
 zlm_res <- zlm( as.formula(FORMULA), sca, parallel=TRUE)
 gc()
-df <- summary(zlm_res)$datatable
+df <- summary(zlm_res, doLRT=TRUE)$datatable
 write.csv(df, paste0("/tmp/cf_df_zlm_", RUN_ID, ".csv"))

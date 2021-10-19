@@ -185,6 +185,7 @@ def recipe_batch_correct(
     harm_key = f"X_harmony_{assay_batch_key}"
     scan_key = f"X_scanorama_{assay_batch_key}"
     bbknn_key = f"bbknn_{assay_batch_key}"
+    sc.pp.highly_variable_genes(ad, batch_key=keys, layer=layer)
     pca(ad, key_added=pca_key, assays=assays, layer=layer)
     sc.pp.neighbors(ad, use_rep=pca_key, key_added="orig")
     umap(ad, key_added="X_umap_orig", neighbors_key="orig")
@@ -203,9 +204,11 @@ def recipe_batch_correct(
         if scan_key in ad.obsm and not force:
             print(f"{scan_key} already exists. Skipping")
         else:
+            _ad = ad[:, ad.var["highly_variable"]].copy()
             sce.pp.scanorama_integrate(
-                ad, key=keys, basis=pca_key, adjusted_basis=scan_key
+                _ad, key=keys, basis=pca_key, adjusted_basis=scan_key,
             )
+            ad.obsm[scan_key] = _ad.obsm[scan_key]
     if "bbknn" in methods:
         if f"connectivities_{bbknn_key}" in ad.obsp and not force:
             print(f"connectivities_{bbknn_key} already exists. Skipping")

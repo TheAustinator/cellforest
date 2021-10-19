@@ -40,7 +40,9 @@ def plot_meta_vln(branch: "CellBranch", **kwargs):
 @plot_py
 # TODO: make `plot_py` into class so that you can specify `pass_stratify` to keep stratify
 # TODO: if lists for x and hue, join columns as strs to make compatible with seaborn
-def plot_frac_cells_recovered_bar(branch: "CellBranch", x: Optional[str] = None, hue: Optional[str] = None, **kwargs):
+def plot_frac_cells_recovered_bar(
+    branch: "CellBranch", x: Optional[str] = None, hue: Optional[str] = None, **kwargs
+):
     """
     Args:
         branch:
@@ -69,7 +71,12 @@ def plot_frac_cells_recovered_bar(branch: "CellBranch", x: Optional[str] = None,
 
 @plot_py(forbid=["facet", "stratify"])
 def plot_hist_features(
-    branch: "CellBranch", features: list, ncol: int = 3, ax_size=5, sep: str = "facet", **kwargs,
+    branch: "CellBranch",
+    features: list,
+    ncol: int = 3,
+    ax_size=5,
+    sep: str = "facet",
+    **kwargs,
 ):
     """
 
@@ -107,7 +114,11 @@ def plot_hist_features(
 
 @plot_py
 def plot_expressing_cells_bar(
-    branch: "CellBranch", genes: Union[str, List[str]], x: Optional[str] = None, hue: Optional[str] = None, **kwargs
+    branch: "CellBranch",
+    genes: Union[str, List[str]],
+    x: Optional[str] = None,
+    hue: Optional[str] = None,
+    **kwargs,
 ):
     df = _expressing_cells_df(branch, genes, x, hue)
     return barplot(x="x", y="frac_expr", hue="hue", data=df, **kwargs)
@@ -148,7 +159,9 @@ def plot_highest_exprs_dens(branch: "CellBranch", r_script: str, args: list, **k
 
 
 @plot_r
-def plot_umis_per_barcode_rank_curv(branch: "CellBranch", r_script: str, args: list, **kwargs):
+def plot_umis_per_barcode_rank_curv(
+    branch: "CellBranch", r_script: str, args: list, **kwargs
+):
     run_r_script_logged(branch, r_script, args, branch.current_process)
 
 
@@ -157,10 +170,15 @@ def _plot_feature_hist(feature_arr, ax, **kwargs):
 
 
 def _expressing_cells_df(
-    branch: "CellBranch", genes: Union[str, List[str]], x: Optional[str] = None, hue: Optional[str] = None,
+    branch: "CellBranch",
+    genes: Union[str, List[str]],
+    x: Optional[str] = None,
+    hue: Optional[str] = None,
 ):
     def _calc_frac_expressing(branch_, genes_):
-        expr_arr = np.array((branch_.rna[:, genes_] > 0).sum(axis=0))[0] / len(branch_.rna)
+        expr_arr = np.array((branch_.rna[:, genes_] > 0).sum(axis=0))[0] / len(
+            branch_.rna
+        )
         return dict(zip(genes_, expr_arr))
 
     def _get_subset_expr_fracs(name_, br_sub_):
@@ -180,7 +198,10 @@ def _expressing_cells_df(
     if "gene" in grp_cols:
         grp_cols.remove("gene")
     # TODO: extremely slow -- parallelize with swifter or pandarallel
-    subset_dict_list = [_get_subset_expr_fracs(name, br_sub) for name, br_sub in branch.groupby(by=grp_cols)]
+    subset_dict_list = [
+        _get_subset_expr_fracs(name, br_sub)
+        for name, br_sub in branch.groupby(by=grp_cols)
+    ]
     subset_dicts = [d for l in subset_dict_list for d in l]
     df = pd.DataFrame(subset_dicts)
     df["x"] = df[x].agg(" ".join, axis=1)

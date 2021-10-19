@@ -18,8 +18,14 @@ def test_pyplot_plots(load_test_config, remove_plots, test_norm):
     plot_name = "_GENES_PER_CELL_HIST_"
 
     assert plot_name in plot_lookup
-    assert "genes_per_cell_hist-plot_size:800+800-stratify:sample.png" in plot_lookup[plot_name].values()  # valid
-    assert "genes_per_cell_hist-plot_size:1600+800-stratify:none.png" in plot_lookup[plot_name].values()  # valid
+    assert (
+        "genes_per_cell_hist-plot_size:800+800-stratify:sample.png"
+        in plot_lookup[plot_name].values()
+    )  # valid
+    assert (
+        "genes_per_cell_hist-plot_size:1600+800-stratify:none.png"
+        in plot_lookup[plot_name].values()
+    )  # valid
 
 
 def test_ggplot2_plots(load_test_config, remove_plots, test_cluster):
@@ -29,12 +35,13 @@ def test_ggplot2_plots(load_test_config, remove_plots, test_cluster):
 
     assert plot_name in plot_lookup
     assert (
-        "perc_hsp_per_cell_vln-plot_size:1600+800-stratify:cluster_id.png" in plot_lookup[plot_name].values()
+        "perc_hsp_per_cell_vln-plot_size:1600+800-stratify:cluster_id.png"
+        in plot_lookup[plot_name].values()
     )  # valid
 
-    assert os.listdir(plot_map[plot_name]['{"plot_size": "wide", "stratify": "cluster"}'].parent) == [
-        "perc_hsp_per_cell_vln-plot_size:1600+800-stratify:cluster_id.png"
-    ]
+    assert os.listdir(
+        plot_map[plot_name]['{"plot_size": "wide", "stratify": "cluster"}'].parent
+    ) == ["perc_hsp_per_cell_vln-plot_size:1600+800-stratify:cluster_id.png"]
 
 
 def test_infer_plot_names(load_test_config, remove_plots, build_root):
@@ -55,7 +62,9 @@ def test_infer_plot_names(load_test_config, remove_plots, build_root):
 
     # check that only one correct plot is in the _plots directory
     plot_dir = list(plot_map[plot_name].values())[0].parent
-    assert os.listdir(plot_dir) == ["umis_per_cell_hist-plot_size:800+800-stratify:none.png"]
+    assert os.listdir(plot_dir) == [
+        "umis_per_cell_hist-plot_size:800+800-stratify:none.png"
+    ]
 
 
 def test_invalid_plot(load_test_config, remove_plots, test_norm):
@@ -69,7 +78,11 @@ def test_invalid_plot(load_test_config, remove_plots, test_norm):
     )  # TODO-QC: this file should ideally be removed from plot_map
     # but, this file should not be in plot_map
     assert sorted(
-        os.listdir(plot_map[plot_name]['{"plot_size": "large", "stratify": "nonexistent_column"}'].parent)
+        os.listdir(
+            plot_map[plot_name][
+                '{"plot_size": "large", "stratify": "nonexistent_column"}'
+            ].parent
+        )
     ) == sorted(
         [
             "genes_per_cell_hist-plot_size:800+800-stratify:sample.png",
@@ -83,10 +96,22 @@ def test_additional_kwargs(load_test_config, remove_plots, test_reduce):
     plot_lookup = test_reduce["reduce"]._plot_lookup
     plot_name = "_PCA_EMBEDDINGS_SCAT_"
 
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}' in plot_map[plot_name]
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "entity_id"}' in plot_map[plot_name]
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}' in plot_lookup[plot_name]
-    assert '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "entity_id"}' in plot_lookup[plot_name]
+    assert (
+        '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}'
+        in plot_map[plot_name]
+    )
+    assert (
+        '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "entity_id"}'
+        in plot_map[plot_name]
+    )
+    assert (
+        '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "nFeature_RNA"}'
+        in plot_lookup[plot_name]
+    )
+    assert (
+        '{"alpha": 0.4, "npcs": 7, "plot_size": "large", "stratify": "entity_id"}'
+        in plot_lookup[plot_name]
+    )
 
     assert (
         "pca_embeddings_scat-alpha:0.4-npcs:7-plot_size:1600+1600-stratify:nfeature_rna.png"
