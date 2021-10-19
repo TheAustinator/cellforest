@@ -103,7 +103,9 @@ def counts_path(root_path):
 
 @useconfig("no_plot_config")
 def test_from_input_dirs(root_path, sample_paths):
-    branch = cf.from_input_dirs(root_path, sample_paths, mode="rna", parallel=False)    # parallel false for pytest
+    branch = cf.from_input_dirs(
+        root_path, sample_paths, mode="rna", parallel=False
+    )  # parallel false for pytest
     assert "AAACATACAACCAC-1" in branch.meta.index
     assert branch.rna.shape[0] > 1 and branch.rna.shape[1] > 1
     return sample_paths
@@ -180,7 +182,10 @@ def branch_spec_reduce(branch_spec_norm):
 @pytest.fixture
 def branch_spec_cluster(branch_spec_reduce):
     spec = deepcopy(branch_spec_reduce)
-    spec_run_cluster = {"_PROCESS_": "cluster", "_PARAMS_": {"num_pcs": 3, "res": 0.5, "eps": 0.1,}}
+    spec_run_cluster = {
+        "_PROCESS_": "cluster",
+        "_PARAMS_": {"num_pcs": 3, "res": 0.5, "eps": 0.1,},
+    }
     spec.append(spec_run_cluster)
     return spec
 
@@ -188,7 +193,10 @@ def branch_spec_cluster(branch_spec_reduce):
 @pytest.fixture
 def branch_spec_markers(branch_spec_cluster):
     spec = deepcopy(branch_spec_cluster)
-    spec_run_markers = {"_PROCESS_": "markers", "_PARAMS_": {"logfc_thresh": 0.0001, "test": "wilcox"}}
+    spec_run_markers = {
+        "_PROCESS_": "markers",
+        "_PARAMS_": {"logfc_thresh": 0.0001, "test": "wilcox"},
+    }
     spec.append(spec_run_markers)
     return spec
 
@@ -272,7 +280,7 @@ def test_diffexp(root_path, branch_spec_diffexp, test_cluster):
 
 
 @pytest.fixture
-def remove_plots(root_path):  # removes all plot folders in the test tree at root_1
+def remove_plots(root_path,):  # removes all plot folders in the test tree at root_1
     for parent, dirnames, _ in os.walk(root_path):
         for dirname in dirnames:
             if dirname == "_plots":

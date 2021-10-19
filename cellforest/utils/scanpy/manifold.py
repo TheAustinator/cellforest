@@ -20,7 +20,10 @@ def pc_load_df(ad: AnnData, n_pcs=None, drop_zero=False) -> pd.DataFrame:
 
 
 def pc_load_df_grp(
-    ad: AnnData, grp_key: str, preprocess_func: Optional[Callable] = reduce, n_pcs: Optional[int] = None
+    ad: AnnData,
+    grp_key: str,
+    preprocess_func: Optional[Callable] = reduce,
+    n_pcs: Optional[int] = None,
 ):
     """
 
@@ -37,7 +40,9 @@ def pc_load_df_grp(
     if preprocess_func:
         map_dict_vals(ad_d, preprocess_func)
     pc_df_dict = map_dict_vals(
-        ad_d, lambda key, _ad: pc_load_df(_ad, n_pcs, drop_zero=False).add_prefix(f"{key}_"), pass_keys=True
+        ad_d,
+        lambda key, _ad: pc_load_df(_ad, n_pcs, drop_zero=False).add_prefix(f"{key}_"),
+        pass_keys=True,
     )
     return pd.concat(list(pc_df_dict.values()), axis=1)
 

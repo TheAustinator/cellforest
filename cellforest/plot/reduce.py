@@ -17,7 +17,9 @@ def plot_umap_embeddings_scat(branch: "CellBranch", **kwargs):
 
 
 @plot_py(requires="reduce", forbid=["facet", "stratify"])
-def plot_umap_features(branch: "CellBranch", features: List, ncol: int = 3, ax_size=5, **kwargs):
+def plot_umap_features(
+    branch: "CellBranch", features: List, ncol: int = 3, ax_size=5, **kwargs
+):
     # TODO: add facet_vars to plotting decorator to allow facet by cols rather than rows, and use that for grid
     rna_features = list(set(features).difference(branch.meta.columns))
     if rna_features:
@@ -59,19 +61,25 @@ def plot_pca_embeddings_scat(branch: "CellBranch", r_script: str, args: list, **
 
 
 @plot_r(requires="reduce")
-def plot_umap_embeddings_scat_r(branch: "CellBranch", r_script: str, args: list, **kwargs):
+def plot_umap_embeddings_scat_r(
+    branch: "CellBranch", r_script: str, args: list, **kwargs
+):
     run_r_script_logged(branch, r_script, args, "plot_umap_embeddings_scat")
 
 
 @plot_r(requires="reduce")
-def plot_cell_cycle_scoring_scat(branch: "CellBranch", r_script: str, args: list, **kwargs):
+def plot_cell_cycle_scoring_scat(
+    branch: "CellBranch", r_script: str, args: list, **kwargs
+):
     run_r_script_logged(branch, r_script, args, "plot_cell_cycle_scoring_scat")
 
 
 def _plot_umap_embeddings_scat(branch: "CellBranch", **kwargs):
     ax = kwargs.pop("ax", plt.gca())
     if "stratify" in kwargs:
-        for (name, grp) in branch.meta[["sample_id", "UMAP_1", "UMAP_2"]].groupby("sample_id"):
+        for (name, grp) in branch.meta[["sample_id", "UMAP_1", "UMAP_2"]].groupby(
+            "sample_id"
+        ):
             scat = ax.scatter(grp["UMAP_1"], grp["UMAP_2"], label=name, **kwargs)
     else:
         scat = ax.scatter(branch.meta["UMAP_1"], branch.meta["UMAP_2"], **kwargs)

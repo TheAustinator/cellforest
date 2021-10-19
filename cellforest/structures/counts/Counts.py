@@ -86,7 +86,9 @@ class Counts(csr_matrix):
         if not isinstance(val, pd.Series):
             raise TypeError(f"Expected pd.Series, got {type(val)}")
         if not len(val) == len(self.index):
-            raise ValueError(f"New index must be same length as existing: {len(val)} and {len(self.index)}")
+            raise ValueError(
+                f"New index must be same length as existing: {len(val)} and {len(self.index)}"
+            )
         if not hasattr(val.index, "stop") or val.index.stop != len(self):
             raise ValueError("Must be series with a numerical index from 0 to len")
         self._idx = val
@@ -100,12 +102,16 @@ class Counts(csr_matrix):
         return self.index
 
     @classmethod
-    def concatenate(cls, counts_list: Union["Counts", Iterable["Counts"]], axis: int = 0) -> "Counts":
+    def concatenate(
+        cls, counts_list: Union["Counts", Iterable["Counts"]], axis: int = 0
+    ) -> "Counts":
         counts_list = counts_list.copy()
         orig = counts_list.pop(0)
         return orig.append(counts_list, axis=axis)
 
-    def append(self, others: Union["Counts", Iterable["Counts"]], axis: int = 0) -> "Counts":
+    def append(
+        self, others: Union["Counts", Iterable["Counts"]], axis: int = 0
+    ) -> "Counts":
         if axis == 0:
             return self.vstack(others)
         elif axis == 1:
@@ -115,9 +121,13 @@ class Counts(csr_matrix):
         others = others if isinstance(others, (list, tuple)) else [others]
         widths = set([self._matrix.shape[1]] + [x._matrix.shape[1] for x in others])
         if len(widths) > 1:
-            raise ValueError(f"Attempting to vstack matrices with variable widths {widths}")
+            raise ValueError(
+                f"Attempting to vstack matrices with variable widths {widths}"
+            )
         matrix = vstack([self._matrix, *[x._matrix for x in others]])
-        cell_ids = pd.concat([self.cell_ids, *[x.cell_ids for x in others]]).reset_index(drop=True)
+        cell_ids = pd.concat(
+            [self.cell_ids, *[x.cell_ids for x in others]]
+        ).reset_index(drop=True)
         features = self.features
         return self.__class__(matrix, cell_ids, features)
 
@@ -125,7 +135,9 @@ class Counts(csr_matrix):
         others = others if isinstance(others, (list, tuple)) else [others]
         matrix = hstack([self._matrix, *[x._matrix for x in others]])
         cell_ids = self.cell_ids
-        features = pd.concat([self.features, *[x.features for x in others]]).reset_index(drop=True)
+        features = pd.concat(
+            [self.features, *[x.features for x in others]]
+        ).reset_index(drop=True)
         return self.__class__(matrix, cell_ids, features)
 
     def hist(
@@ -143,7 +155,7 @@ class Counts(csr_matrix):
         Args:
             agg: name of aggregation function for opposite axis (e.g., "std"); all options: `self._SUPPORTED_AGG_FUNCS`
             axis: axis along which to create histogram, with `agg` applied to other axis
-            labels: list or pd.Series of cell or gene category labels by which to stratify plot
+            labels: list or pd.Series of cell or gene category labels by which to stratify plot_clusters
             group_labels: labels when labeling axis is opposite of aggregation axis, so matrix must be "groupby"ed
             ax: matplotlib pyplot or axes object which defines the plot
             kwargs: keyword arguments for plt.hist()
@@ -156,7 +168,7 @@ class Counts(csr_matrix):
             >>> half_of_cells = rna.shape[0] // 2
             >>> labels = ["sample_1"] * half_of_cells + ["sample_2"] * half_of_cells  # mock cell labels for 2 samples
             >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 6))  # figure with 1x2 axes
-            >>> rna.hist("sum", axis=0, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot on 1st axes object
+            >>> rna.hist("sum", axis=0, ax=ax1, labels=labels, bins=30, alpha=0.5, histtype='step')  # plot_clusters on 1st axes object
             >>> rna.hist("std", axis=0, ax=ax2)  # plot on 2nd axes object
             >>> fig.show()  # display figure state
 
@@ -185,7 +197,9 @@ class Counts(csr_matrix):
         ax = ax or plt.gca()  # use defined or get current axes
         for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
-            matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            matrix_slice = (
+                cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            )
             rna_agg = self._agg_apply(matrix_slice, agg=agg, axis=axis)
             # TODO: kwargs customization for individual strata
             ax.hist(rna_agg, label=label, **kwargs)
@@ -237,7 +251,7 @@ class Counts(csr_matrix):
 
             >>> num_genes = rna.shape[1]
             >>> labels = ["family_1"] * (num_genes // 2) + ["family_2"] * (num_genes // 2)  # mock gene families for 2 samples
-            >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot std vs total cell count for each gene family
+            >>> rna.scatter(agg_x="sum", agg_y="std", axis=1, labels=labels, alpha=0.2)  # plot_clusters std vs total cell count for each gene family
             >>> plt.show()
         """
         if labels is not None and group_labels is not None:
@@ -246,7 +260,9 @@ class Counts(csr_matrix):
             for label in sorted(list(set(group_labels))):
                 selector = group_labels == label
                 counts_group = self[:, selector] if axis == 0 else self[selector]
-                counts_group.scatter(agg_x, agg_y, axis, None, None, ax, label=label, **kwargs)
+                counts_group.scatter(
+                    agg_x, agg_y, axis, None, None, ax, label=label, **kwargs
+                )
             return plt.gca()
         axis = self._get_numeric_axis(axis)
         if "label" in kwargs:
@@ -261,7 +277,9 @@ class Counts(csr_matrix):
         ax = ax or plt.gca()  # use defined or get current axes
         for label in sorted(list(set(labels))):
             where_label = np.where(np.array(labels) == label)[0]
-            matrix_slice = cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            matrix_slice = (
+                cs_matrix[where_label, :] if cells_axis else cs_matrix[:, where_label]
+            )
             rna_agg_x = self._agg_apply(matrix_slice, agg=agg_x, axis=axis)
             rna_agg_y = self._agg_apply(matrix_slice, agg=agg_y, axis=axis)
             # TODO: kwargs customization for individual strata
@@ -278,9 +296,13 @@ class Counts(csr_matrix):
     def _get_numeric_axis(self, axis) -> int:
         """Get binary value for axis or check if it's out of range"""
         if axis in self._SUPPORTED_AGG_AXES:
-            axis = self._SUPPORTED_AGG_AXES.index(axis) % 2  # convert cells -> 0 and genes -> 1
+            axis = (
+                self._SUPPORTED_AGG_AXES.index(axis) % 2
+            )  # convert cells -> 0 and genes -> 1
         else:
-            raise ValueError(f"axis cannot be {axis}, must be in {self._SUPPORTED_AGG_AXES}")
+            raise ValueError(
+                f"axis cannot be {axis}, must be in {self._SUPPORTED_AGG_AXES}"
+            )
 
         return axis
 
@@ -293,7 +315,9 @@ class Counts(csr_matrix):
             labels = " ".join(labels)
         if isinstance(labels, (str, int, float)):
             labels = [labels] * matrix_agg_len
-        if len(labels) != matrix_agg_len:  # check if labels length is the same as matrix axis length
+        if (
+            len(labels) != matrix_agg_len
+        ):  # check if labels length is the same as matrix axis length
             raise ValueError(
                 f"labels list of length {len(labels)} cannot be broadcast with matrix aggregation axis length {matrix_agg_len}"
             )
@@ -319,8 +343,12 @@ class Counts(csr_matrix):
                     rna_agg_out = rna_agg_out / matrix.shape[agg_axis]
             else:
                 # TODO: might run out of memory because there is conversion to numpy matrix in agg funcs
-                rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(matrix.mean(axis=agg_axis), 2)
-                rna_agg_out = np.sqrt(rna_var) if agg == "std" else rna_var  # std is sqrt(var)
+                rna_var = matrix.power(2).mean(axis=agg_axis) - np.power(
+                    matrix.mean(axis=agg_axis), 2
+                )
+                rna_agg_out = (
+                    np.sqrt(rna_var) if agg == "std" else rna_var
+                )  # std is sqrt(var)
         else:
             raise NotImplementedError(
                 f'aggregation function "{agg}" not supported, valid options are: {self._SUPPORTED_AGG_FUNCS["all"]}'
@@ -399,7 +427,9 @@ class Counts(csr_matrix):
         features = crio.read_features()
         return cls(matrix, cell_ids, features)
 
-    def to_cellranger(self, output_dir: Union[str, Path], gz: bool = True, chemistry: str = "v3"):
+    def to_cellranger(
+        self, output_dir: Union[str, Path], gz: bool = True, chemistry: str = "v3"
+    ):
         """Save in 10X Cellranger output format"""
         output_dir = Path(output_dir)
         crio = CellRangerIO
@@ -447,10 +477,21 @@ class Counts(csr_matrix):
         Save as pickle.
         Intermediate data store object used to maintain future compatibility
         """
-        self._save(filepath, self._matrix, self.cell_ids, self.features, save_pickle, save_rds, save_h5ad, save_loom)
+        self._save(
+            filepath,
+            self._matrix,
+            self.cell_ids,
+            self.features,
+            save_pickle,
+            save_rds,
+            save_h5ad,
+            save_loom,
+        )
 
     def copy(self) -> "Counts":
-        return self.__class__(self._matrix.copy(), self.cell_ids.copy(), self.features.copy())
+        return self.__class__(
+            self._matrix.copy(), self.cell_ids.copy(), self.features.copy()
+        )
 
     def as_chemistry_version(self, chemistry):
         """Duplicate with a different 10X chemistry version"""
@@ -533,7 +574,9 @@ class Counts(csr_matrix):
         return key
 
     @staticmethod
-    def _convert_key(key: Union[Iterable, str, int, slice], df: pd.DataFrame) -> Union[List[int], slice]:
+    def _convert_key(
+        key: Union[Iterable, str, int, slice], df: pd.DataFrame
+    ) -> Union[List[int], slice]:
         """Slice index dataframe with key and convert to integer indices"""
         if isinstance(key, (pd.Series, pd.Index, np.ndarray)):
             key = key.tolist()
@@ -556,13 +599,17 @@ class Counts(csr_matrix):
         elif isinstance(key, slice):
             return key
         else:
-            raise TypeError(f"Expected type {get_type_hints(Counts._convert_key)['key']}, not {type(key)}")
+            raise TypeError(
+                f"Expected type {get_type_hints(Counts._convert_key)['key']}, not {type(key)}"
+            )
         if len(key) == 0:
             raise KeyError("No matching indices")
         return key
 
     @staticmethod
-    def _index_col_swap(df: pd.DataFrame, col: Union[str, int] = 0, new_index_colname: str = "i") -> pd.DataFrame:
+    def _index_col_swap(
+        df: pd.DataFrame, col: Union[str, int] = 0, new_index_colname: str = "i"
+    ) -> pd.DataFrame:
         """Swaps column with index of DataFrame"""
         df = df.copy()
         if isinstance(df, pd.Series):
@@ -595,7 +642,9 @@ class Counts(csr_matrix):
         if save_h5ad or save_loom:
             cell_ids = meta if meta is not None else pd.DataFrame(cell_ids).set_index(0)
             cell_ids.index.name = "index"
-            features = features.rename(columns={"ensgs": "gene_ids", "genes": "index"}).set_index("index")
+            features = features.rename(
+                columns={"ensgs": "gene_ids", "genes": "index"}
+            ).set_index("index")
             adata = AnnData(matrix.tocsr(), cell_ids, features)
             if save_h5ad:
                 adata.write_h5ad(filepath.parent / "rna.h5ad")
@@ -612,7 +661,9 @@ class Counts(csr_matrix):
         return df
 
     def __repr__(self):
-        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(self)
+        return f"{self.__class__}: [cell_ids x genes] matrix\n" + csr_matrix.__repr__(
+            self
+        )
 
     def __len__(self):
         return self.shape[0]

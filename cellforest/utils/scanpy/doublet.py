@@ -25,14 +25,22 @@ _R_RUN_DUB_FINDER = str(_R_UTILS_DIR / "run_dub_finder.R")
 
 
 def dub_finder(
-    ad: "AnnData", output_path: AnyPath, dub_rate_per_1k: float = 0.008, n_pcs: int = 15, n_features: int = 2000
+    ad: "AnnData",
+    output_path: AnyPath,
+    dub_rate_per_1k: float = 0.008,
+    n_pcs: int = 15,
+    n_features: int = 2000,
 ):
     # use seurat converter to temp, then convert
     raise NotImplementedError()
 
 
 def dub_finder_disk(
-    srat_path: AnyPath, output_dir: AnyPath, dub_rate_per_1k: float = 0.008, n_pcs: int = 15, n_features: int = 2000
+    srat_path: AnyPath,
+    output_dir: AnyPath,
+    dub_rate_per_1k: float = 0.008,
+    n_pcs: int = 15,
+    n_features: int = 2000,
 ):
     output_dir = Path(output_dir)
     proc_dir = output_dir / "process_files"
@@ -46,7 +54,9 @@ def dub_finder_disk(
         n_features,
     ]
     command_string = f"Rscript {_R_RUN_DUB_FINDER} {' '.join(map(str, arg_list))}"
-    process_shell_command(command_string=command_string, logs_dir=proc_dir, logfile_prefix="dub_finder")
+    process_shell_command(
+        command_string=command_string, logs_dir=proc_dir, logfile_prefix="dub_finder"
+    )
     return pd.read_csv(output_path, index_col=0)
 
 
@@ -119,9 +129,14 @@ def lane_doublet_method_agreement(ad, root_path=None, est_per_1k=0.008):
     pass
 
 
-# TODO: split out plot function
+# TODO: split out plot_clusters function
 def remove_doublets(
-    ad, root_path=None, solo_dub=False, solo_pred=False, dub_find=False, remove_scrublet=False,
+    ad,
+    root_path=None,
+    solo_dub=False,
+    solo_pred=False,
+    dub_find=False,
+    remove_scrublet=False,
 ):
     if not set(ALL_COLS).intersection(set(ad.obs.columns)):
         ad = _add_dub_methods(ad, root_path)
@@ -140,5 +155,7 @@ def remove_doublets(
 def plot_doublets(ad, root_path=None):
     if not set(ALL_COLS).intersection(set(ad.obs.columns)):
         ad = _add_dub_methods(ad, root_path)
-    cols = list(set(["n_genes", "total_counts"] + ALL_COLS).intersection(ad.obs.columns))
+    cols = list(
+        set(["n_genes", "total_counts"] + ALL_COLS).intersection(ad.obs.columns)
+    )
     sc.pl.umap(ad, color=cols)

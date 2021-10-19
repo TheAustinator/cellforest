@@ -67,7 +67,9 @@ def volcano(
         plt.show()
 
 
-def plot_gene_set(ad, df, gene_set, alpha=1, s=10, groupby="cell_type", volcano_groups=None, **kwargs):
+def plot_gene_set(
+    ad, df, gene_set, alpha=1, s=10, groupby="cell_type", volcano_groups=None, **kwargs
+):
     """
 
     Args:
@@ -82,15 +84,29 @@ def plot_gene_set(ad, df, gene_set, alpha=1, s=10, groupby="cell_type", volcano_
     Returns:
 
     """
-    volcano_groups = volcano_groups if volcano_groups is not None else ad.obs[groupby].unique()
-    volcano_groups = volcano_groups if not isinstance(volcano_groups, (str, int)) else (volcano_groups,)
+    volcano_groups = (
+        volcano_groups if volcano_groups is not None else ad.obs[groupby].unique()
+    )
+    volcano_groups = (
+        volcano_groups
+        if not isinstance(volcano_groups, (str, int))
+        else (volcano_groups,)
+    )
     for group in volcano_groups:
         volcano(
-            df[df["gene"].isin(gene_set)], group=group, alpha=alpha, s=s, **kwargs, logfc_thresh=0.25, pval_thresh=0.01
+            df[df["gene"].isin(gene_set)],
+            group=group,
+            alpha=alpha,
+            s=s,
+            **kwargs,
+            logfc_thresh=0.25,
+            pval_thresh=0.01,
         )
         df_gs = df[(df["gene"].isin(gene_set)) & (df["group"] == group)]
         df_gs = df_gs.sort_values(["mean_expr"])
-        sc.pl.heatmap(ad, var_names=df_gs["gene"], groupby=groupby, standard_scale="var")
+        sc.pl.heatmap(
+            ad, var_names=df_gs["gene"], groupby=groupby, standard_scale="var"
+        )
 
 
 def pairwise_de_corr(ad, grp_obs, markers_df, plot=True):

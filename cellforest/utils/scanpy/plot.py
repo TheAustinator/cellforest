@@ -59,6 +59,9 @@ def _prep_axes(
 def _get_kde_arr(
     feat: Union[np.ndarray, spmatrix], kde: Union[bool, np.ndarray, float]
 ) -> np.ndarray:
+    feat = (
+        feat.apply(lambda x: pd.to_numeric(x, errors="coerce")).fillna(1).astype(float)
+    )
     if isinstance(kde, bool):
         return np.array([kde] * feat.shape[1]).flatten()
     if isinstance(kde, float):
@@ -227,7 +230,7 @@ def embedding(
     **kwargs,
 ):
     """
-    Wrapper for scanpy umap plot with additional functionality
+    Wrapper for scanpy umap plot_clusters with additional functionality
     Args:
         basis:
         adata:
@@ -286,7 +289,11 @@ def embedding(
         if isinstance(v_frac, Num):
             v_frac = np.repeat(v_frac, len(color))
         v_frac = np.array(v_frac)
-        _feat = _feat
+        _feat = (
+            _feat.apply(lambda x: pd.to_numeric(x, errors="coerce"))
+            .fillna(1)
+            .astype(float)
+        )
         if nonzero:
             frac_zero = (_feat == 0).sum(axis=0) / _feat.shape[0]
             v_frac = frac_zero + (1 - frac_zero) * v_frac
@@ -322,7 +329,14 @@ def embedding(
         if vmax_frac is not None:
             kwargs["vmax"] = _get_v(vmax_frac, feat, vmax_frac_nonzero)
     if kde is False:
-        return sc.pl.embedding(adata, basis, color=color, **kwargs)
+        _ax_arr = sc.pl.embedding(adata, basis, color=color, show=show, **kwargs)
+        if not isinstance(_ax_arr, np.ndarray):
+            _ax_arr = np.array([_ax_arr])
+        _ax_arr = _ax_arr.flatten()
+        for _ax in _ax_arr:
+            _ax.set_ylabel("")
+            _ax.set_xlabel("")
+        return _ax_arr
     feat = (
         feat
         if feat is not None
@@ -332,7 +346,14 @@ def embedding(
     )
     kde_arr = _get_kde_arr(feat, kde)
     if not kde_arr.any():
-        return None, sc.pl.embedding(adata, basis, color=color, ax=ax, **kwargs)
+        _ax_arr = sc.pl.embedding(adata, basis, color=color, ax=ax, show=show, **kwargs)
+        if not isinstance(_ax_arr, np.ndarray):
+            _ax_arr = np.array([_ax_arr])
+        _ax_arr = _ax_arr.flatten()
+        for _ax in _ax_arr:
+            _ax.set_ylabel("")
+            _ax.set_xlabel("")
+        return None, _ax
     if not len(color) == len(kde_arr):
         print(kde_arr.flatten().shape)
         raise ValueError(
@@ -360,7 +381,9 @@ def embedding(
                 if isinstance(v_val, (list, tuple, np.ndarray)):
                     v_val = v_val[i]
                 _kwargs[v_name] = v_val
-            sc.pl.embedding(adata, basis, color=x, ax=_ax, **_kwargs, show=False)
+            _ax = sc.pl.embedding(adata, basis, color=x, ax=_ax, **_kwargs, show=False)
+            _ax.set_ylabel("")
+            _ax.set_xlabel("")
         else:
             # if not ax_template:
             #     ax_template = copy(_single_kde(df, group=group, ax=ax, **kwargs))
@@ -933,6 +956,8 @@ def umap_kde(
             ax2.figure.colorbar(sm)
         ax2.set_title(g)
         sc.pl.embedding(ad, obsm_key, color=g, ax=ax1, show=show)
+        ax1.set_ylabel("")
+        ax1.set_xlabel("")
         if show:
             plt.show()
 
