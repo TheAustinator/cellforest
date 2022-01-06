@@ -14,10 +14,12 @@ def groupby(
     grp = ad.obs.groupby(obs_cols)
     for name, obs_sub in grp:
         selector = ad.obs_names.isin(obs_sub.index)
+        _ad = ad[selector]
+        _ad._sanitize()
         if return_key:
-            yield name, ad[selector]
+            yield name, _ad
         else:
-            yield ad[selector]
+            yield _ad
 
 
 def groupby_dict(ad: AnnData, obs_cols: Iterable):

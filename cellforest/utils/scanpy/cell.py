@@ -15,6 +15,21 @@ MARKER_THRESH_DEFAULTS = {
 }
 
 
+def _check_mat_type(X) -> str:
+    sums = X.sum(axis=1)
+    sums = pd.Series(np.array(sums).flatten())
+    is_raw = sums.map(float.is_integer).mean() > 0.9
+    if is_raw:
+        return "raw"
+    is_norm = sums.var() / sums.mean() < 1
+    if is_norm:
+        return "norm"
+    if (sums > 0).mean() < 0.9:
+        return "scale"
+    else:
+        return "log"
+
+
 def preprocess(
     ad: AnnData,
     min_cells: int = None,
@@ -22,8 +37,10 @@ def preprocess(
     max_genes: int = None,
     max_pct_mito: int = None,
 ):
-    # if "raw" not in ad.layers:
-    ad.layers["raw"] = ad.X.copy()
+    x_type = _check_mat_type(X)
+
+    if "raw" not in ad.layers:
+        ad.layers["raw"] = ad.X.copy()
     ad.raw = ad.copy()
     ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
     ad.layers["norm"] = ad.X.copy()
@@ -45,8 +62,11 @@ def reduce(
     tsne_kwargs=None,
     umap=True,
     tsne=False,
+    scale: bool = False,
 ):
     sc.pp.highly_variable_genes(ad, batch_key="sample", **hvg_kwargs)
+    if scale:
+        sc.pp.scale(ad)
     sc.pp.pca(ad, n_comps=n_comps, **pca_kwargs)
     sc.pp.neighbors(ad, **neighbors_kwargs)
     if umap:
