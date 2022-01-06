@@ -22,6 +22,10 @@ _R_UTILS_DIR = Path(r.__file__).parent
 _R_MAST_DISK = str(_R_UTILS_DIR / "_mast_disk.R")
 
 
+def _str_dtypes(df):
+    return df.loc[:, (df.dtypes == "object") | (df.dtypes == "category")].astype(str)
+
+
 def col_corr(df, col, pivot="donor"):
     df = df[[col, pivot]].pivot(columns=pivot)
     df.columns = df.columns.get_level_values(1)
@@ -55,6 +59,8 @@ def get_de_stats(df, metric_dict=frozendict({"": np.mean, "_var": np.var}), grp=
 def mast(
     ad: AnnData, formula: str, cores: int = 0, disk: bool = True, log_dir: str = "/tmp"
 ) -> pd.DataFrame:
+    ad = ad.copy()
+    ad.obs = _str_dtypes(ad.obs)
     if disk:
         return _mast_disk(ad, formula, cores, log_dir)
     else:
@@ -70,6 +76,7 @@ def mast_grouped(
     cores: int = 0,
     disk: bool = True,
     log_dir: str = "/tmp",
+    skip_error: bool = True,
     checkpoint_save_path: Optional[str] = "/tmp/mast_checkpoint.csv",
     resume: bool = False,
 ):
@@ -89,13 +96,20 @@ def mast_grouped(
         print(k)
         if k in done:
             print(f"Exists in checkpoint and `resume=True`. Skipping {k}")
-            continue
+            if skip_error:
+                continue
+            else:
+                raise e
         if undersample_col:
             print(_ad.obs[undersample_col].value_counts())
         try:
             _de = mast(_ad, formula, cores, disk, log_dir)
         except Exception as e:
             print(f"Error on {k}: {e}")
+            if skip_error:
+                continue
+            else:
+                raise e
         if not isinstance(_de, pd.DataFrame):
             print(f"Error on {k}: {_de}")
         for (g, _k) in zip(grp, k):

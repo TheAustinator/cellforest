@@ -7,7 +7,7 @@ from pathlib import Path
 from subprocess import check_call
 from typing import Union
 
-from cellforest import get_current_config
+# from cellforest import get_current_config
 
 
 def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfile_prefix: str):

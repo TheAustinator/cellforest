@@ -17,7 +17,16 @@ print(paste0("n_pcs: ", n_pcs))
 print(paste0("nfeatures: ", nfeatures))
 
 
-srat <- readRDS(srat_path)
+# TEMP
+# srat <- readRDS(srat_path)
+# if (is.null(srat@assays$originalexp)){srat@assays$originalexp=srat@assays$RNA}
+# if (is.null(srat@assays$RNA)){srat@assays$RNA=srat@assays$originalexp}
+# srat@assays$RNA = NULL
+# srat$nFeature_RNA = srat$nFeature_originalexp
+
+srat <- CreateSeuratObject(Read10X_h5(srat_path)$`Gene Expression`, project="placeholder", min.cells = 3,min.genes=200)
+
+
 srat <- NormalizeData(srat)
 srat <- FindVariableFeatures(srat, selection.method = "vst", nfeatures = nfeatures)
 srat <- ScaleData(srat)

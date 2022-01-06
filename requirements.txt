@@ -1,10 +1,12 @@
 anndata
+anndata2ri
 dataforest
 IPython
 joblib
 matplotlib
 numba
-numpy
+# for numba
+numpy==1.20
 pandas
 path
 pyyaml

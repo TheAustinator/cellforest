@@ -53,7 +53,7 @@ def process_transpose(
     ad: AnnData, min_cells: int = 10, min_genes: int = 200, max_genes: int = 2500, max_pct_mito: int = 30
 ):
     ad = ad.copy()
-    ad.X = ad.raw.X
+    ad.X = ad.layers.get("raw", ad.raw.X)
     ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
     sc.pp.log1p(ad)
     sc.pp.highly_variable_genes(ad, batch_key="sample")
