@@ -41,7 +41,7 @@ def markers(branch: "CellBranch", run_name: str):
 
 
 @dataprocess(requires="cluster", comparative=True)
-def diffexp(branch: "CellBranch", run_name: str):
+branch: "CellBranch", run_name: str):
     # TODO: refactor both diffexp versions into `_get_diffexp_args`
     input_metadata_path = branch.get_temp_meta_path(run_name)
     run_spec = branch.spec[run_name]

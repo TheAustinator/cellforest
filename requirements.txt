@@ -15,7 +15,7 @@ scipy
 seaborn
 typeguard
 umap-learn
-
+lazy_import
 pathlib
 pytest
 Pillow
