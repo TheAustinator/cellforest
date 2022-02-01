@@ -40,6 +40,8 @@ def norm_total_per_assay(
     assay_keys: Optional[dict] = None,
 ):
     ad.var_names_make_unique()
+    if "feature_types" not in ad.var.columns:
+        ad.var["feature_types"] = "Gene Expression"
     if "raw" in ad.layers:
         ad.X = ad.layers["raw"]
     ad.layers["raw"] = ad.X.copy()

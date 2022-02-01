@@ -1,18 +1,12 @@
-from pathlib import Path
+# from lazy_import import lazy_module as _lazy_module
+from cellforest.api import cl, de, gn, gr, gs, pl, qc, mn, r, pp, tl, io
 
-# from dataforest import get_current_config
-#
-# from cellforest.defaults import defaults
-# from cellforest.structures.counts.Counts import Counts
-# from cellforest.templates.CellBranch import CellBranch
-# from cellforest.templates.CellInterface import CellInterface
-# from cellforest.templates.CellTree import CellTree
-# from cellforest.utils.config.useconfig import useconfig
-# from cellforest.utils.config.functions import CONFIG_OPTIONS, load_config, update_config
-from cellforest.api import cl, de, gn, gr, gs, pl, qc, mn, r, pp, tl
-
-# from_sample_metadata = CellInterface.from_sample_metadata
-# from_input_dirs = CellInterface.from_input_dirs
-# load = CellInterface.load
-
-# update_config(Path(__file__).parent / "config/no_plot_config.yaml")
+# cl = _lazy_module("cellforest.api.cl")
+# de = _lazy_module("cellforest.api.de")
+# gn = _lazy_module("cellforest.api.gn")
+# gr = _lazy_module("cellforest.api.gr")
+# gs = _lazy_module("cellforest.api.gs")
+# pl = _lazy_module("cellforest.api.pl")
+# mn = _lazy_module("cellforest.api.mn")
+# r = _lazy_module("cellforest.api.r")
+# pp = _lazy_module("cellforest.api.pp")

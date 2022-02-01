@@ -10,7 +10,7 @@ from typing import Union
 # from cellforest import get_current_config
 
 
-def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfile_prefix: str):
+def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfile_prefix: str, shell_mode="subprocess"):
     os.makedirs(logs_dir, exist_ok=True)
     out_path = os.path.join(logs_dir, f"{logfile_prefix}.out")
     err_path = os.path.join(logs_dir, f"{logfile_prefix}.err")
@@ -19,8 +19,8 @@ def process_shell_command(command_string: str, logs_dir: Union[str, Path], logfi
     logger.info(f"Running command: {command_string}")
     logger.info(f"STDOUT -> {out_path}")
     logger.info(f"STDERR -> {err_path}")
-    config = get_current_config()
-    shell_mode = config.get("shell_mode", "subprocess")
+    # config = get_current_config()
+    # shell_mode = config.get("shell_mode", "subprocess")
     if shell_mode == "subprocess":
         check_call(shlex.split(command_string), stdout=open(out_path, "w"), stderr=open(err_path, "w"))
     elif shell_mode == "os":

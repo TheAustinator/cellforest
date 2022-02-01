@@ -44,6 +44,24 @@ def groupby_dict_ctrl(
     return ad_d
 
 
+def groupby_ctrl(
+        ad: AnnData, obs_cols: Iterable, ctrl_col: str, ctrl_val: str, join: str = "outer", return_key: bool = True
+):
+    obs_cols = [obs_cols,] if isinstance(obs_cols, str) else list(obs_cols)
+    ad_d = groupby_dict(ad, obs_cols)
+    ind_i = obs_cols.index(ctrl_col)
+    for k, _ad in ad_d.items():
+        k_ctrl = list(copy(k))
+        k_ctrl[ind_i] = ctrl_val
+        k_ctrl = tuple(k_ctrl)
+        if k != k_ctrl:
+            _ad = anndata.concat([_ad, ad_d[k_ctrl]], join=join)
+        if return_key:
+            yield k, _ad
+        else:
+            yield _ad
+
+
 def values_apply(
     d: Dict[str, AnnData], func: Callable, print_keys: bool = False, **kwargs
 ):
