@@ -50,27 +50,29 @@ run_soupx <- function(input_dir_10x, clusters, output_path_sx_est, output_path_s
   # return(c(sx, sx_counts))
 }
 
-run_decontx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
+init_decontx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
   sce_dx <- run_decontx(input_dir_10x, input_path_clusters, output_path_dx_est)
 }
 
-run_soupx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
+init_soupx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
   run_soupx(input_dir_10x, input_path_clusters, output_path_sx_est, output_path_sx_prof)   # list[sx, sx_counts] <-
 }
 
 
 tryCatch( {
-            run_decontx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
+            init_decontx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
           },
           error = function(e) {
+            print(e)
             print("Decontx Failed")
           }
         )
 
 tryCatch( {
-            run_soupx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
+            init_soupx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
           },
           error = function(e) {
+            print(e)
             print("Soupx Failed")
           }
         )
