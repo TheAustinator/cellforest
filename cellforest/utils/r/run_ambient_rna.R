@@ -7,12 +7,14 @@ input_path_clusters <- args[2]
 output_path_dx_est <- args[3]
 output_path_sx_est <- args[4]
 output_path_sx_prof <- args[5]
+soupx_or_dcontx <- args[6]
 
 print(paste0("input_dir_10x: ", input_dir_10x))
 print(paste0("input_path_clusters: ", input_path_clusters))
 print(paste0("output_path_dx_est: ", output_path_dx_est))
 print(paste0("output_path_sx_est: ", output_path_sx_est))
 print(paste0("output_path_sx_prof: ", output_path_sx_prof))
+print(paste0("soupx_or_dcontx: ", soupx_or_dcontx))
 
 
 run_decontx <- function(input_path_outs, input_path_clusters = "", output_path_dx_est) {
@@ -50,10 +52,28 @@ run_soupx <- function(input_dir_10x, clusters, output_path_sx_est, output_path_s
   # return(c(sx, sx_counts))
 }
 
-run_all <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
+run_decontx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
   sce_dx <- run_decontx(input_dir_10x, input_path_clusters, output_path_dx_est)
-  run_soupx(input_dir_10x, sce_dx$decontX_clusters, output_path_sx_est, output_path_sx_prof)   # list[sx, sx_counts] <-
-  # return(c(sce_dx, sx, sx_counts))
 }
 
-run_all(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
+run_soupx <- function(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof) {
+  run_soupx(input_dir_10x, input_path_clusters, output_path_sx_est, output_path_sx_prof)   # list[sx, sx_counts] <-
+}
+
+
+tryCatch( {
+            run_decontx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
+          },
+          error = function(e) {
+            print("Decontx Failed")
+          }
+        )
+
+tryCatch( {
+            run_soupx(input_dir_10x, input_path_clusters, output_path_dx_est, output_path_sx_est, output_path_sx_prof)
+          },
+          error = function(e) {
+            print("Soupx Failed")
+          }
+        )
+
