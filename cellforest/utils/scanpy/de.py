@@ -1,6 +1,7 @@
 import gc
 import logging
 import os
+from itertools import product
 from pathlib import Path
 from typing import Optional, Union, Iterable, Dict
 import uuid
@@ -9,12 +10,13 @@ from anndata import AnnData
 from frozendict import frozendict
 import numpy as np
 import pandas as pd
-
+import scanpy as sc
 import seaborn as sns
 
 from cellforest.api.r import ad_to_r
 from cellforest.api.tl import undersample
 from cellforest.utils import r
+from cellforest.utils.scanpy.cell import get_markers_df
 from cellforest.utils.scanpy.group import groupby_dict, values_apply
 from cellforest.utils.shell.shell_command import process_shell_command
 
@@ -57,14 +59,97 @@ def get_de_stats(df, metric_dict=frozendict({"": np.mean, "_var": np.var}), grp=
 
 
 def mast(
-    ad: AnnData, formula: str, cores: int = 0, disk: bool = True, log_dir: str = "/tmp"
+    ad: AnnData, formula: str, cores: int = 0, disk: bool = True, log_dir: str = "/tmp", keep_temp: bool = False,
 ) -> pd.DataFrame:
     ad = ad.copy()
     ad.obs = _str_dtypes(ad.obs)
     if disk:
-        return _mast_disk(ad, formula, cores, log_dir)
+        return _mast_disk(ad, formula, cores, log_dir, keep_temp)
     else:
         return _mast_mem(ad, formula)
+
+
+def pairwise(ad: AnnData, obs_key: str = "sample"):
+    de = pd.DataFrame()
+    df_meta = pd.DataFrame()
+    pairs = list(product(ad.obs[obs_key].unique(), ad.obs[obs_key].unique()))
+    for pair in pairs:
+        if pair[0] == pair[1]:
+            continue
+        ad.obs["grp"] = ""
+        obs = ad.obs[ad.obs[obs_key].isin(pair)]
+        counts = obs[obs_key].value_counts()
+        n_cells = counts[counts > 0].min()
+        df_meta[pair] = pd.Series({"n_cells": n_cells})
+        grp_ids = {
+            k: list(np.random.choice(_obs.index.tolist(), n_cells, replace=False))
+            if len(_obs) > 0 else []
+            for k, _obs in obs.groupby(obs_key)
+        }
+        for grp, ids in grp_ids.items():
+            ad.obs.loc[ad.obs_names.isin(ids), "grp"] = grp
+        ad.obs["grp"] = ad.obs["grp"].astype("category")
+        sc.tl.rank_genes_groups(ad, "grp", groups=pair, reference=pair[1])
+        _de = get_markers_df(ad).set_index("gene")
+        for grp, dff in _de.groupby("group"):
+            de[pair[0], pair[1], grp, "-logp"] = dff["-logp"]
+            de[pair[0], pair[1], grp, "logfc"] = dff["logfc"]
+            de[pair[0], pair[1], grp, "volcano"] = dff["volcano"]
+    de = de.T
+    df_meta = df_meta.T
+    de.index = pd.MultiIndex.from_tuples(de.index)
+    return de, df_meta
+
+
+def grouped(ad, obs_cmp: str, obs_groupby: str = "sample", reference: Optional = None, test: Optional = None, undersample_bootstrap: bool = False, min_cells_skip: int = 10, as_anndata: bool = True) -> pd.DataFrame:
+    de = pd.DataFrame()
+    if undersample_bootstrap not in [False, 1]:
+        raise NotImplementedError("bootstrapping not yet implemented, so must be False or 1")
+    for grp in ad.obs[obs_groupby].unique():
+        print(grp)
+        ad.obs["_grp"] = np.nan
+        grp_mask = ad.obs[obs_groupby] == grp
+        ad.obs.loc[grp_mask, "_grp"] = ad.obs.loc[grp_mask, obs_cmp]
+        ad.obs["_grp"] = ad.obs["_grp"].astype("category")
+        def _notna(x): np.isnan(x) if isinstance(x, float) else False
+        groups = sorted([x for x in ad.obs.loc[grp_mask, "_grp"].unique() if not _notna(x)])
+        test = test if test is not None else set(groups).difference({reference}).pop()
+        if len(groups) != 2:
+            logging.info(f"len groups for {grp}: {groups} is not two, skiping.")
+            continue
+        min_ = ad.obs["_grp"].value_counts().min()
+        if min_ < min_cells_skip:
+            logging.info(f"minimum class is {min_} for one group in {grp}. skipping")
+            continue
+        if undersample_bootstrap:
+            max_class = ad.obs["_grp"].value_counts().min()
+            inds = list()
+            for class_ in ad.obs["_grp"].unique():
+                _inds = ad.obs.reset_index()[ad.obs.reset_index()["_grp"] == class_].index
+                inds += np.random.choice(_inds, min(len(_inds), max_class), replace=False).tolist()
+            mask = set(ad.obs_names).difference(ad.obs_names[inds])
+            ad.obs.loc[mask, "_grp"] = np.nan
+
+        reference = reference if reference is not None else groups[1]
+        sc.tl.rank_genes_groups(ad, groupby="_grp", reference=reference)
+        _de = get_markers_df(ad, group=test, skip_mean_expr=True)
+        _de = _de[_de["group"] == str(test)].set_index("gene")
+        # import ipdb; ipdb.set_trace()
+        de[grp, "-logp"] = _de["-logp"]
+        de[grp, "logfc"] = _de["logfc"]
+        de[grp, "volcano"] = _de["volcano"]
+
+    de = de.T
+    de.index = pd.MultiIndex.from_tuples(de.index)
+    if as_anndata:
+        layers = {k: dff.drop(columns="level_1") for k, dff in de.reset_index(1).groupby("level_1")}
+        X = layers["volcano"]
+        de = AnnData(X, layers=layers, var=X.columns.to_frame().drop(columns="gene"), obs=X.index.to_frame().drop(columns=0))
+    return de
+
+
+def pairwise_grouped(ad: AnnData, obs_key: str = "sample", obs_groupby: str = "cell_type"):
+    raise NotImplementedError()
 
 
 def mast_grouped(

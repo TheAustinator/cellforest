@@ -6,6 +6,7 @@ from typing import Optional, Dict, Union, Literal
 
 from anndata import AnnData
 from lazy_import import lazy_module, lazy_callable
+logging.getLogger('lazy_import').setLevel(logging.WARNING)
 anndata2ri = lazy_module("anndata2ri")
 robjects = lazy_module("rpy2.robjects")
 localconverter = lazy_callable("rpy2.robjects.conversion.localconverter")
