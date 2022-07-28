@@ -1,7 +1,7 @@
 from collections import defaultdict
 import logging
 from pathlib import Path
-from typing import AnyStr, Dict, Union, Iterable, Sequence, Tuple
+from typing import AnyStr, Dict, Union, Iterable, Sequence, Tuple, Optional
 
 from anndata import AnnData
 import matplotlib.pyplot as plt
@@ -13,10 +13,23 @@ from scipy.stats import pearsonr
 from cellforest.api.io import read_10x
 from cellforest.utils.scanpy.ambient import est_ambient_rna
 from cellforest.utils.scanpy.doublet import dub_finder_disk
+from cellforest.utils.scanpy.group import groupby_dict
 
 
-def pseudo_bulk(ad: AnnData) -> np.ndarray:
-    expr = ad.X.sum(axis=0)
+def pseudo_bulk(ad: AnnData, groupby: Optional[str] = None, layer="X") -> pd.DataFrame:
+    ad_d = groupby_dict(ad, groupby)
+    bulk_d = dict()
+    for k, _ad in ad_d.items():
+        expr = _pseudo_bulk_vector(_ad, layer)
+        bulk_d[k] = expr
+    df = pd.DataFrame(bulk_d).T
+    df.columns = ad.var_names
+    return df
+
+
+def _pseudo_bulk_vector(ad: AnnData, layer="X") -> np.ndarray:
+    X = ad.X if layer == "X" else ad.layers[layer]
+    expr = X.sum(axis=0)
     expr = np.array(expr / expr.sum())[0]
     return expr
 
@@ -39,9 +52,9 @@ def get_droplet_expr(
     ad_cel = ad_all[ad_all.obs.index.isin(df_filt)]
     ad_non = ad_all[~ad_all.obs.index.isin(df_filt)]
     ad_emp = ad_non[ad_non.X.sum(axis=1) < ad_cel.X.sum(axis=1).min() / 10]
-    expr_dict["cell"] = pseudo_bulk(ad_cel)
-    expr_dict["noncell"] = pseudo_bulk(ad_non)
-    expr_dict["empty"] = pseudo_bulk(ad_emp)
+    expr_dict["cell"] = _pseudo_bulk_vector(ad_cel)
+    expr_dict["noncell"] = _pseudo_bulk_vector(ad_non)
+    expr_dict["empty"] = _pseudo_bulk_vector(ad_emp)
     if plot:
         for k, _ad in {"cell": ad_cel, "noncell": ad_non, "empty": ad_emp}.items():
             plt.hist(_ad.X.sum(axis=1), bins=np.arange(*x_arange), log=True, alpha=0.5, label=k)

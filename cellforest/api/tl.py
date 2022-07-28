@@ -43,6 +43,7 @@ def undersample(
         raise NotImplementedError()
     all_inds = list()
     slicer = np.array(len(ad) * [False])
+    max_class = max_class if max_class else ad.obs[obs_class].value_counts().min()
     for class_ in ad.obs[obs_class].unique():
         inds = ad.obs.reset_index()[ad.obs.reset_index()[obs_class] == class_].index
         inds = np.random.choice(inds, min(len(inds), max_class), replace=False).tolist()

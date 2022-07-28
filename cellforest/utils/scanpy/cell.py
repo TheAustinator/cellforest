@@ -1,4 +1,5 @@
 from functools import wraps
+import logging
 from typing import Optional, Dict, Tuple, Union, Set, List
 
 from anndata import AnnData
@@ -64,7 +65,8 @@ def reduce(
     tsne=False,
     scale: bool = False,
 ):
-    sc.pp.highly_variable_genes(ad, batch_key="sample", **hvg_kwargs)
+    hvg_kwargs["batch_key"] = hvg_kwargs.get("batch_key", "sample")
+    sc.pp.highly_variable_genes(ad, **hvg_kwargs)
     if scale:
         sc.pp.scale(ad)
     sc.pp.pca(ad, n_comps=n_comps, **pca_kwargs)
@@ -185,7 +187,7 @@ def process(ad: AnnData):
 
 
 def get_markers_df(
-    ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key="markers"
+    ad: AnnData, mean_expr_clip: float = 0.1, group=None, uns_key="markers", skip_mean_expr: bool = False
 ):
     """
 
@@ -220,19 +222,24 @@ def get_markers_df(
             raise ValueError(
                 f"specified `group`: {group}   not in column :{group_var}  . Choose from {ad.obs[group_var].unique()}"
             )
-        mean_expr = ad[ad.obs[group_var] == _group, _dff["gene"]].X.mean(axis=0)
-        frac_expr = (ad[ad.obs[group_var] == _group, _dff["gene"]].X > 0).mean(axis=0)
-        df.loc[_dff.index, "mean_expr"] = mean_expr.T
-        df.loc[_dff.index, "frac_expr"] = frac_expr.T
+        missing = set(_dff["gene"].unique()) - set(ad.var_names)
+        if missing:
+            logging.warning(f"genes in AnnData.raw (where DE is done), but missing in AnnData.var: {missing}")
+        if not skip_mean_expr:
+            mean_expr = ad[ad.obs[group_var] == _group, _dff["gene"]].X.mean(axis=0)
+            frac_expr = (ad[ad.obs[group_var] == _group, _dff["gene"]].X > 0).mean(axis=0)
+            df.loc[_dff.index, "mean_expr"] = mean_expr.T
+            df.loc[_dff.index, "frac_expr"] = frac_expr.T
 
     if not group:
         for group, dff in df.groupby("group"):
             _add_group(group, dff)
     else:
         _add_group(group, df)
-    df["mean_expr_clip"] = df["mean_expr"].apply(
-        lambda x: np.clip(x, 0, mean_expr_clip)
-    )
+    if not skip_mean_expr:
+        df["mean_expr_clip"] = df["mean_expr"].apply(
+            lambda x: np.clip(x, 0, mean_expr_clip)
+        )
     df["-logp"] = -df["pval_adj"].apply(np.log10)
     ceil = df["-logp"][df["-logp"].abs() != np.inf].max()
     df["-logp"] = df["-logp"].replace({np.inf: ceil})
