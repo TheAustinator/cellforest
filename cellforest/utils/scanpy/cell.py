@@ -38,15 +38,22 @@ def preprocess(
     max_genes: int = None,
     max_pct_mito: int = None,
 ):
-    x_type = _check_mat_type(X)
-
-    if "raw" not in ad.layers:
-        ad.layers["raw"] = ad.X.copy()
-    ad.raw = ad.copy()
-    ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
-    ad.layers["norm"] = ad.X.copy()
-    sc.pp.log1p(ad)
-    ad.layers["log"] = ad.X
+    x_type = _check_mat_type(ad.X)
+    print(x_type)
+    if x_type not in ad.layers and x_type in ["raw", "norm", "log"]:
+        ad.layers[x_type] = ad.X.copy()
+    if "raw" in ad.layers:
+        ad.X = ad.layers["raw"]
+        ad.raw = ad.copy()
+    ad.X = ad.layers["norm"] if "norm" in ad.layers else ad.X
+    if x_type in ["raw", "norm"]:
+        ad = _generic_preprocess(ad, min_cells, min_genes, max_genes, max_pct_mito)
+        ad.layers["norm"] = ad.X.copy()
+        sc.pp.log1p(ad)
+        ad.layers["log"] = ad.X
+    elif "log" not in ad.layers:
+        raise ValueError(f"AnnData object must contain")
+    ad.X = ad.layers["log"]
     return ad
 
 
